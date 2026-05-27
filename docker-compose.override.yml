@@ -1,0 +1,39 @@
+version: '3.8'
+
+# Este archivo aplica configuraciones específicas para el desarrollo local.
+# docker-compose combinará automáticamente docker-compose.yml y docker-compose.override.yml en desarrollo.
+
+services:
+  db:
+    ports:
+      - "5432:5432" # Expone Postgres al host local para poder conectarse desde DBeaver/pgAdmin
+
+  redis:
+    ports:
+      - "6379:6379" # Expone Redis al host local para inspección o debugging
+
+  backend:
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app # Recarga en vivo (live reload) al modificar archivos en local
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+      - DEBUG=True
+      - PYTHONUNBUFFERED=1
+
+  celery_worker:
+    volumes:
+      - ./backend:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+      - DEBUG=True
+      - PYTHONUNBUFFERED=1
+
+  celery_beat:
+    volumes:
+      - ./backend:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+      - DEBUG=True
+      - PYTHONUNBUFFERED=1

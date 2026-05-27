@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: fairbet_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-fairbet}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fairbet_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: fairbet_redis
+    restart: always
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - fairbet_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fairbet_backend
+    restart: always
+    command: python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - django_static:/app/staticfiles
+      - django_media:/app/mediafiles
+    environment:
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-fairbet}
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DEBUG=True
+      - API_FOOTBALL_KEY=${API_FOOTBALL_KEY}
+      - API_FOOTBALL_URL=${API_FOOTBALL_URL:-https://v3.football.api-sports.io}
+    ports:
+      - "8000:8000"
+    networks:
+      - fairbet_network
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fairbet_celery_worker
+    restart: always
+    command: celery -A config worker --loglevel=info
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-fairbet}
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DEBUG=True
+      - API_FOOTBALL_KEY=${API_FOOTBALL_KEY}
+      - API_FOOTBALL_URL=${API_FOOTBALL_URL:-https://v3.football.api-sports.io}
+    networks:
+      - fairbet_network
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fairbet_celery_beat
+    restart: always
+    command: celery -A config beat --loglevel=info
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-fairbet}
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DEBUG=True
+      - API_FOOTBALL_KEY=${API_FOOTBALL_KEY}
+      - API_FOOTBALL_URL=${API_FOOTBALL_URL:-https://v3.football.api-sports.io}
+    networks:
+      - fairbet_network
+
+volumes:
+  postgres_data:
+    name: fairbet_postgres_data
+  redis_data:
+    name: fairbet_redis_data
+  django_static:
+    name: fairbet_django_static
+  django_media:
+    name: fairbet_django_media
+
+networks:
+  fairbet_network:
+    name: fairbet_network
+    driver: bridge

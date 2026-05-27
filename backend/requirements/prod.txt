@@ -1,0 +1,4 @@
+-r base.txt
+
+gunicorn>=22.0.0,<22.1.0
+uvicorn[standard]>=0.29.0,<0.30.0
