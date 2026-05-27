@@ -36,3 +36,18 @@ else:
         }
     }
 
+import sys
+
+# Si se están ejecutando pruebas unitarias o de integración (con pytest o manage.py test),
+# se utiliza SQLite en memoria para independizar los tests de PostgreSQL y acelerar su ejecución.
+if 'test' in sys.argv or 'pytest' in sys.argv or any('pytest' in arg for arg in sys.argv):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+        }
+    }
+    ALLOWED_HOSTS = ['*']
+
+
+

@@ -175,6 +175,18 @@ class MiPerfilView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        # --- CONTROLES DE JUEGO RESPONSABLE ---
+        # Restaurar dinámicamente el estado si la autoexclusión ya expiró
+        from responsible.models import AutoExclusion
+        try:
+            auto_ex = request.user.auto_exclusion
+            if not auto_ex.is_active and perfil.verification_status == UserProfile.STATUS_SELF_EXCLUDED:
+                perfil.verification_status = UserProfile.STATUS_VERIFIED
+                perfil.save(update_fields=['verification_status'])
+        except AutoExclusion.DoesNotExist:
+            pass
+        # --- FIN CONTROLES DE JUEGO RESPONSABLE ---
+
         serializer = PerfilUsuarioSerializer(perfil)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -187,21 +199,15 @@ class AutoexclusionView(APIView):
     Esta es una medida IRREVERSIBLE durante el período configurado, en cumplimiento
     con la Ley 31557 Art. 12 (Protección del Jugador).
 
-    Regla de negocio crítica:
-        - El usuario NO puede revertir la autoexclusión antes del tiempo pactado.
-        - Una vez autoexcluido, todos sus intentos de apuesta son rechazados.
-        - El administrador tampoco puede revertirla antes del tiempo (solo el sistema).
-
-    Respuestas:
-        200 OK: Autoexclusión activada exitosamente.
-        400 Bad Request: La cuenta ya está autoexcluida.
-        403 Forbidden: La cuenta está bloqueada y no puede auto-excluirse.
+    Acepta parámetro 'dias' en el body (ej: 7, 30, 90) o null/omisión para permanente.
     """
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        """Activa la autoexclusión permanente del usuario autenticado."""
+        """Activa la autoexclusión temporal o permanente del usuario autenticado."""
+        from django.utils import timezone
+        from responsible.models import AutoExclusion
+
         try:
             perfil = request.user.profile
         except UserProfile.DoesNotExist:
@@ -224,18 +230,45 @@ class AutoexclusionView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+        # Obtener los días de autoexclusión
+        dias_raw = request.data.get('dias', None)
+        excluded_until = None
+        
+        if dias_raw is not None:
+            try:
+                dias = int(dias_raw)
+                if dias not in [7, 30, 90]:
+                    return Response(
+                        {'error': 'El período de autoexclusión temporal debe ser de 7, 30 o 90 días.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                excluded_until = timezone.now() + timezone.timedelta(days=dias)
+            except (ValueError, TypeError):
+                return Response(
+                    {'error': 'El parámetro "dias" debe ser un número entero (7, 30, 90) o null.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         # Cambiar el estado a autoexcluido dentro de una transacción atómica
         with transaction.atomic():
             perfil.verification_status = UserProfile.STATUS_SELF_EXCLUDED
             perfil.save(update_fields=['verification_status', 'updated_at'])
+            
+            # Registrar el modelo de autoexclusión en la app responsible
+            AutoExclusion.objects.update_or_create(
+                user=request.user,
+                defaults={'excluded_until': excluded_until}
+            )
 
+        mensaje_periodo = f"temporal hasta {excluded_until}" if excluded_until else "permanente e indefinida"
         return Response(
             {
                 'mensaje': (
-                    'Autoexclusión activada. Tu cuenta ha sido suspendida de forma inmediata. '
-                    'Si deseas reactivarla, contacta al soporte después del período de exclusión.'
+                    f"Autoexclusión activada de forma {mensaje_periodo}. Tu cuenta ha sido suspendida inmediatamente. "
+                    "Si deseas reactivarla, contacta al soporte después de que haya expirado el período de exclusión."
                 ),
                 'estado': perfil.get_verification_status_display(),
+                'excluido_hasta': excluded_until.isoformat() if excluded_until else None
             },
             status=status.HTTP_200_OK,
         )

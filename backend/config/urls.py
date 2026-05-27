@@ -25,4 +25,19 @@ urlpatterns = [
 
     # Rutas de la API v1 - Fase 2: Wallet y Partida Doble
     path('api/v1/', include('wallet.urls')),
+
+    # Rutas de la API v1 - Fase 3: Catálogo de Eventos y Cuotas
+    path('api/v1/betting/', include('betting.urls')),
+
+    # Rutas de la API v1 - Fase 7: Juego Responsable
+    path('api/v1/', include('responsible.urls')),
+
+    # Rutas de la API v1 - Fase 8: Auditoría inmutable
+    path('api/v1/', include('audit.urls')),
+
+    # Rutas de la API v1 - Fase 9: Anti-fraude básico
+    path('api/v1/', include('fraud.urls')),
+
+    # Rutas de la API v1 - Fase 10: Dashboard del operador y Reporte MINCETUR
+    path('api/v1/', include('dashboard.urls')),
 ]

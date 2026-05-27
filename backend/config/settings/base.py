@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+from decimal import Decimal
 
 # Construye rutas dentro del proyecto de esta manera: BASE_DIR / 'subdirectorio'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -125,4 +126,38 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# --- CONFIGURACIÓN DE INTEGRACIÓN CON API-FOOTBALL V3 ---
+# Clave de autenticación para la API externa
+API_FOOTBALL_KEY = os.environ.get('API_FOOTBALL_KEY', '')
+# URL base oficial de la API de API-Football
+API_FOOTBALL_URL = os.environ.get('API_FOOTBALL_URL', 'https://v3.football.api-sports.io')
+# Margen del operador aplicado a las cuotas locales (5%)
+OPERATOR_MARGIN = Decimal(os.environ.get('OPERATOR_MARGIN', '0.05'))
+# Ligas a sincronizar por defecto (por ejemplo: Premier League ID 39, LaLiga ID 140)
+API_FOOTBALL_LEAGUES = [39, 140]
+
+# --- PLANIFICACIÓN DE TAREAS PERIÓDICAS (CELERY BEAT) ---
+CELERY_BEAT_SCHEDULE = {
+    'sincronizar-partidos-cada-2-horas': {
+        'task': 'betting.tasks.sync_fixtures',
+        'schedule': 7200.0,  # Cada 2 horas en segundos
+    },
+    'sincronizar-marcadores-en-vivo-cada-30-segundos': {
+        'task': 'betting.tasks.sync_live_scores',
+        'schedule': 30.0,   # Cada 30 segundos
+    },
+    'actualizar-cuotas-en-vivo-cada-10-segundos': {
+        'task': 'betting.tasks.update_odds',
+        'schedule': 10.0,   # Cada 10 segundos
+    },
+    'aplicar-limites-juego-responsable-cada-hora': {
+        'task': 'responsible.tasks.apply_expired_limits',
+        'schedule': 3600.0,  # Cada hora en segundos
+    },
+}
+
+# --- CONFIGURACIÓN DE APUESTAS EN VIVO (LIVE / IN-PLAY) ---
+# Tiempo de enfriamiento (cooldown) en segundos para reanudar mercados tras suspensión automática
+LIVE_SUSPENSION_COOLDOWN = int(os.environ.get('LIVE_SUSPENSION_COOLDOWN', 15))
 
