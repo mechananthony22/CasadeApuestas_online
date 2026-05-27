@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Límites - Juego Responsable{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+     x-data="limits()" x-init="init()">
+
+    <h1 class="text-3xl font-bold mb-2">Límites de Depósito</h1>
+    <p class="text-gray-400 mb-8">Configura tus límites diarios, semanales y mensuales</p>
+
+    <div class="bg-card rounded-xl border border-gray-800 p-8">
+        <div class="space-y-6">
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">Límite Diario (S/)</label>
+                <input type="number" x-model="limits.daily" min="0" step="10"
+                    class="w-full bg-[#222] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">Límite Semanal (S/)</label>
+                <input type="number" x-model="limits.weekly" min="0" step="10"
+                    class="w-full bg-[#222] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">Límite Mensual (S/)</label>
+                <input type="number" x-model="limits.monthly" min="0" step="10"
+                    class="w-full bg-[#222] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
+            </div>
+        </div>
+
+        <template x-if="error">
+            <div class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mt-6" x-text="error"></div>
+        </template>
+
+        <template x-if="success">
+            <div class="bg-win/10 border border-win text-win px-4 py-3 rounded-xl text-sm mt-6" x-text="success"></div>
+        </template>
+
+        <button @click="save()" :disabled="saving"
+            class="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition mt-6">
+            <span x-show="!saving">Guardar Límites</span>
+            <span x-show="saving">Guardando...</span>
+        </button>
+
+        <p class="text-xs text-gray-500 mt-4 text-center">
+            Al aumentar tus límites, se aplicará un período de espera de 24 horas (cooldown).
+        </p>
+    </div>
+
+    <div class="mt-6 bg-card rounded-xl border border-gray-800 p-6">
+        <h2 class="font-bold mb-2">Autoexclusión</h2>
+        <p class="text-sm text-gray-400 mb-4">Si necesitas un descanso, puedes autoexcluirte temporalmente.</p>
+        <a href="{% url 'responsible-self-exclude' %}" class="text-red-400 hover:text-red-300 underline text-sm">Configurar autoexclusión →</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function limits() {
+    return {
+        limits: { daily: 0, weekly: 0, monthly: 0 },
+        error: '',
+        success: '',
+        saving: false,
+
+        async init() {
+            if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
+            const data = await apiFetch('/responsible/limits/');
+            if (data._status === 200) {
+                this.limits.daily = data.daily_limit || 0;
+                this.limits.weekly = data.weekly_limit || 0;
+                this.limits.monthly = data.monthly_limit || 0;
+            }
+        },
+
+        async save() {
+            this.error = '';
+            this.success = '';
+            this.saving = true;
+            const data = await apiFetch('/responsible/limits/', {
+                method: 'PUT',
+                body: JSON.stringify({
+                    daily_limit: parseFloat(this.limits.daily) || 0,
+                    weekly_limit: parseFloat(this.limits.weekly) || 0,
+                    monthly_limit: parseFloat(this.limits.monthly) || 0,
+                }),
+            });
+            this.saving = false;
+            if (data._status === 200 || data.mensaje) {
+                this.success = data.mensaje || 'Límites guardados';
+            } else {
+                this.error = Object.values(data).flat().join(' ') || 'Error al guardar.';
+            }
+        },
+    };
+}
+</script>
+{% endblock %}

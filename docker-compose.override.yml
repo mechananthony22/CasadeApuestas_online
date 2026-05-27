@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Este archivo aplica configuraciones específicas para el desarrollo local.
 # docker-compose combinará automáticamente docker-compose.yml y docker-compose.override.yml en desarrollo.
 

@@ -11,6 +11,8 @@ REGLA DE ARQUITECTURA HÍBRIDA:
 """
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -21,6 +23,7 @@ from .serializers import RegistroUsuarioSerializer, PerfilUsuarioSerializer
 from .validators import validar_dni_peruano
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class RegistroView(APIView):
     """
     POST /api/v1/auth/register/

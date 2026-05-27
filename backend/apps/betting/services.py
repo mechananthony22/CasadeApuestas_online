@@ -35,7 +35,7 @@ class APIFootballClient:
         }
         try:
             logger.info(f"Consumiendo fixtures de API-Football para liga {league_id}, temporada {season}")
-            response = requests.get(url, headers=self.headers, params=params, timeout=10)
+            response = requests.get(url, headers=self.headers, params=params, timeout=60)
             response.raise_for_status()
             data = response.json()
             return data.get('response', [])
@@ -53,7 +53,7 @@ class APIFootballClient:
         }
         try:
             logger.info("Consumiendo partidos en vivo de API-Football")
-            response = requests.get(url, headers=self.headers, params=params, timeout=10)
+            response = requests.get(url, headers=self.headers, params=params, timeout=60)
             response.raise_for_status()
             data = response.json()
             return data.get('response', [])
@@ -71,7 +71,7 @@ class APIFootballClient:
         }
         try:
             logger.info(f"Consumiendo odds de API-Football para el partido {fixture_id}")
-            response = requests.get(url, headers=self.headers, params=params, timeout=10)
+            response = requests.get(url, headers=self.headers, params=params, timeout=60)
             response.raise_for_status()
             data = response.json()
             return data.get('response', [])

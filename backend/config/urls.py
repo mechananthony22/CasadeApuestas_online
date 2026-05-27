@@ -1,10 +1,10 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
 def api_status_view(request):
-    """Endpoint de estado del sistema y disclaimer educativo obligatorio."""
     return JsonResponse({
         'status': 'online',
         'service': 'FairBet Lab API',
@@ -14,13 +14,12 @@ def api_status_view(request):
 
 
 urlpatterns = [
-    # Panel de administración de Django
     path('admin/', admin.site.urls),
 
-    # Endpoint raíz con el disclaimer educativo obligatorio
-    path('', api_status_view, name='api_status'),
+    # JWT endpoints
+    path('api/v1/auth/token/', TokenObtainPairView.as_view(), name='token-obtain'),
+    path('api/v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
 
-    # Rutas de la API v1 - Fase 1: Usuarios y KYC
     path('api/v1/', include('users.urls')),
 
     # Rutas de la API v1 - Fase 2: Wallet y Partida Doble
@@ -40,4 +39,7 @@ urlpatterns = [
 
     # Rutas de la API v1 - Fase 10: Dashboard del operador y Reporte MINCETUR
     path('api/v1/', include('dashboard.urls')),
+
+    # Frontend: template views (login, register, dashboard)
+    path('', include('frontend.urls')),
 ]

@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Apuesta - FairBet Lab{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+     x-data="eventDetail()" x-init="init()">
+
+    <template x-if="loading">
+        <div class="text-center py-20">
+            <div class="animate-spin h-10 w-10 border-4 border-accent border-t-transparent rounded-full mx-auto"></div>
+            <p class="text-gray-400 mt-4">Cargando evento...</p>
+        </div>
+    </template>
+
+    <template x-if="!loading && event">
+        <div>
+            <a href="{% url 'events-list' %}" class="text-gray-400 hover:text-white mb-4 inline-block">&larr; Volver a eventos</a>
+
+            <div class="bg-card rounded-xl border border-gray-800 p-6 mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold uppercase"
+                          :class="event.status === 'live' ? 'text-green-500' : 'text-gray-500'"
+                          x-text="event.status === 'live' ? '🔴 EN VIVO' : '📅 ' + (event.start_date || event.date)"></span>
+                </div>
+                <div class="flex items-center justify-between py-4">
+                    <div class="flex-1 text-center">
+                        <p class="text-2xl font-bold" x-text="event.home_team?.name || 'Local'"></p>
+                    </div>
+                    <div class="flex items-center gap-6 px-8">
+                        <span class="text-4xl font-bold text-accent" x-text="event.home_score ?? '0'"></span>
+                        <span class="text-gray-500 text-xl font-bold">-</span>
+                        <span class="text-4xl font-bold text-accent" x-text="event.away_score ?? '0'"></span>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <p class="text-2xl font-bold" x-text="event.away_team?.name || 'Visitante'"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-card rounded-xl border border-gray-800 p-6">
+                <h2 class="text-xl font-bold mb-4">Selecciona tu apuesta</h2>
+                <template x-for="mkt in (event.markets || [])" :key="mkt.id">
+                    <div class="mb-6">
+                        <h3 class="text-sm text-gray-400 uppercase tracking-wider mb-3" x-text="mkt.name"></h3>
+                        <div class="grid grid-cols-3 gap-3">
+                            <template x-for="sel in (mkt.selections || [])" :key="sel.id">
+                                <button @click="selectSelection(sel)"
+                                    :class="selected?.id === sel.id ? 'border-accent bg-accent/10' : 'border-gray-700 hover:border-gray-500'"
+                                    class="border-2 rounded-xl p-4 text-center transition">
+                                    <p class="text-sm text-gray-400" x-text="sel.name"></p>
+                                    <p class="text-xl font-bold text-win mt-1" x-text="liveOdds[sel.id] || sel.odds"></p>
+                                    <template x-if="liveOdds[sel.id] && liveOdds[sel.id] !== sel.odds">
+                                        <p class="text-xs text-yellow-500">⚡ Actualizado</p>
+                                    </template>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <template x-if="selected">
+                    <div class="mt-6 border-t border-gray-800 pt-6">
+                        <h3 class="text-lg font-bold mb-4">Tu Apuesta</h3>
+                        <div class="bg-[#222] rounded-xl p-4 mb-4">
+                            <p><span class="text-gray-400">Selección:</span> <span class="font-semibold" x-text="selected.name"></span></p>
+                            <p><span class="text-gray-400">Cuota:</span> <span class="font-bold text-win" x-text="currentOdds()"></span></p>
+                            <p><span class="text-gray-400">Evento:</span> <span x-text="event.home_team?.name + ' vs ' + event.away_team?.name"></span></p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-400 mb-2">Monto a apostar (S/)</label>
+                            <input type="number" x-model="stake" min="1" step="0.5"
+                                class="w-full bg-[#222] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
+                        </div>
+
+                        <div class="bg-[#222] rounded-xl p-4 mb-6">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Posible ganancia:</span>
+                                <span class="text-xl font-bold text-win" x-text="'S/ ' + potentialPayout()"></span>
+                            </div>
+                        </div>
+
+                        <template x-if="error">
+                            <div class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mb-4" x-text="error"></div>
+                        </template>
+
+                        <button @click="placeBet()" :disabled="sending || !stake || stake <= 0"
+                            class="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition">
+                            <span x-show="!sending">Confirmar Apuesta</span>
+                            <span x-show="sending">Enviando...</span>
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function eventDetail() {
+    return {
+        event: null,
+        loading: true,
+        selected: null,
+        stake: '',
+        error: '',
+        sending: false,
+        liveOdds: {},
+        ws: null,
+
+        async init() {
+            if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
+            const id = window.location.pathname.split('/').filter(Boolean)[1];
+            await this.loadEvent(id);
+            this.connectWS(id);
+        },
+
+        async loadEvent(id) {
+            const data = await apiFetch('/betting/events/' + id + '/');
+            if (data._status === 200) {
+                this.event = data;
+            }
+            this.loading = false;
+        },
+
+        connectWS(id) {
+            this.ws = connectWebSocket(id, (selName, newOdds, oldOdds) => {
+                const sel = this.findSelectionByName(selName);
+                if (sel) {
+                    this.liveOdds[sel.id] = newOdds;
+                }
+            });
+        },
+
+        findSelectionByName(name) {
+            if (!this.event) return null;
+            for (const mkt of this.event.markets || []) {
+                for (const sel of mkt.selections || []) {
+                    if (sel.name === name || sel.name === name) return sel;
+                }
+            }
+            return null;
+        },
+
+        selectSelection(sel) {
+            this.selected = sel;
+            this.error = '';
+        },
+
+        currentOdds() {
+            if (!this.selected) return '0';
+            return this.liveOdds[this.selected.id] || this.selected.odds;
+        },
+
+        potentialPayout() {
+            if (!this.selected || !this.stake) return '0.00';
+            const odds = parseFloat(this.currentOdds());
+            const amount = parseFloat(this.stake);
+            if (isNaN(odds) || isNaN(amount)) return '0.00';
+            return (amount * odds).toFixed(2);
+        },
+
+        async placeBet() {
+            this.error = '';
+            this.sending = true;
+            const data = await apiFetch('/betting/bets/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    event: this.event.id,
+                    selection: this.selected.id,
+                    stake: parseFloat(this.stake),
+                    idempotency_key: generateIdempotencyKey(),
+                }),
+            });
+            this.sending = false;
+            if (data._status === 201 || data.id) {
+                window.location.href = '/bets/';
+            } else {
+                const msgs = Object.values(data).flat().join(' ');
+                this.error = msgs || 'Error al colocar la apuesta.';
+            }
+        },
+    };
+}
+</script>
+{% endblock %}

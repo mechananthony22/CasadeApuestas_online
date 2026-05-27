@@ -20,12 +20,12 @@ def sync_fixtures():
         engine = SyncEngine()
         # Obtener ligas configuradas (ej: [39, 140])
         leagues = getattr(settings, 'API_FOOTBALL_LEAGUES', [39, 140])
-        current_year = timezone.now().year
+        season = timezone.now().year if timezone.now().month > 6 else timezone.now().year - 1
         
         total_synced = 0
         for league_id in leagues:
-            logger.info(f"Sincronizando partidos de liga {league_id} para la temporada {current_year}")
-            count = engine.sync_fixtures(league_id, season=current_year)
+            logger.info(f"Sincronizando partidos de liga {league_id} para la temporada {season}")
+            count = engine.sync_fixtures(league_id, season=season)
             total_synced += count
             
         logger.info(f"Sincronización de fixtures completada. Total partidos procesados: {total_synced}")

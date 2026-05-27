@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Eventos - FairBet Lab{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+     x-data="eventList()" x-init="init()">
+
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold">Eventos Deportivos</h1>
+        <div class="flex gap-2">
+            <button @click="filter = 'all'; load()"
+                :class="filter === 'all' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
+                class="px-4 py-2 rounded-lg text-sm font-medium transition">Todos</button>
+            <button @click="filter = 'live'; load()"
+                :class="filter === 'live' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
+                class="px-4 py-2 rounded-lg text-sm font-medium transition">En Vivo</button>
+            <button @click="filter = 'scheduled'; load()"
+                :class="filter === 'scheduled' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
+                class="px-4 py-2 rounded-lg text-sm font-medium transition">Próximos</button>
+        </div>
+    </div>
+
+    <template x-if="loading">
+        <div class="text-center py-20">
+            <div class="animate-spin h-10 w-10 border-4 border-accent border-t-transparent rounded-full mx-auto"></div>
+            <p class="text-gray-400 mt-4">Cargando eventos...</p>
+        </div>
+    </template>
+
+    <template x-if="!loading && events.length === 0">
+        <div class="text-center py-20">
+            <p class="text-gray-500 text-xl">No hay eventos disponibles</p>
+        </div>
+    </template>
+
+    <div class="space-y-4" x-show="!loading">
+        <template x-for="ev in events" :key="ev.id">
+            <a :href="'/events/' + ev.id + '/'" class="block bg-card rounded-xl border border-gray-800 hover:border-accent/50 transition overflow-hidden">
+                <div class="p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-semibold uppercase tracking-wider"
+                              :class="ev.status === 'live' ? 'text-green-500' : ev.status === 'scheduled' ? 'text-blue-500' : 'text-gray-500'"
+                              x-text="ev.status === 'live' ? '🔴 EN VIVO' : ev.status === 'scheduled' ? '📅 PRÓXIMO' : '✅ FINALIZADO'"></span>
+                        <span class="text-xs text-gray-500" x-text="ev.league || ''"></span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 text-center">
+                            <p class="text-lg font-bold" x-text="ev.home_team?.name || 'Local'"></p>
+                        </div>
+                        <div class="flex items-center gap-4 px-6">
+                            <span class="text-2xl font-bold text-accent" x-text="ev.home_score ?? ''"></span>
+                            <span class="text-gray-500 font-bold">VS</span>
+                            <span class="text-2xl font-bold text-accent" x-text="ev.away_score ?? ''"></span>
+                        </div>
+                        <div class="flex-1 text-center">
+                            <p class="text-lg font-bold" x-text="ev.away_team?.name || 'Visitante'"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-[#222] px-5 py-3 flex justify-around" x-show="ev.markets && ev.markets.length > 0">
+                    <template x-for="mkt in (ev.markets || []).slice(0,1)" :key="mkt.id">
+                        <template x-for="sel in (mkt.selections || []).slice(0,3)" :key="sel.id">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-400" x-text="sel.name"></p>
+                                <p class="text-sm font-bold text-win" x-text="sel.odds"></p>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+            </a>
+        </template>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function eventList() {
+    return {
+        events: [],
+        filter: 'all',
+        loading: true,
+        async init() {
+            if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
+            await this.load();
+        },
+        async load() {
+            this.loading = true;
+            let url = '/betting/events/';
+            const data = await apiFetch(url);
+            let list = data.results || data || [];
+            if (this.filter !== 'all') list = list.filter(e => e.status === this.filter);
+            this.events = list;
+            this.loading = false;
+        },
+    };
+}
+</script>
+{% endblock %}

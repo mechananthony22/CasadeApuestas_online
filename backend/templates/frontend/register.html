@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registro - FairBet Lab{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center px-4">
+    <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-lg"
+         x-data="registerForm()"
+         x-init="init()">
+
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Crear Cuenta</h1>
+            <p class="text-gray-500 mt-2">Completa tus datos para registrarte</p>
+        </div>
+
+        <form @submit.prevent="submit" class="space-y-4">
+            <div>
+                <label class="block text-gray-700 font-medium mb-1.5">Usuario</label>
+                <input type="text" x-model="form.username" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                    placeholder="Elige un nombre de usuario">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-medium mb-1.5">Email</label>
+                <input type="email" x-model="form.email" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                    placeholder="tu@email.com">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-medium mb-1.5">DNI</label>
+                <input type="text" x-model="form.dni" required maxlength="8"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                    placeholder="12345678">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-medium mb-1.5">Fecha de Nacimiento</label>
+                <input type="date" x-model="form.birth_date" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-medium mb-1.5">Contraseña</label>
+                <input type="password" x-model="form.password" required minlength="8"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                    placeholder="Mínimo 8 caracteres">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-medium mb-1.5">Confirmar Contraseña</label>
+                <input type="password" x-model="form.confirm_password" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                    placeholder="Repite la contraseña">
+            </div>
+
+            <template x-if="error">
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm" x-text="error"></div>
+            </template>
+
+            <button type="submit" :disabled="loading"
+                class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold text-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
+                <span x-show="!loading">Crear Cuenta</span>
+                <span x-show="loading" class="flex items-center gap-2">
+                    <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    </svg>
+                    Registrando...
+                </span>
+            </button>
+        </form>
+
+        <p class="text-center mt-6 text-gray-500">
+            ¿Ya tienes cuenta?
+            <a href="{% url 'login' %}" class="text-indigo-600 hover:text-indigo-800 font-medium hover:underline">Inicia sesión</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    let val = null;
+    if (document.cookie) {
+        document.cookie.split('; ').some(c => {
+            if (c.startsWith(name + '=')) { val = decodeURIComponent(c.substring(name.length + 1)); return true; }
+        });
+    }
+    return val;
+}
+
+function registerForm() {
+    return {
+        form: {
+            username: '',
+            email: '',
+            dni: '',
+            birth_date: '',
+            password: '',
+            confirm_password: '',
+        },
+        error: '',
+        loading: false,
+        init() {
+            if (localStorage.getItem('access_token')) {
+                window.location.href = '{% url "dashboard" %}';
+            }
+        },
+        async submit() {
+            this.error = '';
+            if (this.form.password !== this.form.confirm_password) {
+                this.error = 'Las contraseñas no coinciden.';
+                return;
+            }
+            if (this.form.password.length < 8) {
+                this.error = 'La contraseña debe tener al menos 8 caracteres.';
+                return;
+            }
+            this.loading = true;
+            try {
+                const res = await fetch('/api/v1/auth/register/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({
+                        username: this.form.username,
+                        email: this.form.email,
+                        dni: this.form.dni,
+                        birth_date: this.form.birth_date,
+                        password: this.form.password,
+                        confirm_password: this.form.confirm_password,
+                    }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.error = '';
+                    alert('Registro exitoso. Ahora puedes iniciar sesión.');
+                    window.location.href = '{% url "login" %}';
+                } else {
+                    const msgs = Object.values(data).flat().join(' ');
+                    this.error = msgs || 'Error al registrar. Verifica tus datos.';
+                }
+            } catch (e) {
+                this.error = 'Error de conexión. Verifica tu internet e intenta de nuevo.';
+            } finally {
+                this.loading = false;
+            }
+        },
+    };
+}
+</script>
+{% endblock %}

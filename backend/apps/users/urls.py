@@ -8,10 +8,14 @@ Todas estas rutas son de tipo HTTP síncrono, siguiendo la Regla de Oro del proy
     - WebSocket → solo actualizaciones de cuotas y marcadores en vivo.
 """
 from django.urls import path
+from frontend.views import LoginAPIView
 from .views import RegistroView, VerificarDniView, MiPerfilView, AutoexclusionView
 
 # Se prefija con 'api/v1/' desde config/urls.py (ver su inclusión)
 urlpatterns = [
+    # POST /api/v1/auth/login/ → Inicio de sesión con token
+    path('auth/login/', LoginAPIView.as_view(), name='auth-login'),
+
     # POST /api/v1/auth/register/ → Registro de nuevo usuario con KYC
     path('auth/register/', RegistroView.as_view(), name='auth-register'),
 

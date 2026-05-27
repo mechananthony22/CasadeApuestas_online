@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Mis Apuestas - FairBet Lab{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+     x-data="betList()" x-init="init()">
+
+    <h1 class="text-3xl font-bold mb-8">Mis Apuestas</h1>
+
+    <div class="flex gap-2 mb-6">
+        <button @click="filter = 'all'; filterBets()"
+            :class="filter === 'all' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition">Todas</button>
+        <button @click="filter = 'accepted'; filterBets()"
+            :class="filter === 'accepted' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition">Activas</button>
+        <button @click="filter = 'won'; filterBets()"
+            :class="filter === 'won' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition">Ganadas</button>
+        <button @click="filter = 'lost'; filterBets()"
+            :class="filter === 'lost' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition">Perdidas</button>
+    </div>
+
+    <template x-if="loading">
+        <div class="text-center py-20">
+            <div class="animate-spin h-10 w-10 border-4 border-accent border-t-transparent rounded-full mx-auto"></div>
+        </div>
+    </template>
+
+    <template x-if="!loading && filtered.length === 0">
+        <div class="text-center py-20">
+            <p class="text-gray-500 text-xl">No hay apuestas</p>
+            <a href="{% url 'events-list' %}" class="mt-4 inline-block bg-accent text-white px-6 py-3 rounded-xl hover:bg-accent-hover">Ver Eventos</a>
+        </div>
+    </template>
+
+    <div class="space-y-4" x-show="!loading">
+        <template x-for="bet in filtered" :key="bet.id">
+            <div class="bg-card rounded-xl border border-gray-800 p-5">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <p class="text-sm text-gray-400">Boleto #<span x-text="bet.id"></span></p>
+                        <p class="text-sm text-gray-500" x-text="bet.created_at"></p>
+                    </div>
+                    <span class="text-xs font-bold uppercase px-3 py-1 rounded"
+                          :class="bet.status === 'won' ? 'bg-win/20 text-win' : bet.status === 'lost' ? 'bg-red-900/30 text-red-400' : bet.status === 'accepted' ? 'bg-blue-900/30 text-blue-400' : 'bg-gray-800 text-gray-400'"
+                          x-text="bet.status === 'accepted' ? 'Activa' : bet.status === 'won' ? 'Ganada' : bet.status === 'lost' ? 'Perdida' : bet.status === 'cashed_out' ? 'Cashout' : 'Cancelada'"></span>
+                </div>
+
+                <div class="bg-[#222] rounded-lg p-3 mb-3">
+                    <p class="font-semibold" x-text="bet.event_name || 'Evento'"></p>
+                    <p class="text-sm text-gray-400">
+                        <span x-text="bet.type === 'simple' ? 'Simple' : 'Combinada'"></span> |
+                        <span x-text="bet.selection_name || ''"></span>
+                    </p>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-sm text-gray-400">Monto: <span class="font-semibold text-white" x-text="'S/ ' + bet.stake"></span></p>
+                        <p class="text-sm text-gray-400">Posible pago: <span class="font-semibold text-win" x-text="'S/ ' + bet.potential_payout"></span></p>
+                    </div>
+                    <div>
+                        <template x-if="bet.status === 'accepted' && bet.can_cashout">
+                            <button @click="cashout(bet.id)"
+                                :disabled="cashing === bet.id"
+                                class="bg-win hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50">
+                                <span x-text="cashing === bet.id ? 'Procesando...' : 'Cashout'"></span>
+                            </button>
+                        </template>
+                        <span x-if="bet.status !== 'accepted'" class="text-sm font-bold"
+                              :class="bet.status === 'won' ? 'text-win' : bet.status === 'lost' ? 'text-red-400' : 'text-gray-500'"
+                              x-text="bet.status === 'won' ? '+ S/ ' + bet.potential_payout : bet.status === 'lost' ? '- S/ ' + bet.stake : ''"></span>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function betList() {
+    return {
+        bets: [],
+        filtered: [],
+        filter: 'all',
+        loading: true,
+        cashing: null,
+
+        async init() {
+            if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
+            await this.load();
+        },
+
+        async load() {
+            this.loading = true;
+            const data = await apiFetch('/betting/bets/');
+            this.bets = data.results || data || [];
+            this.filterBets();
+            this.loading = false;
+        },
+
+        filterBets() {
+            if (this.filter === 'all') this.filtered = this.bets;
+            else this.filtered = this.bets.filter(b => b.status === this.filter);
+        },
+
+        async cashout(id) {
+            this.cashing = id;
+            const data = await apiFetch('/betting/bets/' + id + '/cashout/', { method: 'POST' });
+            this.cashing = null;
+            if (data._status === 200 || data.status === 'cashed_out') {
+                await this.load();
+            } else {
+                alert(data.error || 'Error al hacer cashout');
+            }
+        },
+    };
+}
+</script>
+{% endblock %}

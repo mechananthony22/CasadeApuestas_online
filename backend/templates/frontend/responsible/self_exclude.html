@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Autoexclusión - Juego Responsable{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-8"
+     x-data="selfExclude()" x-init="init()">
+
+    <a href="{% url 'responsible-limits' %}" class="text-gray-400 hover:text-white mb-4 inline-block">&larr; Volver a límites</a>
+
+    <div class="bg-card rounded-xl border border-gray-800 p-8">
+        <h1 class="text-2xl font-bold mb-2">Autoexclusión</h1>
+        <p class="text-gray-400 text-sm mb-6">
+            La autoexclusión es una medida IRREVERSIBLE durante el período seleccionado.
+            No podrás acceder a tu cuenta ni realizar apuestas hasta que termine.
+        </p>
+
+        <div class="space-y-4 mb-6">
+            <label class="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
+                   :class="duration === 7 ? 'border-accent bg-accent/10' : 'border-gray-700'">
+                <input type="radio" value="7" x-model="duration" class="sr-only">
+                <div>
+                    <p class="font-bold">7 días</p>
+                    <p class="text-sm text-gray-400">Una semana de descanso</p>
+                </div>
+            </label>
+            <label class="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
+                   :class="duration === 30 ? 'border-accent bg-accent/10' : 'border-gray-700'">
+                <input type="radio" value="30" x-model="duration" class="sr-only">
+                <div>
+                    <p class="font-bold">30 días</p>
+                    <p class="text-sm text-gray-400">Un mes de descanso</p>
+                </div>
+            </label>
+            <label class="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
+                   :class="duration === 90 ? 'border-accent bg-accent/10' : 'border-gray-700'">
+                <input type="radio" value="90" x-model="duration" class="sr-only">
+                <div>
+                    <p class="font-bold">90 días</p>
+                    <p class="text-sm text-gray-400">Tres meses de descanso</p>
+                </div>
+            </label>
+            <label class="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
+                   :class="duration === 0 ? 'border-accent bg-accent/10' : 'border-gray-700'">
+                <input type="radio" value="0" x-model="duration" class="sr-only">
+                <div>
+                    <p class="font-bold">Permanente</p>
+                    <p class="text-sm text-gray-400">Indefinido (sin fecha de término)</p>
+                </div>
+            </label>
+        </div>
+
+        <template x-if="error">
+            <div class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mb-4" x-text="error"></div>
+        </template>
+
+        <template x-if="success">
+            <div class="bg-win/10 border border-win text-win px-4 py-3 rounded-xl text-sm mb-4" x-text="success"></div>
+        </template>
+
+        <button @click="exclude()" :disabled="sending"
+            class="w-full bg-red-700 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition">
+            <span x-show="!sending">Confirmar Autoexclusión</span>
+            <span x-show="sending">Procesando...</span>
+        </button>
+
+        <p class="text-xs text-gray-500 mt-4 text-center">
+            Al confirmar, tu cuenta será suspendida inmediatamente por el período seleccionado.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selfExclude() {
+    return {
+        duration: 7,
+        error: '',
+        success: '',
+        sending: false,
+
+        init() {
+            if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
+        },
+
+        async exclude() {
+            this.error = '';
+            this.success = '';
+            this.sending = true;
+
+            let body = {};
+            if (this.duration > 0) body.dias = this.duration;
+
+            const data = await apiFetch('/users/self-exclude/', {
+                method: 'POST',
+                body: JSON.stringify(body),
+            });
+            this.sending = false;
+            if (data._status === 200 || data.mensaje) {
+                this.success = data.mensaje || 'Autoexclusión activada.';
+                localStorage.clear();
+                setTimeout(() => { window.location.href = '/login/'; }, 3000);
+            } else {
+                this.error = data.error || 'Error al activar autoexclusión.';
+            }
+        },
+    };
+}
+</script>
+{% endblock %}

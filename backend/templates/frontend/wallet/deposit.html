@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Depositar - FairBet Lab{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-8"
+     x-data="deposit()" x-init="init()">
+
+    <a href="{% url 'wallet-balance' %}" class="text-gray-400 hover:text-white mb-4 inline-block">&larr; Volver a billetera</a>
+
+    <div class="bg-card rounded-xl border border-gray-800 p-8">
+        <h1 class="text-2xl font-bold mb-2">Depositar Fichas</h1>
+        <p class="text-gray-400 text-sm mb-6">Recarga tu saldo con fichas virtuales</p>
+
+        <div class="grid grid-cols-3 gap-3 mb-6">
+            <button @click="amount = 10" :class="amount === 10 ? 'border-accent bg-accent/10' : 'border-gray-700'"
+                class="border-2 rounded-xl py-3 text-center font-bold hover:border-gray-500 transition">S/ 10</button>
+            <button @click="amount = 25" :class="amount === 25 ? 'border-accent bg-accent/10' : 'border-gray-700'"
+                class="border-2 rounded-xl py-3 text-center font-bold hover:border-gray-500 transition">S/ 25</button>
+            <button @click="amount = 50" :class="amount === 50 ? 'border-accent bg-accent/10' : 'border-gray-700'"
+                class="border-2 rounded-xl py-3 text-center font-bold hover:border-gray-500 transition">S/ 50</button>
+            <button @click="amount = 100" :class="amount === 100 ? 'border-accent bg-accent/10' : 'border-gray-700'"
+                class="border-2 rounded-xl py-3 text-center font-bold hover:border-gray-500 transition">S/ 100</button>
+            <button @click="amount = 200" :class="amount === 200 ? 'border-accent bg-accent/10' : 'border-gray-700'"
+                class="border-2 rounded-xl py-3 text-center font-bold hover:border-gray-500 transition">S/ 200</button>
+            <button @click="amount = 500" :class="amount === 500 ? 'border-accent bg-accent/10' : 'border-gray-700'"
+                class="border-2 rounded-xl py-3 text-center font-bold hover:border-gray-500 transition">S/ 500</button>
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm text-gray-400 mb-2">O ingresa un monto personalizado</label>
+            <input type="number" x-model="amount" min="1" step="1"
+                class="w-full bg-[#222] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
+        </div>
+
+        <template x-if="error">
+            <div class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mb-4" x-text="error"></div>
+        </template>
+
+        <template x-if="success">
+            <div class="bg-win/10 border border-win text-win px-4 py-3 rounded-xl text-sm mb-4" x-text="success"></div>
+        </template>
+
+        <button @click="deposit()" :disabled="sending || !amount || amount <= 0"
+            class="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition">
+            <span x-show="!sending">Depositar S/ <span x-text="amount || '0'"></span></span>
+            <span x-show="sending">Procesando...</span>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deposit() {
+    return {
+        amount: 10,
+        error: '',
+        success: '',
+        sending: false,
+
+        init() {
+            if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
+        },
+
+        async deposit() {
+            this.error = '';
+            this.success = '';
+            this.sending = true;
+            const data = await apiFetch('/wallet/deposit/', {
+                method: 'POST',
+                body: JSON.stringify({ amount: parseFloat(this.amount) }),
+            });
+            this.sending = false;
+            if (data._status === 200 || data.mensaje) {
+                this.success = data.mensaje || 'Depósito exitoso';
+                this.amount = 10;
+            } else {
+                this.error = data.error || 'Error al depositar.';
+            }
+        },
+    };
+}
+</script>
+{% endblock %}

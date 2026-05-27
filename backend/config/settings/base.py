@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'channels',
+    'rest_framework_simplejwt',
     'django_celery_beat',
     
     # Aplicaciones locales de FairBet Lab
@@ -44,6 +45,9 @@ INSTALLED_APPS = [
     'audit.apps.AuditConfig',
     'fraud.apps.FraudConfig',
     'dashboard.apps.DashboardConfig',
+    
+    # Frontend template views
+    'frontend.apps.FrontendConfig',
 ]
 
 MIDDLEWARE = [
@@ -62,7 +66,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -88,6 +92,7 @@ USE_TZ = True
 # Archivos estáticos y multimedia (CSS, JavaScript, imágenes)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'mediafiles'
 
@@ -102,6 +107,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
 }
 
@@ -135,7 +141,19 @@ API_FOOTBALL_URL = os.environ.get('API_FOOTBALL_URL', 'https://v3.football.api-s
 # Margen del operador aplicado a las cuotas locales (5%)
 OPERATOR_MARGIN = Decimal(os.environ.get('OPERATOR_MARGIN', '0.05'))
 # Ligas a sincronizar por defecto (por ejemplo: Premier League ID 39, LaLiga ID 140)
-API_FOOTBALL_LEAGUES = [39, 140]
+API_FOOTBALL_LEAGUES = [
+    39,   # Premier League
+    140,  # La Liga
+    2,    # Champions League
+    13,   # Copa Libertadores
+    247,  # Copa Sudamericana
+    135,  # Serie A
+    78,   # Bundesliga
+    61,   # Ligue 1
+    128,  # Liga Profesional Argentina
+    71,   # Brasileirão Série A
+    262,  # Liga MX
+]
 
 # --- PLANIFICACIÓN DE TAREAS PERIÓDICAS (CELERY BEAT) ---
 CELERY_BEAT_SCHEDULE = {
@@ -155,9 +173,20 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'responsible.tasks.apply_expired_limits',
         'schedule': 3600.0,  # Cada hora en segundos
     },
+    'liquidar-apuestas-cada-5-minutos': {
+        'task': 'betting.tasks.settle_finished_matches',
+        'schedule': 300.0,  # Cada 5 minutos en segundos
+    },
+}
+
+# --- CONFIGURACIÓN JWT (djangorestframework-simplejwt) ---
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 # --- CONFIGURACIÓN DE APUESTAS EN VIVO (LIVE / IN-PLAY) ---
-# Tiempo de enfriamiento (cooldown) en segundos para reanudar mercados tras suspensión automática
 LIVE_SUSPENSION_COOLDOWN = int(os.environ.get('LIVE_SUSPENSION_COOLDOWN', 15))
 
