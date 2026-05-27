@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-# Motor de sincronización y cliente de API-Football V3 para FairBet Lab
+# Motor de sincronización de datos deportivos para FairBet Lab (The Odds API)
 import logging
 from decimal import Decimal
-from urllib.parse import urlparse
-import requests
 from django.conf import settings
 from django.utils import timezone
 from betting.models import League, Team, Event, Market, Selection
@@ -11,91 +9,17 @@ from betting.the_odds_api import TheOddsAPIClient, string_to_integer_id
 
 logger = logging.getLogger(__name__)
 
-class APIFootballClient:
-    """
-    Cliente HTTP para consumir la API externa de API-Football V3.
-    """
-    def __init__(self):
-        self.api_key = getattr(settings, 'API_FOOTBALL_KEY', '')
-        self.api_url = getattr(settings, 'API_FOOTBALL_URL', 'https://v3.football.api-sports.io')
-        
-        # Cabeceras requeridas para autenticación
-        self.headers = {
-            'x-rapidapi-key': self.api_key,
-            'x-rapidapi-host': urlparse(self.api_url).netloc or 'v3.football.api-sports.io'
-        }
-
-    def get_fixtures(self, league_id, season):
-        """
-        Obtiene los partidos programados para una liga y temporada específica.
-        """
-        url = f"{self.api_url}/fixtures"
-        params = {
-            'league': league_id,
-            'season': season
-        }
-        try:
-            logger.info(f"Consumiendo fixtures de API-Football para liga {league_id}, temporada {season}")
-            response = requests.get(url, headers=self.headers, params=params, timeout=60)
-            response.raise_for_status()
-            data = response.json()
-            return data.get('response', [])
-        except Exception as e:
-            logger.error(f"Error al consumir fixtures de API-Football: {e}")
-            return []
-
-    def get_live_fixtures(self):
-        """
-        Obtiene todos los partidos que se están jugando en tiempo real.
-        """
-        url = f"{self.api_url}/fixtures"
-        params = {
-            'live': 'all'
-        }
-        try:
-            logger.info("Consumiendo partidos en vivo de API-Football")
-            response = requests.get(url, headers=self.headers, params=params, timeout=60)
-            response.raise_for_status()
-            data = response.json()
-            return data.get('response', [])
-        except Exception as e:
-            logger.error(f"Error al consumir partidos en vivo de API-Football: {e}")
-            return []
-
-    def get_odds(self, fixture_id):
-        """
-        Obtiene las cuotas de apuestas (prematch u odds en vivo) asociadas a un partido.
-        """
-        url = f"{self.api_url}/odds"
-        params = {
-            'fixture': fixture_id
-        }
-        try:
-            logger.info(f"Consumiendo odds de API-Football para el partido {fixture_id}")
-            response = requests.get(url, headers=self.headers, params=params, timeout=60)
-            response.raise_for_status()
-            data = response.json()
-            return data.get('response', [])
-        except Exception as e:
-            logger.error(f"Error al consumir odds de API-Football para el partido {fixture_id}: {e}")
-            return []
-
-
 class SyncEngine:
     """
     Motor local de sincronización que procesa las respuestas de la API externa
     y actualiza la base de datos local aplicando el margen del operador.
     """
     def __init__(self):
-        self.provider = getattr(settings, 'SPORTS_API_PROVIDER', 'the_odds_api')
-        if self.provider == 'the_odds_api':
-            self.client = TheOddsAPIClient()
-        else:
-            self.client = APIFootballClient()
+        self.client = TheOddsAPIClient()
 
     def map_status(self, api_status_short):
         """
-        Mapea el estado corto de API-Football a los estados permitidos localmente.
+        Mapea el estado corto de la API a los estados permitidos localmente.
         """
         # Soportar formatos comunes devueltos por la API
         scheduled_statuses = ['NS', 'TBD', 'PST']
@@ -118,78 +42,7 @@ class SyncEngine:
         """
         Sincroniza ligas, equipos y partidos programados para una liga específica en BD local.
         """
-        if self.provider == 'the_odds_api':
-            return self._sync_fixtures_the_odds_api(league_id, season)
-        else:
-            return self._sync_fixtures_api_football(league_id, season)
-
-    def _sync_fixtures_api_football(self, league_id, season=2026):
-        fixtures_data = self.client.get_fixtures(league_id, season)
-        if not fixtures_data:
-            logger.warning(f"No se obtuvieron fixtures para la liga {league_id}")
-            return 0
-
-        synced_count = 0
-        for item in fixtures_data:
-            try:
-                fixture = item.get('fixture', {})
-                league = item.get('league', {})
-                teams = item.get('teams', {})
-                goals = item.get('goals', {})
-
-                if not fixture or not league or not teams:
-                    continue
-
-                # 1. Crear o actualizar liga
-                league_obj, _ = League.objects.update_or_create(
-                    api_id=league['id'],
-                    defaults={
-                        'name': league['name'],
-                        'country': league.get('country', 'Internacional'),
-                        'logo_url': league.get('logo')
-                    }
-                )
-
-                # 2. Crear o actualizar equipos
-                home_team, _ = Team.objects.update_or_create(
-                    api_id=teams['home']['id'],
-                    defaults={
-                        'name': teams['home']['name'],
-                        'logo_url': teams['home'].get('logo')
-                    }
-                )
-                away_team, _ = Team.objects.update_or_create(
-                    api_id=teams['away']['id'],
-                    defaults={
-                        'name': teams['away']['name'],
-                        'logo_url': teams['away'].get('logo')
-                    }
-                )
-
-                # 3. Crear o actualizar evento deportivo
-                event_obj, _ = Event.objects.update_or_create(
-                    api_id=fixture['id'],
-                    defaults={
-                        'league': league_obj,
-                        'home_team': home_team,
-                        'away_team': away_team,
-                        'starts_at': fixture['date'],
-                        'status': self.map_status(fixture['status']['short']),
-                        'home_score': goals.get('home'),
-                        'away_score': goals.get('away')
-                    }
-                )
-                
-                # Intentar sincronizar cuotas inmediatamente para este partido
-                self.sync_odds_for_event(event_obj)
-
-                synced_count += 1
-            except Exception as e:
-                logger.error(f"Error al procesar fixture individual: {e}")
-                continue
-
-        logger.info(f"Sincronizados con éxito {synced_count} partidos para la liga {league_id}")
-        return synced_count
+        return self._sync_fixtures_the_odds_api(league_id, season)
 
     def _sync_fixtures_the_odds_api(self, league_id, season=2026):
         fixtures_data = self.client.get_fixtures(league_id, season)
@@ -390,71 +243,7 @@ class SyncEngine:
         """
         Sincroniza marcadores y estados de partidos en tiempo real.
         """
-        if self.provider == 'the_odds_api':
-            return self._sync_live_scores_the_odds_api()
-        else:
-            return self._sync_live_scores_api_football()
-
-    def _sync_live_scores_api_football(self):
-        live_fixtures = self.client.get_live_fixtures()
-        if not live_fixtures:
-            logger.info("No hay partidos en vivo reportados por la API externa")
-            return 0
-
-        # Ligas configuradas en base.py
-        allowed_leagues = getattr(settings, 'API_FOOTBALL_LEAGUES', [39, 140])
-        synced_count = 0
-
-        for item in live_fixtures:
-            try:
-                fixture = item.get('fixture', {})
-                league = item.get('league', {})
-                goals = item.get('goals', {})
-
-                if not fixture or not league:
-                    continue
-
-                if league.get('id') not in allowed_leagues:
-                    continue
-
-                try:
-                    event_obj = Event.objects.get(api_id=fixture['id'])
-                except Event.DoesNotExist:
-                    continue
-
-                old_status = event_obj.status
-                old_home_score = event_obj.home_score
-                old_away_score = event_obj.away_score
-
-                new_home_score = goals.get('home')
-                new_away_score = goals.get('away')
-
-                is_goal = False
-                if old_home_score is not None and new_home_score is not None and old_home_score != new_home_score:
-                    is_goal = True
-                if old_away_score is not None and new_away_score is not None and old_away_score != new_away_score:
-                    is_goal = True
-
-                event_obj.status = self.map_status(fixture['status']['short'])
-                event_obj.home_score = new_home_score
-                event_obj.away_score = new_away_score
-                event_obj.save()
-
-                synced_count += 1
-
-                if is_goal:
-                    self.suspend_markets_for_event(event_obj)
-
-                if (old_status != event_obj.status or 
-                    old_home_score != event_obj.home_score or 
-                    old_away_score != event_obj.away_score):
-                    self.broadcast_event_update(event_obj)
-
-            except Exception as e:
-                logger.error(f"Error al sincronizar marcador en vivo: {e}")
-                continue
-
-        return synced_count
+        return self._sync_live_scores_the_odds_api()
 
     def _sync_live_scores_the_odds_api(self):
         live_fixtures = self.client.get_live_fixtures()
@@ -563,83 +352,10 @@ class SyncEngine:
         """
         Sincroniza mercados y cuotas para un evento deportivo aplicando el margen del operador.
         """
-        if self.provider == 'the_odds_api':
-            if not event_obj.markets.exists():
-                margin_multiplier = Decimal('1.0000') - getattr(settings, 'OPERATOR_MARGIN', Decimal('0.05'))
-                self.generate_mock_odds(event_obj, margin_multiplier)
-            return
-
-        odds_data = self.client.get_odds(event_obj.api_id)
-        
-        # Margen del operador configurable (Decimal)
-        margin_multiplier = Decimal('1.0000') - getattr(settings, 'OPERATOR_MARGIN', Decimal('0.05'))
-
-        if not odds_data:
-            # Fallback en desarrollo: Si no hay cuotas de la API externa, generar cuotas mock
-            # para asegurar que siempre haya cuotas válidas para pruebas locales.
+        if not event_obj.markets.exists():
+            margin_multiplier = Decimal('1.0000') - getattr(settings, 'OPERATOR_MARGIN', Decimal('0.05'))
             self.generate_mock_odds(event_obj, margin_multiplier)
-            return
-
-        # Sincronizar desde la respuesta de la API externa
-        for item in odds_data:
-            bookmakers = item.get('bookmakers', [])
-            if not bookmakers:
-                continue
-
-            # Priorizar Bet365 (ID 8) o tomar la primera disponible
-            bookmaker = next((b for b in bookmakers if b.get('id') == 8), bookmakers[0])
-            bets = bookmaker.get('bets', [])
-
-            for bet in bets:
-                market_name = bet.get('name')
-                
-                # Mapear nombres a formatos locales estándar
-                # Match Winner -> 1X2
-                # Goals Over/Under -> Over/Under 2.5
-                # Both Teams Score -> BTTS
-                local_market_name = None
-                if market_name == "Match Winner":
-                    local_market_name = "1X2"
-                elif market_name == "Goals Over/Under":
-                    local_market_name = "Over/Under 2.5"
-                elif market_name == "Both Teams Score":
-                    local_market_name = "BTTS"
-
-                if not local_market_name:
-                    continue
-
-                # Crear o actualizar mercado
-                market_obj, _ = Market.objects.get_or_create(
-                    event=event_obj,
-                    name=local_market_name
-                )
-
-                values = bet.get('values', [])
-                for val in values:
-                    selection_name = val.get('value')
-                    raw_odd = Decimal(str(val.get('odd')))
-                    
-                    # Aplicar margen de ganancia de la casa
-                    odds_with_margin = raw_odd * margin_multiplier
-                    
-                    # Normalizar nombres de selección locales
-                    local_selection_name = self.normalize_selection_name(local_market_name, selection_name)
-                    if not local_selection_name:
-                        continue
-
-                    # Guardar selección en BD local
-                    selection_obj, created = Selection.objects.update_or_create(
-                        market=market_obj,
-                        name=local_selection_name,
-                        defaults={
-                            'odds': odds_with_margin.quantize(Decimal('0.0001')),
-                            'is_active': True
-                        }
-                    )
-
-                    # Si cambió la cuota, transmitir la actualización por WebSocket
-                    if not created:
-                        self.broadcast_odds_update(event_obj.id, selection_obj)
+        return
 
     def normalize_selection_name(self, market_name, value):
         """

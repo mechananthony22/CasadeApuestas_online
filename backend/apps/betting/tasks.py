@@ -19,7 +19,7 @@ def sync_fixtures():
     try:
         engine = SyncEngine()
         # Obtener ligas configuradas (ej: [39, 140])
-        leagues = getattr(settings, 'API_FOOTBALL_LEAGUES', [39, 140])
+        leagues = list(getattr(settings, 'THE_ODDS_API_SPORTS', {39: None, 140: None}).keys())
         season = timezone.now().year if timezone.now().month > 6 else timezone.now().year - 1
         
         total_synced = 0

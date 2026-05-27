@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='League',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('api_id', models.IntegerField(help_text='ID oficial de la liga en API-Football', unique=True)),
+                ('api_id', models.IntegerField(help_text='ID oficial de la liga en la API externa', unique=True)),
                 ('name', models.CharField(help_text='Nombre de la liga', max_length=100)),
                 ('country', models.CharField(help_text='País de la liga', max_length=100)),
                 ('logo_url', models.URLField(blank=True, help_text='URL del logo de la liga', max_length=500, null=True)),
@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             name='Team',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('api_id', models.IntegerField(help_text='ID oficial del equipo en API-Football', unique=True)),
+                ('api_id', models.IntegerField(help_text='ID oficial del equipo en la API externa', unique=True)),
                 ('name', models.CharField(help_text='Nombre del equipo', max_length=100)),
                 ('logo_url', models.URLField(blank=True, help_text='URL del escudo del equipo', max_length=500, null=True)),
             ],
@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
             name='Event',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('api_id', models.IntegerField(help_text='ID oficial del partido en API-Football', unique=True)),
+                ('api_id', models.IntegerField(help_text='ID oficial del partido en la API externa', unique=True)),
                 ('starts_at', models.DateTimeField(help_text='Fecha y hora de inicio del evento')),
                 ('status', models.CharField(choices=[('scheduled', 'Programado'), ('in_play', 'En Vivo'), ('finished', 'Finalizado'), ('suspended', 'Suspendido'), ('cancelled', 'Anulado')], default='scheduled', help_text='Estado actual del evento', max_length=20)),
                 ('home_score', models.IntegerField(blank=True, help_text='Goles anotados por el equipo local', null=True)),

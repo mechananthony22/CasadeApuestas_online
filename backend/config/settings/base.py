@@ -133,31 +133,8 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
-# --- CONFIGURACIÓN DE INTEGRACIÓN CON API-FOOTBALL V3 ---
-# Clave de autenticación para la API externa
-API_FOOTBALL_KEY = os.environ.get('API_FOOTBALL_KEY', '')
-# URL base oficial de la API de API-Football
-API_FOOTBALL_URL = os.environ.get('API_FOOTBALL_URL', 'https://v3.football.api-sports.io')
 # Margen del operador aplicado a las cuotas locales (5%)
 OPERATOR_MARGIN = Decimal(os.environ.get('OPERATOR_MARGIN', '0.05'))
-# Ligas a sincronizar por defecto (por ejemplo: Premier League ID 39, LaLiga ID 140)
-API_FOOTBALL_LEAGUES = [
-    39,   # Premier League
-    140,  # La Liga
-    2,    # Champions League
-    13,   # Copa Libertadores
-    247,  # Copa Sudamericana
-    135,  # Serie A
-    78,   # Bundesliga
-    61,   # Ligue 1
-    128,  # Liga Profesional Argentina
-    71,   # Brasileirão Série A
-    262,  # Liga MX
-    301,  # NBA
-    302,  # Euroleague
-    401,  # NFL
-    501,  # MLB
-]
 
 # --- CONFIGURACIÓN DE INTEGRACIÓN CON THE ODDS API (V4) ---
 SPORTS_API_PROVIDER = os.environ.get('SPORTS_API_PROVIDER', 'the_odds_api')

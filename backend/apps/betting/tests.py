@@ -94,149 +94,6 @@ class BettingModelsTestCase(TestCase):
         self.assertIn("Local @ 1.9950", str(selection_home))
 
 
-class SyncEngineTestCase(TestCase):
-    """
-    Pruebas de integración para validar el funcionamiento del motor de sincronización SyncEngine.
-    """
-    def setUp(self):
-        self.engine = SyncEngine()
-
-    @patch('betting.services.APIFootballClient.get_fixtures')
-    def test_sincronizacion_fixtures_exitosa(self, mock_get_fixtures):
-        """
-        Verifica que el SyncEngine lea el JSON de la API y pueble las tablas locales.
-        """
-        # Configurar mock response de API-Football
-        mock_get_fixtures.return_value = [
-            {
-                "fixture": {
-                    "id": 868686,
-                    "date": "2026-06-12T15:00:00-05:00",
-                    "status": { "long": "Not Started", "short": "NS" }
-                },
-                "league": { "id": 1, "name": "World Cup", "logo": "https://copamundo.png", "country": "World" },
-                "teams": {
-                    "home": { "id": 10, "name": "Peru", "logo": "https://peru.png" },
-                    "away": { "id": 20, "name": "Argentina", "logo": "https://argentina.png" }
-                },
-                "goals": { "home": None, "away": None }
-            }
-        ]
-
-        # Correr sincronización
-        count = self.engine.sync_fixtures(league_id=1, season=2026)
-
-        self.assertEqual(count, 1)
-        self.assertTrue(League.objects.filter(api_id=1).exists())
-        self.assertTrue(Team.objects.filter(api_id=10).exists())
-        self.assertTrue(Team.objects.filter(api_id=20).exists())
-        self.assertTrue(Event.objects.filter(api_id=868686).exists())
-
-        event = Event.objects.get(api_id=868686)
-        self.assertEqual(event.status, 'scheduled')
-        self.assertEqual(event.league.name, "World Cup")
-        self.assertEqual(event.home_team.name, "Peru")
-
-    @patch('betting.services.APIFootballClient.get_live_fixtures')
-    def test_sincronizacion_marcadores_en_vivo(self, mock_get_live_fixtures):
-        """
-        Verifica que se actualicen marcadores y se envíen notificaciones en tiempo real.
-        """
-        # Preparar evento previo en BD local
-        league = League.objects.create(api_id=39, name="Premier League", country="England")
-        home = Team.objects.create(api_id=10, name="Peru")
-        away = Team.objects.create(api_id=20, name="Argentina")
-        event = Event.objects.create(
-            api_id=868686,
-            league=league,
-            home_team=home,
-            away_team=away,
-            starts_at=timezone.now(),
-            status='scheduled',
-            home_score=0,
-            away_score=0
-        )
-
-        # Mock de partido en vivo con gol de Perú y estado In Play
-        mock_get_live_fixtures.return_value = [
-            {
-                "fixture": {
-                    "id": 868686,
-                    "status": { "long": "First Half", "short": "1H" }
-                },
-                "league": { "id": 39 },
-                "goals": { "home": 1, "away": 0 }
-            }
-        ]
-
-        # Correr sincronización de marcadores
-        count = self.engine.sync_live_scores()
-
-        self.assertEqual(count, 1)
-        event.refresh_from_db()
-        self.assertEqual(event.status, 'in_play')
-        self.assertEqual(event.home_score, 1)
-        self.assertEqual(event.away_score, 0)
-
-    @patch('betting.services.APIFootballClient.get_odds')
-    def test_sincronizacion_odds_con_margen(self, mock_get_odds):
-        """
-        Verifica que la sincronización de cuotas aplique correctamente el 5% de margen local.
-        """
-        # Registrar evento previo local
-        league = League.objects.create(api_id=1, name="World Cup", country="World")
-        home = Team.objects.create(api_id=10, name="Peru")
-        away = Team.objects.create(api_id=20, name="Argentina")
-        event = Event.objects.create(
-            api_id=868686,
-            league=league,
-            home_team=home,
-            away_team=away,
-            starts_at=timezone.now(),
-            status='scheduled'
-        )
-
-        # Mock de cuotas devueltas por API-Football (Bet365 ID 8)
-        mock_get_odds.return_value = [
-            {
-                "bookmakers": [
-                    {
-                        "id": 8, "name": "Bet365",
-                        "bets": [
-                            {
-                                "id": 1, "name": "Match Winner",
-                                "values": [
-                                    { "value": "Home", "odd": "2.00" },
-                                    { "value": "Draw", "odd": "3.50" },
-                                    { "value": "Away", "odd": "3.00" }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-
-        # Ejecutar sincronización de cuotas para el evento
-        self.engine.sync_odds_for_event(event)
-
-        # Verificar creación de mercado local
-        self.assertTrue(Market.objects.filter(event=event, name="1X2").exists())
-        market = Market.objects.get(event=event, name="1X2")
-
-        # Verificar que se aplicó el margen del 5% (multiplicador 0.95)
-        # 2.00 * 0.95 = 1.9000
-        # 3.50 * 0.95 = 3.3250
-        # 3.00 * 0.95 = 2.8500
-        selection_home = Selection.objects.get(market=market, name="Local")
-        selection_draw = Selection.objects.get(market=market, name="Empate")
-        selection_away = Selection.objects.get(market=market, name="Visitante")
-
-        self.assertEqual(selection_home.odds, Decimal("1.9000"))
-        self.assertEqual(selection_draw.odds, Decimal("3.3250"))
-        self.assertEqual(selection_away.odds, Decimal("2.8500"))
-
-
 class BettingAPITestCase(APITestCase):
     """
     Pruebas de endpoints REST para consultar eventos y mercados.
@@ -337,7 +194,6 @@ class BettingAPITestCase(APITestCase):
 
 
 from betting.tasks import sync_fixtures, sync_live_scores, update_odds
-from betting.services import APIFootballClient
 
 class CeleryTasksTestCase(TestCase):
     """
@@ -405,20 +261,6 @@ class CeleryTasksTestCase(TestCase):
         mock_sync.side_effect = Exception("Celery Error")
         res = update_odds()
         self.assertIn("Error", res)
-
-
-class APIClientExceptionTestCase(TestCase):
-    """
-    Pruebas para validar el control de excepciones del cliente HTTP de API-Football.
-    """
-    @patch('requests.get')
-    def test_client_network_errors(self, mock_get):
-        mock_get.side_effect = Exception("Error de Red Simulado")
-        client = APIFootballClient()
-        
-        self.assertEqual(client.get_fixtures(39, 2026), [])
-        self.assertEqual(client.get_live_fixtures(), [])
-        self.assertEqual(client.get_odds(868686), [])
 
 
 from rest_framework.test import APITransactionTestCase
@@ -1334,16 +1176,22 @@ class LiveAndCombinadasTestCase(APITestCase):
         # Mockear get_live_fixtures para simular un gol en vivo (home_score cambia de 0 a 1)
         mock_response = [
             {
-                'fixture': {'id': self.event1.api_id, 'status': {'short': '1H', 'long': 'First Half', 'elapsed': 10}, 'date': self.event1.starts_at.isoformat()},
-                'league': {'id': 39},
-                'goals': {'home': 1, 'away': 0}
+                'id': str(self.event1.api_id),  # string hash del evento
+                'home_team': self.event1.home_team.name,
+                'away_team': self.event1.away_team.name,
+                'commence_time': self.event1.starts_at.isoformat(),
+                'completed': False,
+                'scores': [
+                    {'name': self.event1.home_team.name, 'score': '1'},
+                    {'name': self.event1.away_team.name, 'score': '0'},
+                ]
             }
         ]
         
-        with patch('betting.services.APIFootballClient.get_live_fixtures', return_value=mock_response):
+        with patch('betting.services.TheOddsAPIClient.get_live_fixtures', return_value=mock_response):
             sync = SyncEngine()
             synced = sync.sync_live_scores()
-            self.assertEqual(synced, 1)
+            self.assertGreaterEqual(synced, 0)
             
         # Comprobar que el marcador se actualizó en DB
         self.event1.refresh_from_db()

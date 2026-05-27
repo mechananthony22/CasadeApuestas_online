@@ -59,8 +59,6 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings.dev
       - SECRET_KEY=${DJANGO_SECRET_KEY}
       - DEBUG=True
-      - API_FOOTBALL_KEY=${API_FOOTBALL_KEY}
-      - API_FOOTBALL_URL=${API_FOOTBALL_URL:-https://v3.football.api-sports.io}
     ports:
       - "8000:8000"
     networks:
@@ -86,8 +84,6 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings.dev
       - SECRET_KEY=${DJANGO_SECRET_KEY}
       - DEBUG=True
-      - API_FOOTBALL_KEY=${API_FOOTBALL_KEY}
-      - API_FOOTBALL_URL=${API_FOOTBALL_URL:-https://v3.football.api-sports.io}
     networks:
       - fairbet_network
 
@@ -111,8 +107,6 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings.dev
       - SECRET_KEY=${DJANGO_SECRET_KEY}
       - DEBUG=True
-      - API_FOOTBALL_KEY=${API_FOOTBALL_KEY}
-      - API_FOOTBALL_URL=${API_FOOTBALL_URL:-https://v3.football.api-sports.io}
     networks:
       - fairbet_network
 

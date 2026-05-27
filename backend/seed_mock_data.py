@@ -31,9 +31,9 @@ def seed():
     
     # 1. Crear Ligas
     ligas_data = [
-        {"api_id": 140, "name": "La Liga", "country": "España", "logo_url": "https://media.api-sports.io/football/leagues/140.png"},
-        {"api_id": 39, "name": "Premier League", "country": "Inglaterra", "logo_url": "https://media.api-sports.io/football/leagues/39.png"},
-        {"api_id": 2, "name": "Champions League", "country": "Europa", "logo_url": "https://media.api-sports.io/football/leagues/2.png"},
+        {"api_id": 140, "name": "La Liga", "country": "España", "logo_url": None},
+        {"api_id": 39, "name": "Premier League", "country": "Inglaterra", "logo_url": None},
+        {"api_id": 2, "name": "Champions League", "country": "Europa", "logo_url": None},
     ]
     
     ligas = {}
@@ -51,14 +51,14 @@ def seed():
 
     # 2. Crear Equipos
     equipos_data = [
-        {"api_id": 541, "name": "Real Madrid", "logo_url": "https://media.api-sports.io/football/teams/541.png"},
-        {"api_id": 529, "name": "Barcelona", "logo_url": "https://media.api-sports.io/football/teams/529.png"},
-        {"api_id": 50, "name": "Manchester City", "logo_url": "https://media.api-sports.io/football/teams/50.png"},
-        {"api_id": 42, "name": "Arsenal", "logo_url": "https://media.api-sports.io/football/teams/42.png"},
-        {"api_id": 40, "name": "Liverpool", "logo_url": "https://media.api-sports.io/football/teams/40.png"},
-        {"api_id": 157, "name": "Bayern Munich", "logo_url": "https://media.api-sports.io/football/teams/157.png"},
-        {"api_id": 496, "name": "Juventus", "logo_url": "https://media.api-sports.io/football/teams/496.png"},
-        {"api_id": 85, "name": "PSG", "logo_url": "https://media.api-sports.io/football/teams/85.png"},
+        {"api_id": 541, "name": "Real Madrid", "logo_url": None},
+        {"api_id": 529, "name": "Barcelona", "logo_url": None},
+        {"api_id": 50, "name": "Manchester City", "logo_url": None},
+        {"api_id": 42, "name": "Arsenal", "logo_url": None},
+        {"api_id": 40, "name": "Liverpool", "logo_url": None},
+        {"api_id": 157, "name": "Bayern Munich", "logo_url": None},
+        {"api_id": 496, "name": "Juventus", "logo_url": None},
+        {"api_id": 85, "name": "PSG", "logo_url": None},
     ]
     
     equipos = {}

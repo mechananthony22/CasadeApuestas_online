@@ -90,10 +90,9 @@ class TheOddsAPIClient:
 
     def get_odds(self, fixture_id):
         """
-        Mantiene la interfaz compatible con APIFootballClient.
-        Debido a que get_fixtures en The Odds API ya retorna las cuotas embebidas en el evento,
-        este método puede actuar directamente sobre cuotas pre-cargadas o retornar vacío
-        si se requiere actualización bajo demanda.
+        Retorna cuotas bajo demanda para un fixture individual.
+        En The Odds API las cuotas se actualizan de forma masiva por liga en get_fixtures,
+        por lo que este método retorna vacío para evitar peticiones redundantes.
         """
         # Nota: En The Odds API no se requiere consulta por ID individual para cuotas estándar
         # ya que se actualizan de forma masiva por liga.

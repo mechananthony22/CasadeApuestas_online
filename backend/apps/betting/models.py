@@ -19,9 +19,9 @@ class League(models.Model):
 
 class Team(models.Model):
     """
-    Representa un equipo de fútbol importado de la API externa (API-Football).
+    Representa un equipo deportivo importado desde la API externa.
     """
-    api_id = models.IntegerField(unique=True, help_text="ID oficial del equipo en API-Football")
+    api_id = models.IntegerField(unique=True, help_text="ID oficial del equipo en la API externa")
     name = models.CharField(max_length=100, help_text="Nombre del equipo")
     logo_url = models.URLField(max_length=500, null=True, blank=True, help_text="URL del escudo del equipo")
 
@@ -41,7 +41,7 @@ class Event(models.Model):
         ('cancelled', 'Anulado'),
     )
 
-    api_id = models.IntegerField(unique=True, help_text="ID oficial del partido en API-Football")
+    api_id = models.IntegerField(unique=True, help_text="ID oficial del partido en la API externa")
     league = models.ForeignKey(League, on_delete=models.PROTECT, related_name='events', help_text="Liga a la que pertenece el evento")
     home_team = models.ForeignKey(Team, on_delete=models.PROTECT, related_name='home_events', help_text="Equipo local")
     away_team = models.ForeignKey(Team, on_delete=models.PROTECT, related_name='away_events', help_text="Equipo visitante")
