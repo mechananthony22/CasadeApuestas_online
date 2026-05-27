@@ -53,6 +53,8 @@ services:
       - ./backend:/app
       - django_static:/app/staticfiles
       - django_media:/app/mediafiles
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-fairbet}
       - REDIS_URL=redis://redis:6379/0
@@ -78,6 +80,8 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-fairbet}
       - REDIS_URL=redis://redis:6379/0
@@ -101,6 +105,8 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-fairbet}
       - REDIS_URL=redis://redis:6379/0
