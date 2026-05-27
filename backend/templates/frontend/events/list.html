@@ -19,6 +19,23 @@
         </div>
     </div>
 
+    <!-- Filtros de Deportes -->
+    <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-800 pb-4" x-show="!loading && events.length > 0">
+        <button @click="selectedSport = 'all'"
+            :class="selectedSport === 'all' ? 'bg-accent text-white' : 'bg-card text-gray-400 hover:bg-gray-800 hover:text-white'"
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
+            🏆 Todos los Deportes
+        </button>
+        <template x-for="sportName in Object.keys(groupedEvents)" :key="sportName">
+            <button @click="selectedSport = sportName"
+                :class="selectedSport === sportName ? 'bg-accent text-white' : 'bg-card text-gray-400 hover:bg-gray-800 hover:text-white'"
+                class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
+                <span x-text="sportName === 'Fútbol' ? '⚽' : sportName === 'Baloncesto' ? '🏀' : sportName === 'Fútbol Americano' ? '🏈' : sportName === 'Béisbol' ? '⚾' : '🏆'"></span>
+                <span x-text="sportName"></span>
+            </button>
+        </template>
+    </div>
+
     <template x-if="loading">
         <div class="text-center py-20">
             <div class="animate-spin h-10 w-10 border-4 border-accent border-t-transparent rounded-full mx-auto"></div>
@@ -32,41 +49,63 @@
         </div>
     </template>
 
-    <div class="space-y-4" x-show="!loading">
-        <template x-for="ev in events" :key="ev.id">
-            <a :href="'/events/' + ev.id + '/'" class="block bg-card rounded-xl border border-gray-800 hover:border-accent/50 transition overflow-hidden">
-                <div class="p-5">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-semibold uppercase tracking-wider"
-                              :class="ev.status === 'live' ? 'text-green-500' : ev.status === 'scheduled' ? 'text-blue-500' : 'text-gray-500'"
-                              x-text="ev.status === 'live' ? '🔴 EN VIVO' : ev.status === 'scheduled' ? '📅 PRÓXIMO' : '✅ FINALIZADO'"></span>
-                        <span class="text-xs text-gray-500" x-text="ev.league || ''"></span>
+    <div class="space-y-8" x-show="!loading">
+        <template x-for="(leagues, sport) in groupedEvents" :key="sport">
+            <div x-show="selectedSport === 'all' || selectedSport === sport">
+                <!-- Sport Header -->
+                <h2 class="text-xl font-bold text-accent mb-4 border-b border-gray-800 pb-2 flex items-center gap-2">
+                    <span x-text="sport === 'Fútbol' ? '⚽' : sport === 'Baloncesto' ? '🏀' : sport === 'Fútbol Americano' ? '🏈' : sport === 'Béisbol' ? '⚾' : '🏆'"></span>
+                    <span x-text="sport"></span>
+                </h2>
+                
+                <template x-for="(evs, leagueName) in leagues" :key="leagueName">
+                    <div class="mb-6 ml-2">
+                        <!-- League Header -->
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3" x-text="leagueName"></h3>
+                        
+                        <div class="space-y-3">
+                            <template x-for="ev in evs" :key="ev.id">
+                                <a :href="'/events/' + ev.id + '/'" class="block bg-card rounded-xl border border-gray-800 hover:border-accent/50 transition overflow-hidden">
+                                    <div class="p-5">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded"
+                                                      :class="ev.status === 'live' || ev.status === 'in_play' ? 'bg-green-950 text-green-400' : 'bg-blue-950 text-blue-400'"
+                                                      x-text="ev.status === 'live' || ev.status === 'in_play' ? '🔴 EN VIVO' : '📅 PRÓXIMO'"></span>
+                                                <span class="text-xs text-gray-400 font-medium" x-text="formatDateTime(ev.starts_at)"></span>
+                                            </div>
+                                            <span class="text-xs text-gray-500 font-semibold" x-text="ev.league?.country || ''"></span>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex-1 text-center">
+                                                <p class="text-lg font-bold" x-text="ev.home_team?.name || 'Local'"></p>
+                                            </div>
+                                            <div class="flex items-center gap-4 px-6">
+                                                <span class="text-2xl font-bold text-accent" x-text="ev.home_score ?? ''"></span>
+                                                <span class="text-gray-500 font-bold">VS</span>
+                                                <span class="text-2xl font-bold text-accent" x-text="ev.away_score ?? ''"></span>
+                                            </div>
+                                            <div class="flex-1 text-center">
+                                                <p class="text-lg font-bold" x-text="ev.away_team?.name || 'Visitante'"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-[#222] px-5 py-3 flex justify-around" x-show="ev.markets && ev.markets.length > 0">
+                                        <template x-for="mkt in (ev.markets || []).slice(0,1)" :key="mkt.id">
+                                            <template x-for="sel in (mkt.selections || []).slice(0,3)" :key="sel.id">
+                                                <div class="text-center">
+                                                    <p class="text-xs text-gray-400" x-text="sel.name"></p>
+                                                    <p class="text-sm font-bold text-win" x-text="sel.odds"></p>
+                                                </div>
+                                            </template>
+                                        </template>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
                     </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1 text-center">
-                            <p class="text-lg font-bold" x-text="ev.home_team?.name || 'Local'"></p>
-                        </div>
-                        <div class="flex items-center gap-4 px-6">
-                            <span class="text-2xl font-bold text-accent" x-text="ev.home_score ?? ''"></span>
-                            <span class="text-gray-500 font-bold">VS</span>
-                            <span class="text-2xl font-bold text-accent" x-text="ev.away_score ?? ''"></span>
-                        </div>
-                        <div class="flex-1 text-center">
-                            <p class="text-lg font-bold" x-text="ev.away_team?.name || 'Visitante'"></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-[#222] px-5 py-3 flex justify-around" x-show="ev.markets && ev.markets.length > 0">
-                    <template x-for="mkt in (ev.markets || []).slice(0,1)" :key="mkt.id">
-                        <template x-for="sel in (mkt.selections || []).slice(0,3)" :key="sel.id">
-                            <div class="text-center">
-                                <p class="text-xs text-gray-400" x-text="sel.name"></p>
-                                <p class="text-sm font-bold text-win" x-text="sel.odds"></p>
-                            </div>
-                        </template>
-                    </template>
-                </div>
-            </a>
+                </template>
+            </div>
         </template>
     </div>
 </div>
@@ -78,20 +117,95 @@ function eventList() {
     return {
         events: [],
         filter: 'all',
+        selectedSport: 'all',
         loading: true,
+        wsConnections: {},
         async init() {
             if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
             await this.load();
         },
         async load() {
             this.loading = true;
+            this.disconnectAllWS();
             let url = '/betting/events/';
             const data = await apiFetch(url);
             let list = data.results || data || [];
-            if (this.filter !== 'all') list = list.filter(e => e.status === this.filter);
+            if (this.filter === 'live') {
+                list = list.filter(e => e.status === 'in_play' || e.status === 'live');
+            } else if (this.filter === 'scheduled') {
+                list = list.filter(e => e.status === 'scheduled');
+            }
             this.events = list;
             this.loading = false;
+            this.connectAllWS();
         },
+        connectAllWS() {
+            this.events.forEach(ev => {
+                const ws = connectWebSocket(
+                    ev.id,
+                    // onOddsChange
+                    (data) => {
+                        const selId = data.selection_id;
+                        const selName = data.selection_name;
+                        const newOdds = data.new_odds;
+                        
+                        const eventObj = this.events.find(e => e.id === ev.id);
+                        if (eventObj && eventObj.markets) {
+                            for (const mkt of eventObj.markets) {
+                                if (mkt.selections) {
+                                    const sel = mkt.selections.find(s => s.id === selId || s.name === selName);
+                                    if (sel) {
+                                        sel.odds = newOdds;
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    // onEventUpdate
+                    (data) => {
+                        const eventObj = this.events.find(e => e.id === ev.id);
+                        if (eventObj) {
+                            eventObj.home_score = data.home_score;
+                            eventObj.away_score = data.away_score;
+                            eventObj.status = data.status;
+                        }
+                    },
+                    // onMarketSuspended
+                    (data) => {
+                        const eventObj = this.events.find(e => e.id === ev.id);
+                        if (eventObj && eventObj.markets) {
+                            eventObj.markets.forEach(m => m.is_active = false);
+                        }
+                    },
+                    // onMarketResumed
+                    (data) => {
+                        this.load();
+                    }
+                );
+                this.wsConnections[ev.id] = ws;
+            });
+        },
+        disconnectAllWS() {
+            Object.values(this.wsConnections).forEach(ws => {
+                try { ws.close(); } catch(_) {}
+            });
+            this.wsConnections = {};
+        },
+        get groupedEvents() {
+            const groups = {};
+            this.events.forEach(ev => {
+                const sport = ev.league?.sport || 'Fútbol';
+                const leagueName = ev.league?.name || 'Otras Ligas';
+                if (!groups[sport]) {
+                    groups[sport] = {};
+                }
+                if (!groups[sport][leagueName]) {
+                    groups[sport][leagueName] = [];
+                }
+                groups[sport][leagueName].push(ev);
+            });
+            return groups;
+        }
     };
 }
 </script>

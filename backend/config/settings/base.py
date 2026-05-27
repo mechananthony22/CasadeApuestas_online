@@ -153,7 +153,33 @@ API_FOOTBALL_LEAGUES = [
     128,  # Liga Profesional Argentina
     71,   # Brasileirão Série A
     262,  # Liga MX
+    301,  # NBA
+    302,  # Euroleague
+    401,  # NFL
+    501,  # MLB
 ]
+
+# --- CONFIGURACIÓN DE INTEGRACIÓN CON THE ODDS API (V4) ---
+SPORTS_API_PROVIDER = os.environ.get('SPORTS_API_PROVIDER', 'the_odds_api')
+THE_ODDS_API_KEY = os.environ.get('THE_ODDS_API_KEY', '')
+THE_ODDS_API_URL = os.environ.get('THE_ODDS_API_URL', 'https://api.the-odds-api.com/v4')
+# Mapeo de IDs de liga locales a sport_key de The Odds API
+THE_ODDS_API_SPORTS = {
+    140: 'soccer_spain_la_liga',       # La Liga
+    39: 'soccer_epl',                  # Premier League
+    2: 'soccer_uefa_champs_league',    # Champions League (Corregido: champs en lugar de champions)
+    13: 'soccer_conmebol_copa_libertadores', # Copa Libertadores
+    247: 'soccer_conmebol_copa_sudamericana', # Copa Sudamericana
+    135: 'soccer_italy_serie_a',       # Serie A
+    78: 'soccer_germany_bundesliga',   # Bundesliga
+    61: 'soccer_france_ligue_one',     # Ligue 1 (Corregido: ligue_one)
+    71: 'soccer_brazil_campeonato',    # Brasileirão Série A (Activo en verano)
+    262: 'soccer_mexico_liga_mx',      # Liga MX
+    301: 'basketball_nba',             # NBA
+    302: 'basketball_euroleague',      # Euroleague
+    401: 'americanfootball_nfl',       # NFL
+    501: 'baseball_mlb',               # MLB
+}
 
 # --- PLANIFICACIÓN DE TAREAS PERIÓDICAS (CELERY BEAT) ---
 CELERY_BEAT_SCHEDULE = {

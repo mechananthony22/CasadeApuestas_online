@@ -52,9 +52,17 @@
                         <a :href="'/events/' + ev.id + '/'" class="flex justify-between items-center p-4 bg-[#222] rounded-xl hover:bg-[#2a2a2a] transition">
                             <div>
                                 <p class="font-semibold" x-text="ev.name || (ev.home_team?.name + ' vs ' + ev.away_team?.name)"></p>
-                                <p class="text-sm text-gray-400" x-text="ev.status"></p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded"
+                                          :class="ev.status === 'in_play' || ev.status === 'live' ? 'bg-green-950 text-green-400' : 'bg-blue-950 text-blue-400'"
+                                          x-text="ev.status === 'in_play' || ev.status === 'live' ? '🔴 En Vivo' : '📅 Programado'"></span>
+                                    <span class="text-xs text-gray-400" x-text="ev.league?.name || ''"></span>
+                                </div>
                             </div>
-                            <span class="text-sm text-gray-500" x-text="ev.start_date || ev.date"></span>
+                            <div class="text-right">
+                                <span class="text-xs text-gray-500 block">Inicio:</span>
+                                <span class="text-sm text-gray-300 font-medium" x-text="formatDateTime(ev.starts_at)"></span>
+                            </div>
                         </a>
                     </template>
                 </div>
@@ -96,7 +104,7 @@ function dashboard() {
             const data = await apiFetch('/betting/events/');
             const list = data.results || data || [];
             this.events = list;
-            this.stats.live_events = list.filter(e => e.status === 'live').length;
+            this.stats.live_events = list.filter(e => e.status === 'in_play' || e.status === 'live').length;
             this.stats.upcoming_events = list.filter(e => e.status === 'scheduled').length;
         },
         async loadBets() {

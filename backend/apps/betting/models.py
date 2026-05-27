@@ -5,10 +5,11 @@ from django.contrib.auth.models import User
 
 class League(models.Model):
     """
-    Representa una liga de fútbol importada de la API externa (API-Football).
+    Representa una liga o torneo deportivo (Fútbol, Baloncesto, etc.).
     """
-    api_id = models.IntegerField(unique=True, help_text="ID oficial de la liga en API-Football")
+    api_id = models.IntegerField(unique=True, help_text="ID oficial de la liga en la API externa")
     name = models.CharField(max_length=100, help_text="Nombre de la liga")
+    sport = models.CharField(max_length=50, default='Fútbol', help_text="Deporte de la liga (Fútbol, Baloncesto, etc.)")
     country = models.CharField(max_length=100, help_text="País de la liga")
     logo_url = models.URLField(max_length=500, null=True, blank=True, help_text="URL del logo de la liga")
 

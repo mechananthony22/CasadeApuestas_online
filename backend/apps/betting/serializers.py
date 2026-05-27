@@ -13,7 +13,7 @@ class LeagueSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = League
-        fields = ['id', 'api_id', 'name', 'country', 'logo_url']
+        fields = ['id', 'api_id', 'name', 'sport', 'country', 'logo_url']
 
 
 class TeamSerializer(serializers.ModelSerializer):

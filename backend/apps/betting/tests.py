@@ -1385,6 +1385,141 @@ class LiveAndCombinadasTestCase(APITestCase):
         self.assertTrue(self.market1.is_active)
 
 
+class TheOddsAPITestCase(APITestCase):
+    """
+    Suite de pruebas de integración para el nuevo proveedor The Odds API.
+    Valida la sincronización de eventos, hashing determinista de IDs, cuotas y marcadores.
+    """
+    def setUp(self):
+        from betting.models import League, Team, Event, Market, Selection
+        self.league_id = 140 # La Liga
+        
+    @patch('betting.the_odds_api.TheOddsAPIClient.get_fixtures')
+    def test_sync_fixtures_the_odds_api(self, mock_get_fixtures):
+        """
+        Prueba la sincronización de eventos y cuotas a través de The Odds API
+        empleando el enmascarado determinista de IDs tipo string.
+        """
+        # Configurar mock response de The Odds API
+        mock_get_fixtures.return_value = [
+            {
+                "id": "mock_event_hash_12345",
+                "sport_key": "soccer_spain_la_liga",
+                "sport_title": "La Liga",
+                "commence_time": "2026-05-28T20:00:00Z",
+                "home_team": "Real Madrid",
+                "away_team": "Barcelona",
+                "bookmakers": [
+                    {
+                        "key": "bet365",
+                        "title": "Bet365",
+                        "markets": [
+                            {
+                                "key": "h2h",
+                                "outcomes": [
+                                    {"name": "Real Madrid", "price": 2.10},
+                                    {"name": "Barcelona", "price": 3.60},
+                                    {"name": "Draw", "price": 3.40}
+                                ]
+                            },
+                            {
+                                "key": "totals",
+                                "outcomes": [
+                                    {"name": "Over", "price": 1.85, "point": 2.5},
+                                    {"name": "Under", "price": 1.95, "point": 2.5}
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+
+        # Configurar settings del proveedor activo
+        with self.settings(SPORTS_API_PROVIDER='the_odds_api'):
+            from betting.services import SyncEngine, string_to_integer_id
+            sync = SyncEngine()
+            count = sync.sync_fixtures(self.league_id)
+            
+            # 1. Debe haber sincronizado 1 partido
+            self.assertEqual(count, 1)
+            
+            # 2. El ID del partido en DB debe ser el hash entero determinista
+            expected_id = string_to_integer_id("mock_event_hash_12345")
+            event = Event.objects.get(api_id=expected_id)
+            self.assertEqual(event.home_team.name, "Real Madrid")
+            self.assertEqual(event.away_team.name, "Barcelona")
+            
+            # 3. Comprobar creación de mercados y cuotas con margen (por defecto 5%)
+            # Cuota de Real Madrid = 2.10 * 0.95 = 1.9950
+            sel_home = Selection.objects.get(market__event=event, name="Local")
+            self.assertEqual(sel_home.odds, Decimal("1.9950"))
+            
+            sel_draw = Selection.objects.get(market__event=event, name="Empate")
+            self.assertEqual(sel_draw.odds, Decimal("3.2300")) # 3.40 * 0.95 = 3.2300
+
+    @patch('betting.the_odds_api.TheOddsAPIClient.get_live_fixtures')
+    def test_sync_live_scores_the_odds_api_goal_suspension(self, mock_get_live_fixtures):
+        """
+        Prueba que la sincronización de marcadores en vivo de The Odds API
+        actualice la base de datos y dispare la suspensión de mercados ante un gol.
+        """
+        from betting.services import string_to_integer_id
+        # Pre-crear liga, equipos y partido en BD
+        event_hash = "live_event_hash_abc"
+        event_id = string_to_integer_id(event_hash)
+        
+        league = League.objects.create(api_id=self.league_id, name="La Liga", country="España")
+        home = Team.objects.create(api_id=string_to_integer_id("Real Madrid"), name="Real Madrid")
+        away = Team.objects.create(api_id=string_to_integer_id("Barcelona"), name="Barcelona")
+        
+        event = Event.objects.create(
+            api_id=event_id,
+            league=league,
+            home_team=home,
+            away_team=away,
+            starts_at=timezone.now(),
+            status='in_play',
+            home_score=0,
+            away_score=0
+        )
+        
+        market = Market.objects.create(event=event, name="1X2", is_active=True)
+        
+        # Mock de marcador en vivo (gol de Real Madrid 1-0)
+        mock_get_live_fixtures.return_value = [
+            {
+                "id": event_hash,
+                "sport_key": "soccer_spain_la_liga",
+                "sport_title": "La Liga",
+                "commence_time": event.starts_at.isoformat(),
+                "home_team": "Real Madrid",
+                "away_team": "Barcelona",
+                "completed": False,
+                "scores": [
+                    {"name": "Real Madrid", "score": "1"},
+                    {"name": "Barcelona", "score": "0"}
+                ],
+                "_league_id": self.league_id
+            }
+        ]
+        
+        with self.settings(SPORTS_API_PROVIDER='the_odds_api'):
+            from betting.services import SyncEngine
+            sync = SyncEngine()
+            count = sync.sync_live_scores()
+            self.assertEqual(count, 1)
+            
+            event.refresh_from_db()
+            self.assertEqual(event.home_score, 1)
+            self.assertEqual(event.status, 'in_play')
+            
+            # Los mercados deben haberse suspendido automáticamente por el gol
+            market.refresh_from_db()
+            self.assertFalse(market.is_active)
+
+
+
 
 
 

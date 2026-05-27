@@ -23,8 +23,30 @@ class EventViewSet(viewsets.ReadOnlyModelViewSet):
         """
         Retorna la lista de partidos ordenados por fecha de inicio.
         Permite filtrar por estado (ejemplo: ?status=live o ?status=scheduled).
+        Auto-transiciona partidos que ya debieron comenzar a 'in_play' y partidos
+        viejos a 'finished' para mantener el catálogo sincronizado sin Celery Beat en local.
         """
-        queryset = Event.objects.all().select_related(
+        from django.utils import timezone
+        from datetime import timedelta
+
+        # Auto-transición en caliente para entornos sin Celery Beat activo:
+        # 1. Pasar a 'in_play' los partidos programados que ya comenzaron en la hora actual
+        Event.objects.filter(
+            status='scheduled',
+            starts_at__lte=timezone.now()
+        ).update(status='in_play')
+
+        # 2. Pasar a 'finished' los partidos 'in_play' que comenzaron hace más de 3 horas
+        finished_threshold = timezone.now() - timedelta(hours=3)
+        Event.objects.filter(
+            status='in_play',
+            starts_at__lte=finished_threshold
+        ).update(status='finished')
+
+        # Excluir partidos finalizados o anulados del catálogo público
+        queryset = Event.objects.exclude(status__in=['finished', 'cancelled'])
+
+        queryset = queryset.select_related(
             'league', 'home_team', 'away_team'
         ).prefetch_related(
             'markets', 'markets__selections'
