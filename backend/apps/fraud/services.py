@@ -136,3 +136,72 @@ class FraudDetector:
             return alert
             
         return None
+
+    @classmethod
+    def check_bonus_arbitrage(cls, user, bet):
+        """
+        Regla 4: Detecta abuso de bonos mediante apuestas cruzadas (hedge betting/arbitraje).
+        Si el usuario tiene un bono de bienvenida activo y realiza apuestas cubriendo
+        resultados mutuamente excluyentes del mismo evento deportivo, se levanta una alerta.
+        """
+        # 1. Verificar si el usuario tiene un bono activo
+        from wallet.models import UserBonus
+        try:
+            if not hasattr(user, 'promo_bonus') or not user.promo_bonus.is_active:
+                return None
+        except UserBonus.DoesNotExist:
+            return None
+
+        # 2. Obtener las selecciones que componen la apuesta actual
+        current_selections = list(bet.selections.all().select_related('selection__market__event'))
+        if not current_selections:
+            return None
+
+        # 3. Buscar otras apuestas activas ('accepted') del mismo usuario
+        other_bets = Bet.objects.filter(
+            user=user,
+            status='accepted'
+        ).exclude(id=bet.id).prefetch_related('selections__selection__market')
+
+        # Para cada selección de la apuesta actual:
+        for cs in current_selections:
+            current_sel = cs.selection
+            current_market = current_sel.market
+            current_event = current_market.event
+
+            # Buscar si alguna otra apuesta del mismo usuario cubre otra selección en el mismo mercado
+            for ob in other_bets:
+                for obs in ob.selections.all():
+                    other_sel = obs.selection
+                    # Si pertenecen al mismo mercado pero son selecciones diferentes, hay cobertura/arbitraje
+                    if other_sel.market_id == current_market.id and other_sel.id != current_sel.id:
+                        desc = (
+                            f"Posible abuso de bono (apuestas cruzadas) detectado para el usuario {user.username}. "
+                            f"Colocó apuestas cubriendo múltiples resultados en el mercado '{current_market.name}' "
+                            f"para el evento '{current_event.home_team.name} vs {current_event.away_team.name}'."
+                        )
+                        
+                        alert = SuspiciousActivity.objects.create(
+                            user=user,
+                            activity_type=SuspiciousActivity.TYPE_BONUS_ABUSE,
+                            description=desc,
+                            payload={
+                                'bet_id_1': bet.id,
+                                'bet_id_2': ob.id,
+                                'market_id': current_market.id,
+                                'market_name': current_market.name,
+                                'event_id': current_event.id,
+                                'event_name': f"{current_event.home_team.name} vs {current_event.away_team.name}",
+                                'selection_1': current_sel.name,
+                                'selection_2': other_sel.name
+                            },
+                            severity=SuspiciousActivity.SEVERITY_HIGH,
+                            status=SuspiciousActivity.STATUS_PENDING
+                        )
+                        logger.warning(
+                            f"ALERTA ANTI-FRAUDE: Abuso de bono detectado para el usuario '{user.username}' "
+                            f"en el evento '{current_event.home_team.name} vs {current_event.away_team.name}'."
+                        )
+                        return alert
+        return None
+

@@ -119,3 +119,107 @@ class LedgerEntrySerializer(serializers.ModelSerializer):
             'created_at',
         ]
         read_only_fields = fields
+
+
+class TransferenciaSerializer(serializers.Serializer):
+    """
+    Serializer para la transferencia interna de fichas virtuales entre usuarios.
+
+    Valida que el destinatario exista, que no sea el mismo usuario remitente,
+    que ambos usuarios estén verificados y no autoexcluidos, y que el monto sea positivo.
+    """
+
+    to_username = serializers.CharField(
+        max_length=150,
+        help_text='Nombre de usuario del destinatario'
+    )
+
+    amount = serializers.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        min_value=Decimal('0.0001'),
+        help_text='Monto a transferir (mínimo 0.0001)'
+    )
+
+    description = serializers.CharField(
+        required=False,
+        default='Transferencia interna de fichas',
+        max_length=255,
+        help_text='Descripción opcional de la transferencia'
+    )
+
+    def validate_to_username(self, value):
+        """
+        Valida que el usuario destinatario exista en el sistema.
+        """
+        username = value.strip()
+        if not User.objects.filter(username=username).exists():
+            raise serializers.ValidationError("El usuario destinatario no existe.")
+        return username
+
+    def validate(self, attrs):
+        """
+        Valida las reglas de negocio para la transferencia interna:
+        1. No transferir dinero a la propia cuenta del usuario.
+        2. El usuario remitente debe estar verificado y no autoexcluido.
+        3. El usuario destinatario debe estar verificado y no autoexcluido.
+        """
+        sender = self.context['request'].user
+        to_username = attrs['to_username']
+
+        if sender.username == to_username:
+            raise serializers.ValidationError({
+                "to_username": "No puedes transferir fondos a tu propia cuenta."
+            })
+
+        receiver = User.objects.get(username=to_username)
+
+        # Importar modelos requeridos localmente para evitar dependencias circulares
+        from users.models import UserProfile
+        from responsible.models import AutoExclusion
+
+        # Validaciones del Remitente (Sender)
+        try:
+            sender_profile = sender.profile
+            if sender_profile.verification_status != UserProfile.STATUS_VERIFIED:
+                raise serializers.ValidationError({
+                    "non_field_errors": "Tu cuenta debe estar verificada para realizar transferencias."
+                })
+        except UserProfile.DoesNotExist:
+            raise serializers.ValidationError({
+                "non_field_errors": "Tu cuenta no posee un perfil KYC de verificación completo."
+            })
+
+        try:
+            sender_autoex = sender.auto_exclusion
+            if sender_autoex.is_active:
+                raise serializers.ValidationError({
+                    "non_field_errors": "No puedes transferir fondos porque tu cuenta está autoexcluida."
+                })
+        except AutoExclusion.DoesNotExist:
+            pass
+
+        # Validaciones del Destinatario (Receiver)
+        try:
+            receiver_profile = receiver.profile
+            if receiver_profile.verification_status != UserProfile.STATUS_VERIFIED:
+                raise serializers.ValidationError({
+                    "to_username": "El destinatario debe tener su cuenta verificada para recibir fondos."
+                })
+        except UserProfile.DoesNotExist:
+            raise serializers.ValidationError({
+                "to_username": "El destinatario no posee un perfil KYC de verificación completo."
+            })
+
+        try:
+            receiver_autoex = receiver.auto_exclusion
+            if receiver_autoex.is_active:
+                raise serializers.ValidationError({
+                    "to_username": "El destinatario no puede recibir fondos porque su cuenta está autoexcluida."
+                })
+        except AutoExclusion.DoesNotExist:
+            pass
+
+        attrs['receiver_user'] = receiver
+        return attrs
+

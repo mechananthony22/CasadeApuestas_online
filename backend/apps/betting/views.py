@@ -195,6 +195,20 @@ class BetViewSet(viewsets.ModelViewSet):
                     description=f"Retención en custodia por apuesta #{bet_obj.id}"
                 )
 
+                # --- ACTUALIZACIÓN DE ROLLOVER DEL BONO ---
+                from wallet.models import UserBonus
+                try:
+                    # Obtenemos el bono activo del usuario bloqueando su registro de forma segura
+                    promo_bonus = UserBonus.objects.select_for_update().get(user=locked_user, is_active=True)
+                    # Apuestas elegibles con cuota total >= 1.5000
+                    if total_odds >= Decimal('1.5000'):
+                        promo_bonus.current_turnover += stake
+                        if promo_bonus.current_turnover >= promo_bonus.required_turnover:
+                            promo_bonus.is_active = False
+                        promo_bonus.save()
+                except UserBonus.DoesNotExist:
+                    pass
+
         except Exception as e:
             return Response(
                 {'error': f"Error interno al colocar la apuesta transaccional: {str(e)}"},
@@ -208,17 +222,24 @@ class BetViewSet(viewsets.ModelViewSet):
         # Enviar notificación ligera por Django Channels (Fase 6)
         self.broadcast_bet_placed(user.id, bet_obj.id)
 
-        # --- CONTROLES DE ANTI-FRAUDE (REGLA APUESTAS IDÉNTICAS) ---
+        # --- CONTROLES DE ANTI-FRAUDE ---
         try:
             from fraud.services import FraudDetector
             FraudDetector.check_syndicated_betting(bet_obj)
+            FraudDetector.check_bonus_arbitrage(user, bet_obj)
         except Exception as e:
             import logging
-            logging.getLogger(__name__).error(f"Error al verificar patrón de apuestas idénticas: {str(e)}")
+            logging.getLogger(__name__).error(f"Error al verificar reglas de anti-fraude: {str(e)}")
         # --- FIN CONTROLES DE ANTI-FRAUDE ---
 
         # 6. Registrar en la caché de Redis por 5 minutos (300 segundos) para idempotencia
         cache.set(cache_key, {'status': status.HTTP_201_CREATED, 'data': response_data}, timeout=300)
+
+        # Agregar disclaimer obligatorio de juego responsable (Ley 31557)
+        response_data['disclaimer'] = (
+            'Juego responsable: El juego de apuestas en exceso puede causar adicción. '
+            'Juega con moderación. Plataforma de simulación educativa con moneda virtual.'
+        )
 
         return Response(response_data, status=status.HTTP_201_CREATED)
 
@@ -340,7 +361,15 @@ class BetViewSet(viewsets.ModelViewSet):
             pass
             
         serializer = self.get_serializer(bet_obj)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        response_data = serializer.data
+
+        # Agregar disclaimer obligatorio de juego responsable al cash-out (Ley 31557)
+        response_data['disclaimer'] = (
+            'Juego responsable: El juego de apuestas en exceso puede causar adicción. '
+            'Juega con moderación. Plataforma de simulación educativa con moneda virtual.'
+        )
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
     def broadcast_cash_out_placed(self, user_id, bet_id, amount):
         """

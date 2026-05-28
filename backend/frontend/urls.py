@@ -10,6 +10,7 @@ urlpatterns = [
     path('bets/', views.BetListView.as_view(), name='bets-list'),
     path('wallet/', views.WalletBalanceView.as_view(), name='wallet-balance'),
     path('wallet/deposit/', views.WalletDepositView.as_view(), name='wallet-deposit'),
+    path('wallet/transfer/', views.WalletTransferView.as_view(), name='wallet-transfer'),
     path('responsible/limits/', views.ResponsibleLimitsView.as_view(), name='responsible-limits'),
     path('responsible/self-exclude/', views.ResponsibleSelfExcludeView.as_view(), name='responsible-self-exclude'),
 ]

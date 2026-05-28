@@ -208,6 +208,13 @@ class SyncEngine:
                     local_market_name = "Over/Under 2.5"
             elif market_key == "btts" and sport_name == 'Fútbol':
                 local_market_name = "BTTS"
+            elif market_key == "spreads":
+                # Mercado de Handicap Asiático (spreads) — versión simplificada medio gol
+                if outcomes:
+                    point = outcomes[0].get('point', -0.5)
+                    local_market_name = f"Handicap Asiático {'+' if point >= 0 else ''}{point}"
+                else:
+                    local_market_name = "Handicap Asiático -0.5"
             else:
                 continue
                 
@@ -244,6 +251,12 @@ class SyncEngine:
                         local_selection_name = "Sí"
                     elif selection_name.lower() in ["no"]:
                         local_selection_name = "No"
+                elif "handicap asiático" in local_market_name.lower():
+                    # Para spreads, la API devuelve el nombre del equipo como selección
+                    if selection_name == event_obj.home_team.name:
+                        local_selection_name = "Local"
+                    elif selection_name == event_obj.away_team.name:
+                        local_selection_name = "Visitante"
                         
                 if not local_selection_name:
                     continue
@@ -447,6 +460,12 @@ class SyncEngine:
                 return "Sí"
             elif v_lower in ["no"]:
                 return "No"
+        elif "handicap asiático" in market_name.lower():
+            # Las selecciones de handicap son "Local" y "Visitante"
+            if v_lower in ["home", "local", "1"]:
+                return "Local"
+            elif v_lower in ["away", "visitante", "2"]:
+                return "Visitante"
         return None
 
     def generate_mock_odds(self, event_obj, margin_multiplier):
@@ -484,6 +503,16 @@ class SyncEngine:
             for name, raw_odd in selections_btts:
                 Selection.objects.update_or_create(
                     market=market_btts,
+                    name=name,
+                    defaults={'odds': (raw_odd * margin_multiplier).quantize(Decimal('0.0001')), 'is_active': True}
+                )
+
+            # 4. Mercado Handicap Asiático -0.5 (simplificado medio gol, sin devolución)
+            market_ah, _ = Market.objects.get_or_create(event=event_obj, name="Handicap Asiático -0.5")
+            selections_ah = [("Local", Decimal("1.90")), ("Visitante", Decimal("1.90"))]
+            for name, raw_odd in selections_ah:
+                Selection.objects.update_or_create(
+                    market=market_ah,
                     name=name,
                     defaults={'odds': (raw_odd * margin_multiplier).quantize(Decimal('0.0001')), 'is_active': True}
                 )

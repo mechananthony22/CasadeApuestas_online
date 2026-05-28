@@ -134,15 +134,66 @@ class BetSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     type_display = serializers.CharField(source='get_type_display', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
+    event_name = serializers.SerializerMethodField(read_only=True)
+    selection_name = serializers.SerializerMethodField(read_only=True)
+    can_cashout = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Bet
         fields = [
             'id', 'username', 'status', 'status_display', 'type', 
             'type_display', 'stake', 'potential_payout', 'idempotency_key', 
-            'created_at', 'settled_at', 'selections', 'selections_detail'
+            'created_at', 'settled_at', 'selections', 'selections_detail',
+            'event_name', 'selection_name', 'can_cashout'
         ]
         read_only_fields = ['id', 'user', 'status', 'type', 'potential_payout', 'idempotency_key', 'created_at', 'settled_at']
+
+    def get_event_name(self, obj):
+        """
+        Retorna el nombre descriptivo del evento o eventos del boleto.
+        """
+        selections = obj.selections.all()
+        if not selections.exists():
+            return "Sin eventos"
+        if obj.type == 'simple':
+            first = selections.first()
+            event = first.selection.market.event
+            return f"{event.home_team.name} vs {event.away_team.name}"
+        else:
+            return f"Combinada ({selections.count()} partidos)"
+
+    def get_selection_name(self, obj):
+        """
+        Retorna la descripción de la selección o selecciones realizadas en el boleto.
+        """
+        selections = obj.selections.all()
+        if not selections.exists():
+            return ""
+        if obj.type == 'simple':
+            first = selections.first()
+            return f"{first.selection.name} @ {first.odds_at_bet:.2f} ({first.selection.market.name})"
+        else:
+            parts = []
+            for s in selections:
+                parts.append(f"{s.selection.name} @ {s.odds_at_bet:.2f}")
+            return " / ".join(parts)
+
+    def get_can_cashout(self, obj):
+        """
+        Determina dinámicamente si la apuesta califica para cobro anticipado (Cash-out).
+        """
+        if obj.status != 'accepted':
+            return False
+
+        # El cash-out no está disponible si algún partido terminó, se suspendió o anuló
+        for s in obj.selections.all():
+            event = s.selection.market.event
+            if event.status in ['finished', 'cancelled', 'suspended']:
+                return False
+            if not s.selection.is_active or not s.selection.market.is_active:
+                return False
+
+        return True
 
     def validate_stake(self, value):
         """
@@ -239,6 +290,11 @@ class BetSerializer(serializers.ModelSerializer):
         # 6. Validar que los partidos no hayan iniciado (excepto apuestas en vivo)
         for s_obj in selection_objs:
             event = s_obj.market.event
+            # Bloquear apuestas en eventos suspendidos o cancelados (regulatorio)
+            if event.status in ['suspended', 'cancelled']:
+                raise serializers.ValidationError(
+                    f"El partido '{event}' está en estado '{event.get_status_display()}' y no acepta apuestas."
+                )
             if event.starts_at <= timezone.now() and event.status != 'in_play':
                 raise serializers.ValidationError(f"El partido '{event}' ya ha comenzado y no acepta apuestas pre-match.")
 

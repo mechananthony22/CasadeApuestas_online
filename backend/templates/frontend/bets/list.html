@@ -72,7 +72,7 @@
                                 <span x-text="cashing === bet.id ? 'Procesando...' : 'Cashout'"></span>
                             </button>
                         </template>
-                        <span x-if="bet.status !== 'accepted'" class="text-sm font-bold"
+                        <span x-show="bet.status !== 'accepted'" class="text-sm font-bold"
                               :class="bet.status === 'won' ? 'text-win' : bet.status === 'lost' ? 'text-red-400' : 'text-gray-500'"
                               x-text="bet.status === 'won' ? '+ S/ ' + bet.potential_payout : bet.status === 'lost' ? '- S/ ' + bet.stake : ''"></span>
                     </div>

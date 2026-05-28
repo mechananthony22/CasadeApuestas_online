@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.urls import path
-from .views import DepositoView, RetiroView, BalanceView, HistorialView
+from .views import DepositoView, RetiroView, BalanceView, HistorialView, TransferenciaView
 
 # Se prefija con 'api/v1/' desde config/urls.py
 urlpatterns = [
@@ -15,4 +15,8 @@ urlpatterns = [
 
     # GET /api/v1/wallet/history/ → Historial de movimientos contables
     path('wallet/history/', HistorialView.as_view(), name='api-wallet-history'),
+
+    # POST /api/v1/wallet/transfer/ → Transferencia interna entre usuarios
+    path('wallet/transfer/', TransferenciaView.as_view(), name='api-wallet-transfer'),
 ]
+

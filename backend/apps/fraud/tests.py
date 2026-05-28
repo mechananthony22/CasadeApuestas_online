@@ -229,3 +229,74 @@ class FraudDetectorTestCase(APITestCase):
         # 4. Intentar resolver una alerta ya cerrada (debe fallar con 400)
         response_double = self.client.post(url_resolve, {'status': 'DISMISSED'}, format='json')
         self.assertEqual(response_double.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_rule_4_bonus_abuse_hedge_betting(self):
+        """
+        4. Regla de Abuso de Bono (Apuestas Cruzadas/Hedge Betting):
+           Si un usuario con bono de bienvenida activo coloca apuestas en selecciones
+           mutuamente excluyentes del mismo mercado/evento deportivo para liberar el bono sin riesgo,
+           se debe disparar una alerta anti-fraude.
+        """
+        from wallet.models import UserBonus
+        u = self.users[0]
+        self.client.force_authenticate(user=u)
+
+        # 1. Crear bono de bienvenida activo para el usuario
+        UserBonus.objects.create(
+            user=u,
+            bonus_amount=Decimal('100.0000'),
+            required_turnover=Decimal('600.0000'),
+            is_active=True
+        )
+
+        # 2. Cargarle saldo suficiente en su wallet
+        LedgerEntry.objects.create(
+            user=u,
+            account=LedgerEntry.Account.WALLET_USUARIO,
+            amount=Decimal('500.0000'),
+            direction=LedgerEntry.Direction.CREDIT,
+            transaction_id=uuid4(),
+            description="Carga inicial"
+        )
+
+        # 3. Crear otra selección en el mismo mercado (ej. Visitante con cuota 2.50)
+        selection_away = Selection.objects.create(
+            market=self.market,
+            name="Visitante",
+            odds=Decimal("2.5000")
+        )
+
+        # 4. Colocar la primera apuesta a "Local" (debe tener éxito y no disparar alerta de abuso)
+        response_bet1 = self.client.post(
+            '/api/v1/betting/bets/',
+            {
+                "selections": [{"selection_id": self.selection.id, "expected_odds": "2.0000"}],
+                "stake": "100.0000"
+            },
+            format='json',
+            HTTP_IDEMPOTENCY_KEY=str(uuid4())
+        )
+        self.assertEqual(response_bet1.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(SuspiciousActivity.objects.filter(activity_type=SuspiciousActivity.TYPE_BONUS_ABUSE).count(), 0)
+
+        # 5. Colocar la segunda apuesta a "Visitante" en el mismo evento (debe disparar la alerta)
+        response_bet2 = self.client.post(
+            '/api/v1/betting/bets/',
+            {
+                "selections": [{"selection_id": selection_away.id, "expected_odds": "2.5000"}],
+                "stake": "100.0000"
+            },
+            format='json',
+            HTTP_IDEMPOTENCY_KEY=str(uuid4())
+        )
+        self.assertEqual(response_bet2.status_code, status.HTTP_201_CREATED)
+
+        # 6. Verificar que se haya registrado la alerta de abuso de bono
+        alerts = SuspiciousActivity.objects.filter(activity_type=SuspiciousActivity.TYPE_BONUS_ABUSE)
+        self.assertEqual(alerts.count(), 1)
+        alert = alerts.first()
+        self.assertEqual(alert.user, u)
+        self.assertEqual(alert.severity, SuspiciousActivity.SEVERITY_HIGH)
+        self.assertEqual(alert.payload['market_id'], self.market.id)
+        self.assertIn(alert.payload['selection_1'], [self.selection.name, selection_away.name])
+        self.assertIn(alert.payload['selection_2'], [self.selection.name, selection_away.name])

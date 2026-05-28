@@ -78,17 +78,30 @@ function limits() {
             this.error = '';
             this.success = '';
             this.saving = true;
+
+            // Convertir 0 o vacío a null (sin límite); valores positivos se envían como Decimal
+            const parseLimit = (val) => {
+                const num = parseFloat(val);
+                return (isNaN(num) || num <= 0) ? null : num;
+            };
+
             const data = await apiFetch('/responsible/limits/', {
-                method: 'PUT',
+                method: 'POST',
                 body: JSON.stringify({
-                    daily_limit: parseFloat(this.limits.daily) || 0,
-                    weekly_limit: parseFloat(this.limits.weekly) || 0,
-                    monthly_limit: parseFloat(this.limits.monthly) || 0,
+                    daily_limit: parseLimit(this.limits.daily),
+                    weekly_limit: parseLimit(this.limits.weekly),
+                    monthly_limit: parseLimit(this.limits.monthly),
                 }),
             });
             this.saving = false;
             if (data._status === 200 || data.mensaje) {
                 this.success = data.mensaje || 'Límites guardados';
+                // Actualizar con valores reales del servidor (puede haber cooldown)
+                if (data.limites) {
+                    this.limits.daily = data.limites.daily_limit || 0;
+                    this.limits.weekly = data.limites.weekly_limit || 0;
+                    this.limits.monthly = data.limites.monthly_limit || 0;
+                }
             } else {
                 this.error = Object.values(data).flat().join(' ') || 'Error al guardar.';
             }

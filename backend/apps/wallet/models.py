@@ -181,3 +181,59 @@ class LedgerEntry(models.Model):
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0.0000')
 
         return total_credits - total_debits
+
+
+class UserBonus(models.Model):
+    """
+    Representa un bono de bienvenida u otra promoción otorgada a un usuario.
+    Registra el monto del bono, el rollover requerido y el avance acumulado (Ley 31557).
+    """
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='promo_bonus',
+        verbose_name='Usuario'
+    )
+    bonus_amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        verbose_name='Monto del Bono'
+    )
+    rollover_multiplier = models.IntegerField(
+        default=6,
+        verbose_name='Multiplicador de Rollover'
+    )
+    required_turnover = models.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        verbose_name='Monto Total Requerido'
+    )
+    current_turnover = models.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        default=Decimal('0.0000'),
+        verbose_name='Rollover Acumulado'
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='¿Bono Activo?'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha de Adquisición'
+    )
+
+    class Meta:
+        verbose_name = 'Bono de Usuario'
+        verbose_name_plural = 'Bonos de Usuarios'
+
+    def __str__(self):
+        return f"Bono de {self.user.username} (Falta apostar: S/ {self.remaining_rollover:.2f})"
+
+    @property
+    def remaining_rollover(self) -> Decimal:
+        """
+        Calcula el monto de rollover restante que debe cumplir el usuario antes de retirar.
+        """
+        return max(Decimal('0.0000'), self.required_turnover - self.current_turnover)
+

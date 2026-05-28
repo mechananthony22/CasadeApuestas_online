@@ -42,11 +42,13 @@ class SuspiciousActivity(models.Model):
     TYPE_MULTIPLE_ACCOUNTS = 'MULTIPLE_ACCOUNTS_SAME_IP'
     TYPE_DEPOSIT_CASHOUT = 'IMMEDIATE_DEPOSIT_CASHOUT'
     TYPE_IDENTICAL_BET = 'IDENTICAL_BET_PATTERN'
+    TYPE_BONUS_ABUSE = 'BONUS_ABUSE'
     
     TYPE_CHOICES = [
         (TYPE_MULTIPLE_ACCOUNTS, 'Múltiples Cuentas desde misma IP'),
         (TYPE_DEPOSIT_CASHOUT, 'Recarga seguida de Cash-out Inmediato'),
         (TYPE_IDENTICAL_BET, 'Patrón de Apuestas Idénticas en Grupo'),
+        (TYPE_BONUS_ABUSE, 'Abuso de Bono por Apuestas Cruzadas'),
     ]
     
     SEVERITY_LOW = 'LOW'

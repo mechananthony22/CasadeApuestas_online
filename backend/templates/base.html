@@ -109,6 +109,22 @@
     </nav>
 
     <main class="flex-grow w-full">
+        <!-- 
+            BANNER OBLIGATORIO DE CONSUMO RESPONSABLE (Ley 31557 Art. 12)
+            Visible en todas las pantallas cuando el usuario está autenticado.
+            No puede ser cerrado ni ocultado por el usuario.
+        -->
+        <template x-data x-if="localStorage.getItem('access_token')">
+            <div class="bg-gradient-to-r from-amber-900/40 via-amber-800/30 to-amber-900/40 border-b border-amber-600/30">
+                <div class="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-2">
+                    <span class="text-amber-400 text-sm">⚠️</span>
+                    <p class="text-amber-300/90 text-xs font-medium text-center">
+                        El juego en exceso puede causar adicción. Juega con moderación y responsabilidad.
+                        <a href="{% url 'responsible-limits' %}" class="underline hover:text-amber-200 font-bold ml-1">Configura tus límites →</a>
+                    </p>
+                </div>
+            </div>
+        </template>
         {% block content %}{% endblock %}
     </main>
 

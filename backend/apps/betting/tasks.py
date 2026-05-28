@@ -9,6 +9,110 @@ from betting.services import SyncEngine
 
 logger = logging.getLogger(__name__)
 
+
+def _resolve_selection_result(market_name, selection_name, home_score, away_score):
+    """
+    Motor centralizado de resolución de selecciones para todos los tipos de mercado.
+
+    Determina si una selección de apuesta individual ha sido ganadora o perdedora
+    en base al marcador final del evento deportivo y las reglas específicas del mercado.
+
+    Mercados soportados:
+        - 1X2: Victoria local / Empate / Victoria visitante (fútbol clásico).
+        - Over/Under X.X: Parsea dinámicamente la línea del nombre del mercado
+          (ej: "Over/Under 2.5" → línea 2.5, "Over/Under 210.5" → línea 210.5).
+        - BTTS (Both Teams To Score): Ambos equipos anotan (Sí/No).
+        - Ganador (Moneyline): Victoria directa sin posibilidad de empate
+          (baloncesto, fútbol americano, béisbol, etc.).
+        - Handicap Asiático X.X: Aplica la línea de handicap al marcador del equipo local
+          y compara contra el visitante. Versión simplificada con medio gol (sin devolución).
+
+    Args:
+        market_name (str): Nombre del mercado tal como está en la BD (ej: "Over/Under 2.5").
+        selection_name (str): Nombre de la selección apostada (ej: "Local", "Over", "Sí").
+        home_score (int): Goles/puntos del equipo local al finalizar el evento.
+        away_score (int): Goles/puntos del equipo visitante al finalizar el evento.
+
+    Returns:
+        bool: True si la selección es ganadora, False si es perdedora.
+    """
+    import re
+    from decimal import Decimal
+
+    # --- MERCADO 1X2 (Fútbol clásico: Local / Empate / Visitante) ---
+    if market_name == "1X2":
+        if selection_name == "Local" and home_score > away_score:
+            return True
+        elif selection_name == "Empate" and home_score == away_score:
+            return True
+        elif selection_name == "Visitante" and home_score < away_score:
+            return True
+        return False
+
+    # --- MERCADO OVER/UNDER DINÁMICO (Parsea la línea numérica del nombre) ---
+    # Soporta cualquier línea: "Over/Under 2.5", "Over/Under 210.5", "Over/Under 45.5", etc.
+    if market_name.startswith("Over/Under"):
+        line_match = re.search(r'([\d.]+)', market_name)
+        if line_match:
+            line = Decimal(line_match.group(1))
+        else:
+            # Fallback a línea 2.5 si el parsing falla por datos corruptos
+            line = Decimal('2.5')
+            logger.warning(f"No se pudo parsear la línea del mercado '{market_name}'. Usando fallback 2.5.")
+
+        total_score = Decimal(str(home_score + away_score))
+        if selection_name == "Over" and total_score > line:
+            return True
+        elif selection_name == "Under" and total_score < line:
+            return True
+        return False
+
+    # --- MERCADO BTTS (Both Teams To Score / Ambos Marcan) ---
+    if market_name == "BTTS":
+        if selection_name == "Sí" and home_score > 0 and away_score > 0:
+            return True
+        elif selection_name == "No" and (home_score == 0 or away_score == 0):
+            return True
+        return False
+
+    # --- MERCADO GANADOR / MONEYLINE (Deportes sin empate: NBA, NFL, MLB, etc.) ---
+    if market_name == "Ganador (Moneyline)":
+        if selection_name == "Local" and home_score > away_score:
+            return True
+        elif selection_name == "Visitante" and home_score < away_score:
+            return True
+        return False
+
+    # --- MERCADO HANDICAP ASIÁTICO (Versión simplificada medio gol, sin devolución) ---
+    # Formato del nombre: "Handicap Asiático -0.5", "Handicap Asiático +1.5", etc.
+    # Se aplica el handicap al equipo local y se compara con el visitante.
+    if market_name.startswith("Handicap Asiático"):
+        line_match = re.search(r'([+-]?[\d.]+)', market_name)
+        if line_match:
+            handicap_line = Decimal(line_match.group(1))
+        else:
+            logger.warning(f"No se pudo parsear la línea del handicap '{market_name}'. Selección marcada como perdida.")
+            return False
+
+        # Marcador ajustado del local: home_score + handicap_line
+        adjusted_home = Decimal(str(home_score)) + handicap_line
+
+        if selection_name == "Local" and adjusted_home > Decimal(str(away_score)):
+            return True
+        elif selection_name == "Visitante" and adjusted_home < Decimal(str(away_score)):
+            return True
+        return False
+
+    # --- MERCADO NO RECONOCIDO ---
+    # Si llegamos aquí, el mercado no tiene lógica de resolución definida.
+    # Se registra un warning y se marca como perdida por defecto (conservador).
+    logger.warning(
+        f"Mercado '{market_name}' no reconocido para resolución automática. "
+        f"Selección '{selection_name}' marcada como perdida por defecto."
+    )
+    return False
+
+
 @shared_task
 def sync_fixtures():
     """
@@ -123,25 +227,13 @@ def settle_finished_matches():
                 market_name = bs.selection.market.name
                 selection_name = bs.selection.name
                 
-                won = False
-                if market_name == "1X2":
-                    if selection_name == "Local" and home_score > away_score:
-                        won = True
-                    elif selection_name == "Empate" and home_score == away_score:
-                        won = True
-                    elif selection_name == "Visitante" and home_score < away_score:
-                        won = True
-                elif market_name == "Over/Under 2.5":
-                    total_goals = home_score + away_score
-                    if selection_name == "Over" and total_goals > 2.5:
-                        won = True
-                    elif selection_name == "Under" and total_goals < 2.5:
-                        won = True
-                elif market_name == "BTTS":
-                    if selection_name == "Sí" and home_score > 0 and away_score > 0:
-                        won = True
-                    elif selection_name == "No" and (home_score == 0 or away_score == 0):
-                        won = True
+                # Resolver el resultado de la selección según el tipo de mercado
+                won = _resolve_selection_result(
+                    market_name=market_name,
+                    selection_name=selection_name,
+                    home_score=home_score,
+                    away_score=away_score
+                )
                 
                 bs.status = 'won' if won else 'lost'
                 bs.save()

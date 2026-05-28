@@ -40,6 +40,10 @@ class WalletDepositView(TemplateView):
     template_name = 'frontend/wallet/deposit.html'
 
 
+class WalletTransferView(TemplateView):
+    template_name = 'frontend/wallet/transfer.html'
+
+
 class ResponsibleLimitsView(TemplateView):
     template_name = 'frontend/responsible/limits.html'
 

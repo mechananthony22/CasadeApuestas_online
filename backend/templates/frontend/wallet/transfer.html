@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Transferir Fichas - FairBet Lab{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-8"
+     x-data="transfer()" x-init="init()">
+
+    <a href="{% url 'wallet-balance' %}" class="text-gray-400 hover:text-white mb-4 inline-block font-medium text-sm transition">&larr; Volver a Billetera</a>
+
+    <div class="bg-card rounded-xl border border-gray-800 p-8 shadow-xl">
+        <h1 class="text-2xl font-black text-white tracking-tight mb-2">⇆ Transferencia Interna</h1>
+        <p class="text-gray-400 text-xs mb-6">Envía fichas virtuales de forma instantánea a otro usuario verificado.</p>
+
+        <!-- Formulario -->
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Usuario Destinatario</label>
+                <input type="text" x-model="to_username" placeholder="Ingrese el username"
+                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none font-bold text-sm transition focus:ring-1 focus:ring-accent">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Monto a Transferir (S/.)</label>
+                <input type="number" x-model="amount" min="0.0001" step="0.01" placeholder="0.00"
+                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none font-black text-lg transition focus:ring-1 focus:ring-accent">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Descripción / Motivo (Opcional)</label>
+                <input type="text" x-model="description" placeholder="Ej: Pago, regalo, etc."
+                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none text-sm transition focus:ring-1 focus:ring-accent">
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <template x-if="error">
+                <div class="bg-red-900/40 border border-red-500/80 text-red-200 px-4 py-3 rounded-xl text-sm mb-4" x-text="error"></div>
+            </template>
+
+            <template x-if="success">
+                <div class="bg-win/10 border border-win text-win px-4 py-3 rounded-xl text-sm mb-4" x-text="success"></div>
+            </template>
+        </div>
+
+        <button @click="sendTransfer()" :disabled="sending || !to_username || !amount || amount <= 0"
+            class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-md transition mt-4 shadow-lg hover:shadow-blue-500/10">
+            <span x-show="!sending">Realizar Transferencia</span>
+            <span x-show="sending">Procesando...</span>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function transfer() {
+    return {
+        to_username: '',
+        amount: '',
+        description: '',
+        error: '',
+        success: '',
+        sending: false,
+        idempotencyKey: '',
+
+        init() {
+            if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
+            this.idempotencyKey = generateIdempotencyKey();
+        },
+
+        async sendTransfer() {
+            this.error = '';
+            this.success = '';
+            this.sending = true;
+
+            const payload = {
+                to_username: this.to_username.trim(),
+                amount: parseFloat(this.amount),
+                description: this.description.trim() || undefined
+            };
+
+            const data = await apiFetch('/wallet/transfer/', {
+                method: 'POST',
+                idempotencyKey: this.idempotencyKey,
+                body: JSON.stringify(payload)
+            });
+
+            this.sending = false;
+
+            if (data._status === 201 || data.mensaje) {
+                this.success = data.mensaje || 'Transferencia realizada con éxito';
+                this.to_username = '';
+                this.amount = '';
+                this.description = '';
+                // Generar nueva clave de idempotencia para la siguiente transacción
+                this.idempotencyKey = generateIdempotencyKey();
+            } else {
+                // Manejar errores estructurados de DRF
+                if (data.non_field_errors) {
+                    this.error = data.non_field_errors[0] || data.non_field_errors;
+                } else if (data.to_username) {
+                    this.error = data.to_username[0] || data.to_username;
+                } else if (data.amount) {
+                    this.error = data.amount[0] || data.amount;
+                } else if (data.error) {
+                    this.error = data.error;
+                } else {
+                    this.error = 'Ocurrió un error al procesar la transferencia.';
+                }
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

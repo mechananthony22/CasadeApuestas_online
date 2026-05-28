@@ -180,18 +180,65 @@ class DepositoView(APIView):
                 description=f'Recarga de {user.username}',
             )
 
+            # --- CONTROL DE BONO DE BIENVENIDA ---
+            from .models import UserBonus
+            califica_bono = not UserBonus.objects.filter(user=user).exists()
+            bono_otorgado = Decimal('0.0000')
+            required_turnover = Decimal('0.0000')
+            tx_bono_id = None
+
+            if califica_bono:
+                bono_otorgado = min(amount, Decimal('500.0000'))
+                required_turnover = bono_otorgado * 6  # Meta de rollover de 6x
+                tx_bono_id = uuid4()
+
+                # 1. Registrar la meta promocional del usuario
+                UserBonus.objects.create(
+                    user=user,
+                    bonus_amount=bono_otorgado,
+                    rollover_multiplier=6,
+                    required_turnover=required_turnover
+                )
+
+                # 2. Contabilidad en partida doble del Bono:
+                # - DÉBITO: bonos (sale del fondo promocional de la casa)
+                LedgerEntry.objects.create(
+                    user=None,
+                    account=LedgerEntry.Account.BONOS,
+                    amount=bono_otorgado,
+                    direction=LedgerEntry.Direction.DEBIT,
+                    transaction_id=tx_bono_id,
+                    description=f"Provisión de bono de bienvenida para {user.username}"
+                )
+
+                # - CRÉDITO: wallet_usuario del usuario (entra a su balance)
+                LedgerEntry.objects.create(
+                    user=user,
+                    account=LedgerEntry.Account.WALLET_USUARIO,
+                    amount=bono_otorgado,
+                    direction=LedgerEntry.Direction.CREDIT,
+                    transaction_id=tx_bono_id,
+                    description="Bono de Bienvenida 100%"
+                )
+
         nuevo_balance = LedgerEntry.get_user_balance(user)
 
-        return Response(
-            {
-                'mensaje': 'Depósito realizado exitosamente.',
-                'transaction_id': str(transaction_id),
-                'amount': f"{Decimal(amount).quantize(Decimal('0.0001'))}",
-                'nuevo_balance': f"{Decimal(nuevo_balance).quantize(Decimal('0.0001'))}",
-                'disclaimer': 'Plataforma educativa con moneda virtual. No constituye una casa de apuestas.',
-            },
-            status=status.HTTP_201_CREATED,
-        )
+        response_payload = {
+            'mensaje': 'Depósito realizado exitosamente.',
+            'transaction_id': str(transaction_id),
+            'amount': f"{Decimal(amount).quantize(Decimal('0.0001'))}",
+            'nuevo_balance': f"{Decimal(nuevo_balance).quantize(Decimal('0.0001'))}",
+            'disclaimer': 'Plataforma educativa con moneda virtual. No constituye una casa de apuestas.',
+        }
+
+        if califica_bono:
+            response_payload['bono_bienvenida'] = {
+                'bono_otorgado': f"{Decimal(bono_otorgado).quantize(Decimal('0.0001'))}",
+                'rollover_requerido': f"{Decimal(required_turnover).quantize(Decimal('0.0001'))}",
+                'mensaje': '¡Felicidades! Se ha acreditado tu Bono de Bienvenida del 100% en tu cuenta.'
+            }
+
+        return Response(response_payload, status=status.HTTP_201_CREATED)
 
 
 class RetiroView(APIView):
@@ -231,6 +278,25 @@ class RetiroView(APIView):
 
         with transaction.atomic():
             user = User.objects.select_for_update().get(pk=request.user.pk)
+
+            # --- CONTROL DE BONO DE BIENVENIDA ---
+            # Si el usuario tiene un bono activo y con rollover pendiente, bloquear retiro
+            from .models import UserBonus
+            try:
+                if hasattr(user, 'promo_bonus') and user.promo_bonus.is_active:
+                    remaining = user.promo_bonus.remaining_rollover
+                    if remaining > Decimal('0.0000'):
+                        return Response(
+                            {
+                                'error': f"No puedes retirar fondos. Tienes un bono activo con rollover pendiente (Falta apostar: S/ {remaining:.4f})",
+                                'rollover_restante': f"{Decimal(remaining).quantize(Decimal('0.0001'))}",
+                                'monto_bono': f"{Decimal(user.promo_bonus.bonus_amount).quantize(Decimal('0.0001'))}",
+                            },
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+            except UserBonus.DoesNotExist:
+                pass
+            # --- FIN CONTROL DE BONO DE BIENVENIDA ---
 
             balance_actual = LedgerEntry.get_user_balance(user)
 
@@ -368,3 +434,126 @@ class HistorialView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class TransferenciaView(APIView):
+    """
+    POST /api/v1/wallet/transfer/
+
+    Endpoint para la transferencia interna de fichas virtuales entre dos usuarios.
+    Mantiene el principio de partida doble y previene duplicaciones con Idempotency-Key.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # 1. Obtener y validar cabecera de idempotencia
+        idempotency_header = request.headers.get('Idempotency-Key')
+        if not idempotency_header:
+            return Response(
+                {'error': 'El encabezado HTTP "Idempotency-Key" es obligatorio.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        import uuid
+        try:
+            idempotency_uuid = uuid.UUID(idempotency_header)
+        except ValueError:
+            return Response(
+                {'error': 'El encabezado "Idempotency-Key" debe ser un UUID v4 válido.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 2. Consultar caché en Redis para verificar clave duplicada
+        from django.core.cache import cache
+        cache_key = f"idempotency_{idempotency_header}"
+        cached_response = cache.get(cache_key)
+        if cached_response:
+            return Response(cached_response['data'], status=cached_response['status'])
+
+        # 3. Serializar y validar reglas de negocio KYC y juego responsable
+        from .serializers import TransferenciaSerializer
+        serializer = TransferenciaSerializer(data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        amount = serializer.validated_data['amount']
+        receiver_user = serializer.validated_data['receiver_user']
+        description = serializer.validated_data.get('description', 'Transferencia interna de fichas')
+
+        # --- CONTROLES DE ANTI-FRAUDE (REGLA IP) ---
+        ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', '127.0.0.1')).split(',')[0].strip()
+        from fraud.services import FraudDetector
+        FraudDetector.log_and_check_ip(request.user, ip)
+        # --- FIN CONTROLES DE ANTI-FRAUDE ---
+
+        # 4. Procesamiento transaccional de la transferencia
+        try:
+            with transaction.atomic():
+                # Bloqueo pesimista en base de datos para ambos usuarios para evitar condiciones de carrera
+                # Para evitar interbloqueos (deadlocks), siempre bloqueamos en orden ascendente por ID
+                sender_id = request.user.pk
+                receiver_id = receiver_user.pk
+
+                if sender_id < receiver_id:
+                    sender = User.objects.select_for_update().get(pk=sender_id)
+                    receiver = User.objects.select_for_update().get(pk=receiver_id)
+                else:
+                    receiver = User.objects.select_for_update().get(pk=receiver_id)
+                    sender = User.objects.select_for_update().get(pk=sender_id)
+
+                # Calcular saldo disponible del Ledger contable
+                balance_actual = LedgerEntry.get_user_balance(sender)
+                if balance_actual < amount:
+                    return Response(
+                        {
+                            'error': 'Saldo insuficiente para realizar la transferencia.',
+                            'balance_actual': f"{Decimal(balance_actual).quantize(Decimal('0.0001'))}",
+                            'monto_solicitado': f"{Decimal(amount).quantize(Decimal('0.0001'))}",
+                        },
+                        status=status.HTTP_409_CONFLICT
+                    )
+
+                # Contabilidad en partida doble:
+                # - DÉBITO: wallet_usuario del Remitente (sale dinero)
+                # - CRÉDITO: wallet_usuario del Destinatario (entra dinero)
+                # Ambas entradas balanceadas con el mismo transaction_id (idempotency key)
+                LedgerEntry.objects.create(
+                    user=sender,
+                    account=LedgerEntry.Account.WALLET_USUARIO,
+                    amount=amount,
+                    direction=LedgerEntry.Direction.DEBIT,
+                    transaction_id=idempotency_uuid,
+                    description=f"Envío a {receiver.username}: {description}"
+                )
+
+                LedgerEntry.objects.create(
+                    user=receiver,
+                    account=LedgerEntry.Account.WALLET_USUARIO,
+                    amount=amount,
+                    direction=LedgerEntry.Direction.CREDIT,
+                    transaction_id=idempotency_uuid,
+                    description=f"Recepción de {sender.username}: {description}"
+                )
+
+        except Exception as e:
+            return Response(
+                {'error': f"Error interno al procesar la transferencia: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        nuevo_balance = LedgerEntry.get_user_balance(sender)
+        response_data = {
+            'mensaje': 'Transferencia realizada exitosamente.',
+            'transaction_id': str(idempotency_uuid),
+            'amount': f"{Decimal(amount).quantize(Decimal('0.0001'))}",
+            'nuevo_balance': f"{Decimal(nuevo_balance).quantize(Decimal('0.0001'))}",
+            'destinatario': receiver_user.username,
+            'disclaimer': 'Plataforma educativa con moneda virtual. No constituye una casa de apuestas.'
+        }
+
+        # 5. Guardar respuesta en caché por 5 minutos para idempotencia
+        cache.set(cache_key, {'status': status.HTTP_201_CREATED, 'data': response_data}, timeout=300)
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
+

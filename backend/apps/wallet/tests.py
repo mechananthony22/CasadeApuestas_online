@@ -56,6 +56,16 @@ class TestModeloLedgerEntry(TestCase):
             email='wallet@fairbet.pe',
             password='Password123!'
         )
+        from users.models import UserProfile
+        from datetime import date
+        UserProfile.objects.get_or_create(
+            user=self.usuario,
+            defaults={
+                'dni': '72418591',
+                'birth_date': date(1995, 1, 1),
+                'verification_status': UserProfile.STATUS_VERIFIED
+            }
+        )
 
     def test_get_user_balance_retorna_cero_sin_movimientos(self):
         """Un usuario sin movimientos debe tener saldo 0.0000."""
@@ -164,6 +174,16 @@ class TestInvarianteSumaCero(TestCase):
             email='invariante@fairbet.pe',
             password='Password123!'
         )
+        from users.models import UserProfile
+        from datetime import date
+        UserProfile.objects.get_or_create(
+            user=self.usuario,
+            defaults={
+                'dni': '72418592',
+                'birth_date': date(1995, 1, 1),
+                'verification_status': UserProfile.STATUS_VERIFIED
+            }
+        )
 
     def test_transaccion_deposito_suma_cero(self):
         """Un depósito: CREDIT wallet + DEBIT casa = 0."""
@@ -246,6 +266,16 @@ class TestInvarianteSaldoNoNegativo(TestCase):
             email='saldo@fairbet.pe',
             password='Password123!'
         )
+        from users.models import UserProfile
+        from datetime import date
+        UserProfile.objects.get_or_create(
+            user=self.usuario,
+            defaults={
+                'dni': '72418593',
+                'birth_date': date(1995, 1, 1),
+                'verification_status': UserProfile.STATUS_VERIFIED
+            }
+        )
 
     def test_usuario_sin_fondos_tiene_saldo_cero(self):
         """Un usuario sin depósitos debe tener saldo 0, no negativo."""
@@ -268,6 +298,16 @@ class TestInvarianteSistemaConstante(TestCase):
             username='sistema_test',
             email='sistema@fairbet.pe',
             password='Password123!'
+        )
+        from users.models import UserProfile
+        from datetime import date
+        UserProfile.objects.get_or_create(
+            user=self.usuario,
+            defaults={
+                'dni': '72418594',
+                'birth_date': date(1995, 1, 1),
+                'verification_status': UserProfile.STATUS_VERIFIED
+            }
         )
 
     def test_sistema_vacio_suma_cero(self):
@@ -313,10 +353,21 @@ class TestHypothesisInvariantes(HypothesisTestCase):
     """
 
     def setUp(self):
+        User.objects.filter(username='hypothesis_test').delete()
         self.usuario = User.objects.create_user(
             username='hypothesis_test',
             email='hypothesis@fairbet.pe',
             password='Password123!'
+        )
+        from users.models import UserProfile
+        from datetime import date
+        UserProfile.objects.get_or_create(
+            user=self.usuario,
+            defaults={
+                'dni': '72418595',
+                'birth_date': date(1995, 1, 1),
+                'verification_status': UserProfile.STATUS_VERIFIED
+            }
         )
 
     @given(
@@ -502,9 +553,26 @@ class TestDepositoEndpoint(APITestCase):
 
     def setUp(self):
         self.usuario = User.objects.create_user(
-            username='deposit_test',
-            email='deposit@fairbet.pe',
+            username='deposito_test',
+            email='deposito@fairbet.pe',
             password='Password123!'
+        )
+        from users.models import UserProfile
+        from datetime import date
+        UserProfile.objects.get_or_create(
+            user=self.usuario,
+            defaults={
+                'dni': '72418596',
+                'birth_date': date(1995, 1, 1),
+                'verification_status': UserProfile.STATUS_VERIFIED
+            }
+        )
+        from wallet.models import UserBonus
+        UserBonus.objects.create(
+            user=self.usuario,
+            bonus_amount=Decimal('0.0000'),
+            required_turnover=Decimal('0.0000'),
+            is_active=False
         )
         self.client.force_authenticate(user=self.usuario)
         self.url = reverse('api-wallet-deposit')
@@ -546,6 +614,16 @@ class TestRetiroEndpoint(APITestCase):
             username='withdraw_test',
             email='withdraw@fairbet.pe',
             password='Password123!'
+        )
+        from users.models import UserProfile
+        from datetime import date
+        UserProfile.objects.get_or_create(
+            user=self.usuario,
+            defaults={
+                'dni': '72418597',
+                'birth_date': date(1995, 1, 1),
+                'verification_status': UserProfile.STATUS_VERIFIED
+            }
         )
         self.client.force_authenticate(user=self.usuario)
         self.url = reverse('api-wallet-withdraw')
@@ -601,6 +679,16 @@ class TestBalanceEndpoint(APITestCase):
             email='balance@fairbet.pe',
             password='Password123!'
         )
+        from users.models import UserProfile
+        from datetime import date
+        UserProfile.objects.get_or_create(
+            user=self.usuario,
+            defaults={
+                'dni': '72418598',
+                'birth_date': date(1995, 1, 1),
+                'verification_status': UserProfile.STATUS_VERIFIED
+            }
+        )
         self.client.force_authenticate(user=self.usuario)
         self.url = reverse('api-wallet-balance')
 
@@ -637,6 +725,16 @@ class TestConcurrenciaRetiro(TestCase):
             username='concurrencia_test',
             email='concurrencia@fairbet.pe',
             password='Password123!'
+        )
+        from users.models import UserProfile
+        from datetime import date
+        UserProfile.objects.get_or_create(
+            user=self.usuario,
+            defaults={
+                'dni': '72418599',
+                'birth_date': date(1995, 1, 1),
+                'verification_status': UserProfile.STATUS_VERIFIED
+            }
         )
 
         from uuid import uuid4
@@ -709,3 +807,340 @@ class TestConcurrenciaRetiro(TestCase):
 
         balance_final = LedgerEntry.get_user_balance(self.usuario)
         self.assertGreaterEqual(balance_final, Decimal('0.0000'))
+
+
+# ============================================================
+# Tests de Transferencia Interna
+# ============================================================
+
+class TestTransferenciaEndpoint(APITestCase):
+    """Tests de integración para POST /api/v1/wallet/transfer/."""
+
+    def setUp(self):
+        self.sender = User.objects.create_user(
+            username='sender_user',
+            email='sender@fairbet.pe',
+            password='Password123!'
+        )
+        self.receiver = User.objects.create_user(
+            username='receiver_user',
+            email='receiver@fairbet.pe',
+            password='Password123!'
+        )
+
+        from users.models import UserProfile
+        from datetime import date
+        self.sender_profile = UserProfile.objects.create(
+            user=self.sender,
+            dni='12345671',
+            birth_date=date(1995, 1, 1),
+            verification_status=UserProfile.STATUS_VERIFIED
+        )
+        self.receiver_profile = UserProfile.objects.create(
+            user=self.receiver,
+            dni='12345672',
+            birth_date=date(1995, 1, 1),
+            verification_status=UserProfile.STATUS_VERIFIED
+        )
+
+        self.client.force_authenticate(user=self.sender)
+        self.url = reverse('api-wallet-transfer')
+
+        # Depositar saldo inicial al sender
+        from uuid import uuid4
+        tx = uuid4()
+        LedgerEntry.objects.create(
+            user=self.sender,
+            account=LedgerEntry.Account.WALLET_USUARIO,
+            amount=Decimal('500.0000'),
+            direction=LedgerEntry.Direction.CREDIT,
+            transaction_id=tx,
+            description='Deposito inicial'
+        )
+        LedgerEntry.objects.create(
+            user=None,
+            account=LedgerEntry.Account.CASA,
+            amount=Decimal('500.0000'),
+            direction=LedgerEntry.Direction.DEBIT,
+            transaction_id=tx,
+            description='Financiamiento de prueba'
+        )
+
+    def test_transferencia_exitosa(self):
+        """Una transferencia válida debe decrementar el sender y sumar al receiver."""
+        from uuid import uuid4
+        headers = {'HTTP_IDEMPOTENCY_KEY': str(uuid4())}
+        payload = {
+            'to_username': 'receiver_user',
+            'amount': '200.0000',
+            'description': 'Regalo de cumpleaños'
+        }
+
+        respuesta = self.client.post(self.url, payload, format='json', **headers)
+        self.assertEqual(respuesta.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(respuesta.data['nuevo_balance'], '300.0000')
+
+        # Verificar balances
+        self.assertEqual(LedgerEntry.get_user_balance(self.sender), Decimal('300.0000'))
+        self.assertEqual(LedgerEntry.get_user_balance(self.receiver), Decimal('200.0000'))
+
+        # Verificar sistema invariant = 0
+        self.assertEqual(LedgerEntry.get_system_zero_invariant(), Decimal('0.0000'))
+
+    def test_transferencia_saldo_insuficiente(self):
+        """Una transferencia mayor al saldo del sender debe fallar con HTTP 409."""
+        from uuid import uuid4
+        headers = {'HTTP_IDEMPOTENCY_KEY': str(uuid4())}
+        payload = {
+            'to_username': 'receiver_user',
+            'amount': '1000.0000'
+        }
+
+        respuesta = self.client.post(self.url, payload, format='json', **headers)
+        self.assertEqual(respuesta.status_code, status.HTTP_409_CONFLICT)
+        self.assertIn('error', respuesta.data)
+
+    def test_transferencia_a_uno_mismo(self):
+        """Un usuario no puede transferirse a sí mismo."""
+        from uuid import uuid4
+        headers = {'HTTP_IDEMPOTENCY_KEY': str(uuid4())}
+        payload = {
+            'to_username': 'sender_user',
+            'amount': '100.0000'
+        }
+
+        respuesta = self.client.post(self.url, payload, format='json', **headers)
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('to_username', respuesta.data)
+
+    def test_transferencia_destinatario_inexistente(self):
+        """Un destinatario que no existe debe dar HTTP 400."""
+        from uuid import uuid4
+        headers = {'HTTP_IDEMPOTENCY_KEY': str(uuid4())}
+        payload = {
+            'to_username': 'no_existe',
+            'amount': '100.0000'
+        }
+
+        respuesta = self.client.post(self.url, payload, format='json', **headers)
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('to_username', respuesta.data)
+
+    def test_transferencia_sender_autoexcluido(self):
+        """Un remitente autoexcluido no puede transferir."""
+        from responsible.models import AutoExclusion
+        from django.utils import timezone
+        AutoExclusion.objects.create(
+            user=self.sender,
+            excluded_until=timezone.now() + timezone.timedelta(days=7)
+        )
+
+        from uuid import uuid4
+        headers = {'HTTP_IDEMPOTENCY_KEY': str(uuid4())}
+        payload = {
+            'to_username': 'receiver_user',
+            'amount': '100.0000'
+        }
+
+        respuesta = self.client.post(self.url, payload, format='json', **headers)
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', respuesta.data)
+
+    def test_transferencia_receiver_autoexcluido(self):
+        """No se puede transferir a un destinatario autoexcluido."""
+        from responsible.models import AutoExclusion
+        from django.utils import timezone
+        AutoExclusion.objects.create(
+            user=self.receiver,
+            excluded_until=timezone.now() + timezone.timedelta(days=7)
+        )
+
+        from uuid import uuid4
+        headers = {'HTTP_IDEMPOTENCY_KEY': str(uuid4())}
+        payload = {
+            'to_username': 'receiver_user',
+            'amount': '100.0000'
+        }
+
+        respuesta = self.client.post(self.url, payload, format='json', **headers)
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('to_username', respuesta.data)
+
+    def test_transferencia_idempotente(self):
+        """Las peticiones duplicadas con la misma clave de idempotencia deben retornar la misma respuesta."""
+        from uuid import uuid4
+        key = str(uuid4())
+        headers = {'HTTP_IDEMPOTENCY_KEY': key}
+        payload = {
+            'to_username': 'receiver_user',
+            'amount': '100.0000'
+        }
+
+        # Primer envío
+        r1 = self.client.post(self.url, payload, format='json', **headers)
+        self.assertEqual(r1.status_code, status.HTTP_201_CREATED)
+
+        # Segundo envío
+        r2 = self.client.post(self.url, payload, format='json', **headers)
+        self.assertEqual(r2.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(r1.data['transaction_id'], r2.data['transaction_id'])
+
+
+class TestBonoBienvenidaYRollover(APITestCase):
+    """
+    Suite de pruebas para validar el Bono de Bienvenida (100% hasta S/ 500),
+    la restricción de retiros con rollover pendiente, y la acumulación
+    correcta del rollover según la cuota de la apuesta colocada.
+    """
+
+    def setUp(self):
+        # Crear usuario para las pruebas de bonos
+        self.usuario = User.objects.create_user(
+            username='bonus_user',
+            email='bonus_user@fairbet.pe',
+            password='Password123!'
+        )
+        from users.models import UserProfile
+        from datetime import date
+        UserProfile.objects.get_or_create(
+            user=self.usuario,
+            defaults={
+                'dni': '72418598',
+                'birth_date': date(1995, 1, 1),
+                'verification_status': UserProfile.STATUS_VERIFIED
+            }
+        )
+        self.client.force_authenticate(user=self.usuario)
+
+        # Crear catálogo deportivo mínimo para poder colocar apuestas
+        from django.utils import timezone
+        from betting.models import League, Team, Event, Market, Selection
+        self.league = League.objects.create(api_id=40, name="Premier League", country="Inglaterra")
+        self.home_team = Team.objects.create(api_id=3, name="Arsenal")
+        self.away_team = Team.objects.create(api_id=4, name="Chelsea")
+        self.event = Event.objects.create(
+            api_id=101,
+            league=self.league,
+            home_team=self.home_team,
+            away_team=self.away_team,
+            starts_at=timezone.now() + timezone.timedelta(days=1),
+            status='scheduled'
+        )
+        self.market = Market.objects.create(event=self.event, name="1X2")
+        # Selección elegible (cuota >= 1.50)
+        self.sel_high = Selection.objects.create(market=self.market, name="Local", odds=Decimal("1.8000"))
+        # Selección no elegible para rollover (cuota < 1.50)
+        self.sel_low = Selection.objects.create(market=self.market, name="Empate", odds=Decimal("1.2000"))
+
+    def test_primer_deposito_otorga_bono_bienvenida(self):
+        """El primer depósito otorga un bono del 100% hasta S/ 500 y crea el UserBonus con rollover de 6x."""
+        url_deposit = reverse('api-wallet-deposit')
+        # Hacemos una recarga de 300
+        respuesta = self.client.post(url_deposit, {'amount': '300.0000'}, format='json')
+        self.assertEqual(respuesta.status_code, status.HTTP_201_CREATED)
+        
+        # Debe recibir 300 en efectivo + 300 de bono = 600 de balance
+        self.assertEqual(Decimal(respuesta.data['nuevo_balance']), Decimal('600.0000'))
+        self.assertIn('bono_bienvenida', respuesta.data)
+        self.assertEqual(Decimal(respuesta.data['bono_bienvenida']['bono_otorgado']), Decimal('300.0000'))
+        self.assertEqual(Decimal(respuesta.data['bono_bienvenida']['rollover_requerido']), Decimal('1800.0000')) # 300 * 6
+
+        # Verificar en base de datos
+        from wallet.models import UserBonus
+        bono = UserBonus.objects.get(user=self.usuario)
+        self.assertTrue(bono.is_active)
+        self.assertEqual(bono.bonus_amount, Decimal('300.0000'))
+        self.assertEqual(bono.required_turnover, Decimal('1800.0000'))
+        self.assertEqual(bono.current_turnover, Decimal('0.0000'))
+        self.assertEqual(bono.remaining_rollover, Decimal('1800.0000'))
+
+    def test_bloqueo_de_retiros_con_rollover_activo(self):
+        """Intentar retirar fondos teniendo un bono activo con rollover pendiente debe fallar con HTTP 400."""
+        # 1. Realizar primer depósito para activar bono
+        url_deposit = reverse('api-wallet-deposit')
+        self.client.post(url_deposit, {'amount': '100.0000'}, format='json')
+
+        # 2. Intentar retirar
+        url_withdraw = reverse('api-wallet-withdraw')
+        respuesta = self.client.post(url_withdraw, {'amount': '50.0000'}, format='json')
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', respuesta.data)
+        self.assertIn('rollover pendiente', respuesta.data['error'])
+
+    def test_acumulacion_de_rollover_y_liberacion(self):
+        """Colocar apuestas elegibles acumula rollover. Al cumplir la meta, el bono se desactiva y se puede retirar."""
+        # 1. Activar bono con depósito de 100 (Rollover requerido = 600)
+        url_deposit = reverse('api-wallet-deposit')
+        self.client.post(url_deposit, {'amount': '100.0000'}, format='json')
+        
+        from wallet.models import UserBonus
+        bono = UserBonus.objects.get(user=self.usuario)
+        self.assertEqual(bono.required_turnover, Decimal('600.0000'))
+
+        # 2. Colocar apuesta con cuota baja (odds = 1.20). No debe acumular rollover
+        from uuid import uuid4
+        self.client.post(
+            '/api/v1/betting/bets/',
+            {
+                "selections": [{"selection_id": self.sel_low.id, "expected_odds": "1.2000"}],
+                "stake": "50.0000"
+            },
+            format='json',
+            HTTP_IDEMPOTENCY_KEY=str(uuid4())
+        )
+        bono.refresh_from_db()
+        self.assertEqual(bono.current_turnover, Decimal('0.0000')) # No acumuló por cuota baja
+
+        # 3. Colocar apuesta con cuota elegible (odds = 1.80). Debe acumular rollover
+        # Recargamos más fichas manualmente primero para evitar saldo insuficiente (409 Conflict)
+        LedgerEntry.objects.create(
+            user=self.usuario,
+            account=LedgerEntry.Account.WALLET_USUARIO,
+            amount=Decimal('500.0000'),
+            direction=LedgerEntry.Direction.CREDIT,
+            transaction_id=uuid4(),
+            description="Recarga manual previa"
+        )
+        self.client.post(
+            '/api/v1/betting/bets/',
+            {
+                "selections": [{"selection_id": self.sel_high.id, "expected_odds": "1.8000"}],
+                "stake": "200.0000"
+            },
+            format='json',
+            HTTP_IDEMPOTENCY_KEY=str(uuid4())
+        )
+        bono.refresh_from_db()
+        self.assertEqual(bono.current_turnover, Decimal('200.0000'))
+        self.assertTrue(bono.is_active)
+
+        # 4. Colocar apuesta elegible por el resto del rollover (S/ 400)
+        # Recargamos fichas para tener saldo suficiente (el bono ya existe, no se otorga otro bono)
+        LedgerEntry.objects.create(
+            user=self.usuario,
+            account=LedgerEntry.Account.WALLET_USUARIO,
+            amount=Decimal('500.0000'),
+            direction=LedgerEntry.Direction.CREDIT,
+            transaction_id=uuid4(),
+            description="Recarga manual"
+        )
+        
+        self.client.post(
+            '/api/v1/betting/bets/',
+            {
+                "selections": [{"selection_id": self.sel_high.id, "expected_odds": "1.8000"}],
+                "stake": "400.0000"
+            },
+            format='json',
+            HTTP_IDEMPOTENCY_KEY=str(uuid4())
+        )
+        bono.refresh_from_db()
+        self.assertEqual(bono.current_turnover, Decimal('600.0000'))
+        self.assertFalse(bono.is_active) # Bono liberado/completado
+
+        # 5. Intentar retirar ahora (debe permitirlo)
+        url_withdraw = reverse('api-wallet-withdraw')
+        respuesta = self.client.post(url_withdraw, {'amount': '10.0000'}, format='json')
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+
+
