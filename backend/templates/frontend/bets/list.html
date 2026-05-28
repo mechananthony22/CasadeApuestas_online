@@ -4,21 +4,25 @@
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
      x-data="betList()" x-init="init()">
 
-    <h1 class="text-3xl font-bold mb-8">Mis Apuestas</h1>
-
-    <div class="flex gap-2 mb-6">
-        <button @click="filter = 'all'; filterBets()"
-            :class="filter === 'all' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition">Todas</button>
-        <button @click="filter = 'accepted'; filterBets()"
-            :class="filter === 'accepted' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition">Activas</button>
-        <button @click="filter = 'won'; filterBets()"
-            :class="filter === 'won' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition">Ganadas</button>
-        <button @click="filter = 'lost'; filterBets()"
-            :class="filter === 'lost' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition">Perdidas</button>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-white tracking-tight">📋 Mis Apuestas</h1>
+            <p class="text-xs text-gray-400 mt-1">Historial de apuestas activas, ganadas y perdidas en tu cuenta educativa</p>
+        </div>
+        <div class="flex gap-1.5 bg-[#0d0f12] p-1.5 rounded-xl border border-gray-800/40">
+            <button @click="filter = 'all'; filterBets()"
+                :class="filter === 'all' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">Todas</button>
+            <button @click="filter = 'accepted'; filterBets()"
+                :class="filter === 'accepted' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">Activas</button>
+            <button @click="filter = 'won'; filterBets()"
+                :class="filter === 'won' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">Ganadas</button>
+            <button @click="filter = 'lost'; filterBets()"
+                :class="filter === 'lost' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">Perdidas</button>
+        </div>
     </div>
 
     <template x-if="loading">
@@ -36,22 +40,22 @@
 
     <div class="space-y-4" x-show="!loading">
         <template x-for="bet in filtered" :key="bet.id">
-            <div class="bg-card rounded-xl border border-gray-800 p-5">
+            <div class="bg-card rounded-xl border border-gray-800/80 p-5 hover:border-accent/40 transition">
                 <div class="flex justify-between items-start mb-3">
                     <div>
-                        <p class="text-sm text-gray-400">Boleto #<span x-text="bet.id"></span></p>
-                        <p class="text-sm text-gray-500" x-text="bet.created_at"></p>
+                        <p class="text-xs font-bold text-gray-400">Boleto #<span x-text="bet.id"></span></p>
+                        <p class="text-xs text-gray-500 mt-0.5" x-text="formatDateTime(bet.created_at)"></p>
                     </div>
-                    <span class="text-xs font-bold uppercase px-3 py-1 rounded"
-                          :class="bet.status === 'won' ? 'bg-win/20 text-win' : bet.status === 'lost' ? 'bg-red-900/30 text-red-400' : bet.status === 'accepted' ? 'bg-blue-900/30 text-blue-400' : 'bg-gray-800 text-gray-400'"
+                    <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md"
+                          :class="bet.status === 'won' ? 'bg-win/10 text-win border border-win/20' : bet.status === 'lost' ? 'bg-red-950/40 text-red-400 border border-red-900/30' : bet.status === 'accepted' ? 'bg-blue-950/40 text-blue-400 border border-blue-900/30' : 'bg-[#0d0f12] text-gray-400 border border-gray-800'"
                           x-text="bet.status === 'accepted' ? 'Activa' : bet.status === 'won' ? 'Ganada' : bet.status === 'lost' ? 'Perdida' : bet.status === 'cashed_out' ? 'Cashout' : 'Cancelada'"></span>
                 </div>
 
-                <div class="bg-[#222] rounded-lg p-3 mb-3">
-                    <p class="font-semibold" x-text="bet.event_name || 'Evento'"></p>
-                    <p class="text-sm text-gray-400">
-                        <span x-text="bet.type === 'simple' ? 'Simple' : 'Combinada'"></span> |
-                        <span x-text="bet.selection_name || ''"></span>
+                <div class="bg-[#0d0f12] border border-gray-800/40 rounded-lg p-3 mb-3">
+                    <p class="font-bold text-sm text-gray-200" x-text="bet.event_name || 'Evento'"></p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <span class="font-semibold uppercase" x-text="bet.type === 'simple' ? 'Simple' : 'Combinada'"></span> &bull;
+                        <span class="text-win font-bold" x-text="bet.selection_name || ''"></span>
                     </p>
                 </div>
 

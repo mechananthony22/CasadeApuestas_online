@@ -14,36 +14,36 @@
         </p>
 
         <div class="space-y-4 mb-6">
-            <label class="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
-                   :class="duration === 7 ? 'border-accent bg-accent/10' : 'border-gray-700'">
+            <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
+                   :class="duration === 7 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'">
                 <input type="radio" value="7" x-model="duration" class="sr-only">
                 <div>
-                    <p class="font-bold">7 días</p>
-                    <p class="text-sm text-gray-400">Una semana de descanso</p>
+                    <p class="font-extrabold text-white text-base">7 días</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Una semana de descanso temporal</p>
                 </div>
             </label>
-            <label class="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
-                   :class="duration === 30 ? 'border-accent bg-accent/10' : 'border-gray-700'">
+            <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
+                   :class="duration === 30 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'">
                 <input type="radio" value="30" x-model="duration" class="sr-only">
                 <div>
-                    <p class="font-bold">30 días</p>
-                    <p class="text-sm text-gray-400">Un mes de descanso</p>
+                    <p class="font-extrabold text-white text-base">30 días</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Un mes completo de descanso temporal</p>
                 </div>
             </label>
-            <label class="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
-                   :class="duration === 90 ? 'border-accent bg-accent/10' : 'border-gray-700'">
+            <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
+                   :class="duration === 90 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'">
                 <input type="radio" value="90" x-model="duration" class="sr-only">
                 <div>
-                    <p class="font-bold">90 días</p>
-                    <p class="text-sm text-gray-400">Tres meses de descanso</p>
+                    <p class="font-extrabold text-white text-base">90 días</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Tres meses de descanso temporal</p>
                 </div>
             </label>
-            <label class="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
-                   :class="duration === 0 ? 'border-accent bg-accent/10' : 'border-gray-700'">
+            <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
+                   :class="duration === 0 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'">
                 <input type="radio" value="0" x-model="duration" class="sr-only">
                 <div>
-                    <p class="font-bold">Permanente</p>
-                    <p class="text-sm text-gray-400">Indefinido (sin fecha de término)</p>
+                    <p class="font-extrabold text-white text-base">Permanente</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Indefinido (sin fecha de término programada)</p>
                 </div>
             </label>
         </div>

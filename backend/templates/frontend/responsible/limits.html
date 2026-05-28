@@ -4,25 +4,27 @@
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
      x-data="limits()" x-init="init()">
 
-    <h1 class="text-3xl font-bold mb-2">Límites de Depósito</h1>
-    <p class="text-gray-400 mb-8">Configura tus límites diarios, semanales y mensuales</p>
+    <div class="mb-8">
+        <h1 class="text-3xl font-black text-white tracking-tight">🛡️ Límites de Depósito</h1>
+        <p class="text-xs text-gray-400 mt-1">Configura tus límites de depósito diario, semanal y mensual para promover el juego responsable</p>
+    </div>
 
     <div class="bg-card rounded-xl border border-gray-800 p-8">
         <div class="space-y-6">
             <div>
-                <label class="block text-sm text-gray-400 mb-2">Límite Diario (S/)</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Límite Diario (S/)</label>
                 <input type="number" x-model="limits.daily" min="0" step="10"
-                    class="w-full bg-[#222] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
+                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none font-bold">
             </div>
             <div>
-                <label class="block text-sm text-gray-400 mb-2">Límite Semanal (S/)</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Límite Semanal (S/)</label>
                 <input type="number" x-model="limits.weekly" min="0" step="10"
-                    class="w-full bg-[#222] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
+                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none font-bold">
             </div>
             <div>
-                <label class="block text-sm text-gray-400 mb-2">Límite Mensual (S/)</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Límite Mensual (S/)</label>
                 <input type="number" x-model="limits.monthly" min="0" step="10"
-                    class="w-full bg-[#222] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
+                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none font-bold">
             </div>
         </div>
 

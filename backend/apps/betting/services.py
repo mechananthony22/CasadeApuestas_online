@@ -75,7 +75,7 @@ class SyncEngine:
         def api_fetch_fn():
             return self.client.get_fixtures(league_id, season)
 
-fixtures_data = self.cache.get_fixtures(league_id, api_fetch_fn)
+        fixtures_data = self.cache.get_fixtures(league_id, api_fetch_fn)
         if not fixtures_data:
             logger.warning(f"No se obtuvieron fixtures de The Odds API para la liga {league_id}")
             return 0
@@ -120,6 +120,13 @@ fixtures_data = self.cache.get_fixtures(league_id, api_fetch_fn)
                 if not home_team_name or not away_team_name:
                     continue
                 
+                from django.utils.dateparse import parse_datetime
+                commence_time_raw = item.get('commence_time')
+                if isinstance(commence_time_raw, str):
+                    commence_time = parse_datetime(commence_time_raw)
+                else:
+                    commence_time = commence_time_raw
+
                 home_team_id = string_to_integer_id(home_team_name)
                 away_team_id = string_to_integer_id(away_team_name)
 
@@ -147,7 +154,6 @@ fixtures_data = self.cache.get_fixtures(league_id, api_fetch_fn)
                 )
                 
                 # 3. Crear o actualizar evento deportivo
-                commence_time = item.get('commence_time')
                 event_obj, _ = Event.objects.update_or_create(
                     api_id=event_api_id,
                     defaults={

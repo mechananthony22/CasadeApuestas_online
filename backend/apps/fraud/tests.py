@@ -63,7 +63,7 @@ class FraudDetectorTestCase(APITestCase):
            distintos durante depósitos debe gatillar SuspiciousActivity.
         """
         shared_ip = "192.168.12.12"
-        url_deposit = reverse('wallet-deposit')
+        url_deposit = reverse('api-wallet-deposit')
 
         # Realizar depósitos simulados con 3 usuarios diferentes desde la misma IP (no debe disparar alerta aún)
         for i in range(3):
@@ -109,7 +109,7 @@ class FraudDetectorTestCase(APITestCase):
         self.client.force_authenticate(user=u)
 
         # 1. Realizar recarga
-        url_deposit = reverse('wallet-deposit')
+        url_deposit = reverse('api-wallet-deposit')
         self.client.post(url_deposit, {'amount': '200.0000'}, format='json')
 
         # 2. Colocar una apuesta de 100

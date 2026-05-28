@@ -5,14 +5,14 @@ from .views import DepositoView, RetiroView, BalanceView, HistorialView
 # Se prefija con 'api/v1/' desde config/urls.py
 urlpatterns = [
     # POST /api/v1/wallet/deposit/ → Recarga simulada de fichas
-    path('wallet/deposit/', DepositoView.as_view(), name='wallet-deposit'),
+    path('wallet/deposit/', DepositoView.as_view(), name='api-wallet-deposit'),
 
     # POST /api/v1/wallet/withdraw/ → Retiro simulado de fichas
-    path('wallet/withdraw/', RetiroView.as_view(), name='wallet-withdraw'),
+    path('wallet/withdraw/', RetiroView.as_view(), name='api-wallet-withdraw'),
 
     # GET /api/v1/wallet/balance/ → Saldo calculado por SUM(credits) - SUM(debits)
-    path('wallet/balance/', BalanceView.as_view(), name='wallet-balance'),
+    path('wallet/balance/', BalanceView.as_view(), name='api-wallet-balance'),
 
     # GET /api/v1/wallet/history/ → Historial de movimientos contables
-    path('wallet/history/', HistorialView.as_view(), name='wallet-history'),
+    path('wallet/history/', HistorialView.as_view(), name='api-wallet-history'),
 ]

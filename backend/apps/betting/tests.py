@@ -202,9 +202,10 @@ class CeleryTasksTestCase(TestCase):
     @patch('betting.tasks.SyncEngine.sync_fixtures')
     def test_sync_fixtures_task(self, mock_sync):
         mock_sync.return_value = 5
-        res = sync_fixtures()
-        self.assertIn("10 partidos", res)
-        self.assertEqual(mock_sync.call_count, 2)
+        with self.settings(THE_ODDS_API_SPORTS={39: 'soccer_epl', 140: 'soccer_spain_la_liga'}):
+            res = sync_fixtures()
+            self.assertIn("10 partidos", res)
+            self.assertEqual(mock_sync.call_count, 2)
 
     @patch('betting.tasks.SyncEngine.sync_live_scores')
     def test_sync_live_scores_task(self, mock_sync):
@@ -1167,7 +1168,12 @@ class LiveAndCombinadasTestCase(APITestCase):
         se suspendan automáticamente y cualquier intento de apuesta sea bloqueado.
         """
         from uuid import uuid4
-        # Cambiar a in_play
+        from django.core.cache import cache
+        from betting.services import string_to_integer_id
+        cache.clear()
+        
+        event_hash = "mock_live_event_901"
+        self.event1.api_id = string_to_integer_id(event_hash)
         self.event1.status = 'in_play'
         self.event1.home_score = 0
         self.event1.away_score = 0
@@ -1176,7 +1182,7 @@ class LiveAndCombinadasTestCase(APITestCase):
         # Mockear get_live_fixtures para simular un gol en vivo (home_score cambia de 0 a 1)
         mock_response = [
             {
-                'id': str(self.event1.api_id),  # string hash del evento
+                'id': event_hash,  # string hash del evento
                 'home_team': self.event1.home_team.name,
                 'away_team': self.event1.away_team.name,
                 'commence_time': self.event1.starts_at.isoformat(),
@@ -1312,7 +1318,9 @@ class TheOddsAPITestCase(APITestCase):
         Prueba que la sincronización de marcadores en vivo de The Odds API
         actualice la base de datos y dispare la suspensión de mercados ante un gol.
         """
+        from django.core.cache import cache
         from betting.services import string_to_integer_id
+        cache.clear()
         # Pre-crear liga, equipos y partido en BD
         event_hash = "live_event_hash_abc"
         event_id = string_to_integer_id(event_hash)

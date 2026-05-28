@@ -142,7 +142,6 @@ THE_ODDS_API_KEY = os.environ.get('THE_ODDS_API_KEY', '')
 THE_ODDS_API_URL = os.environ.get('THE_ODDS_API_URL', 'https://api.the-odds-api.com/v4')
 
 # Mapeo de IDs de liga locales a sport_key de The Odds API
-# SOLO FÚTBOL: Solo soccer para el tier gratuito (gratis) de The Odds API
 THE_ODDS_API_SPORTS = {
     140: 'soccer_spain_la_liga',       # La Liga
     39: 'soccer_epl',                  # Premier League
@@ -154,9 +153,11 @@ THE_ODDS_API_SPORTS = {
     61: 'soccer_france_ligue_one',     # Ligue 1
     71: 'soccer_brazil_campeonato',    # Brasileirão Série A
     262: 'soccer_mexico_liga_mx',      # Liga MX
+    301: 'basketball_nba',             # NBA
+    302: 'basketball_euroleague',      # Euroleague
+    401: 'americanfootball_nfl',       # NFL
+    501: 'baseball_mlb',               # MLB
 }
-# Nota: NBA, NFL, MLB, etc. fueron removidos porque el tier gratuito de The Odds API
-# solo cubre soccer. Si necesitas esos deportes, necesitas un plan pagado.
 
 # --- CACHE TTL CONFIGURATION PARA THE ODDS API ---
 # Estos valores controlan cuánto tiempo se mantienen los datos en Redis antes de

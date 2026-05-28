@@ -1,9 +1,10 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}FairBet Lab{% endblock %}</title>
+    <title>{% block title %}JUANCHO HBET{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
@@ -11,43 +12,74 @@
         theme: {
             extend: {
                 colors: {
-                    dark: '#111111',
-                    card: '#1a1a1a',
-                    accent: '#dc2626',
-                    'accent-hover': '#b91c1c',
-                    win: '#10b981',
+                    dark: '#1a1d23',
+                    card: '#111317',
+                    accent: '#16a34a',
+                    'accent-hover': '#15803d',
+                    win: '#4ade80',
                 }
             }
         }
     }
     </script>
+    <!-- 
+      ESTILOS GLOBALES DE DISEÑO PREMIUM (JUANCHO HBET)
+      Define la tipografía Inter, el fondo oscuro unificado, navegación y pie de página.
+    -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        /* Reseteo general de caja y fuente */
+        * {
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+        
+        /* Fondo slate-dark unificado para todo el sitio */
+        body {
+            background-color: #1a1d23 !important;
+        }
+        
+        /* Cabecera / Barra de Navegación superior */
+        nav {
+            background-color: #111317 !important;
+            border-bottom: 1px solid #2a2d35 !important;
+        }
+        
+        /* Pie de Página / Footer */
+        footer {
+            background-color: #111317 !important;
+            border-top: 1px solid #2a2d35 !important;
+        }
+    </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-dark text-white min-h-screen flex flex-col">
     <nav class="bg-card border-b border-accent/30" x-data="{ open: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+            <div class="flex justify-between items-center h-20">
                 <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
-                    <span class="text-2xl font-bold text-accent tracking-tight">FairBet Lab</span>
+                    <img src="{% static 'img/juancho_hbet_logo.png' %}" alt="JUANCHO HBET Logo" class="h-14 w-auto object-contain rounded-md">
+                    <span class="text-3xl font-black text-accent tracking-wider uppercase">JUANCHO HBET</span>
                     <span class="bg-accent text-white text-xs font-bold px-2 py-0.5 rounded">Educativo</span>
                 </a>
 
-                <div class="hidden sm:flex items-center gap-6 text-sm font-medium">
+                <div class="hidden sm:flex items-center gap-6 text-lg font-bold">
                     <template x-if="localStorage.getItem('access_token')">
                         <div class="flex items-center gap-6">
                             <a href="{% url 'events-list' %}" class="hover:text-accent transition">Eventos</a>
                             <a href="{% url 'bets-list' %}" class="hover:text-accent transition">Mis Apuestas</a>
                             <a href="{% url 'wallet-balance' %}" class="hover:text-accent transition">Billetera</a>
                             <a href="{% url 'responsible-limits' %}" class="hover:text-accent transition">Límites</a>
-                            <span class="text-gray-400">|</span>
-                            <span class="text-gray-300" x-text="'👤 ' + (JSON.parse(localStorage.getItem('user') || '{}').username || '')"></span>
-                            <button @click="localStorage.clear(); window.location.href='/login/'" class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                            <span class="text-gray-500">|</span>
+                            <span class="text-gray-300 font-semibold" x-text="'👤 ' + (JSON.parse(localStorage.getItem('user') || '{}').username || '')"></span>
+                            <button @click="localStorage.clear(); window.location.href='/login/'" class="bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl text-base font-bold transition">
                                 Salir
                             </button>
                         </div>
                     </template>
                     <template x-if="!localStorage.getItem('access_token')">
-                        <a href="{% url 'login' %}" class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg transition">Ingresar</a>
+                        <a href="{% url 'login' %}" class="bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl text-base font-bold transition">Ingresar</a>
                     </template>
                 </div>
 
@@ -89,7 +121,7 @@
             </div>
             <p class="text-sm text-gray-400">Cumple con la Ley 31557 de Perú y su reglamento DS 005-2023-MINCETUR.</p>
             <p class="text-sm text-gray-400 mt-1">Prohibido el acceso a menores de 18 años. Juega con responsabilidad.</p>
-            <p class="text-xs mt-4 text-gray-600">&copy; {% now "Y" %} FairBet Lab.</p>
+            <p class="text-xs mt-4 text-gray-600">&copy; {% now "Y" %} JUANCHO HBET.</p>
         </div>
     </footer>
 

@@ -186,8 +186,8 @@ class DepositoView(APIView):
             {
                 'mensaje': 'Depósito realizado exitosamente.',
                 'transaction_id': str(transaction_id),
-                'amount': str(amount),
-                'nuevo_balance': str(nuevo_balance),
+                'amount': f"{Decimal(amount).quantize(Decimal('0.0001'))}",
+                'nuevo_balance': f"{Decimal(nuevo_balance).quantize(Decimal('0.0001'))}",
                 'disclaimer': 'Plataforma educativa con moneda virtual. No constituye una casa de apuestas.',
             },
             status=status.HTTP_201_CREATED,
@@ -238,8 +238,8 @@ class RetiroView(APIView):
                 return Response(
                     {
                         'error': 'Saldo insuficiente para realizar el retiro.',
-                        'balance_actual': str(balance_actual),
-                        'monto_solicitado': str(amount),
+                        'balance_actual': f"{Decimal(balance_actual).quantize(Decimal('0.0001'))}",
+                        'monto_solicitado': f"{Decimal(amount).quantize(Decimal('0.0001'))}",
                     },
                     status=status.HTTP_409_CONFLICT,
                 )
@@ -268,8 +268,8 @@ class RetiroView(APIView):
             {
                 'mensaje': 'Retiro realizado exitosamente.',
                 'transaction_id': str(transaction_id),
-                'amount': str(amount),
-                'nuevo_balance': str(nuevo_balance),
+                'amount': f"{Decimal(amount).quantize(Decimal('0.0001'))}",
+                'nuevo_balance': f"{Decimal(nuevo_balance).quantize(Decimal('0.0001'))}",
                 'disclaimer': 'Plataforma educativa con moneda virtual. No constituye una casa de apuestas.',
             },
             status=status.HTTP_200_OK,
@@ -317,9 +317,9 @@ class BalanceView(APIView):
         return Response(
             {
                 'username': user.username,
-                'balance': str(balance),
-                'total_depositado': str(total_credits),
-                'total_retirado': str(total_debits),
+                'balance': f"{Decimal(balance).quantize(Decimal('0.0001'))}",
+                'total_depositado': f"{Decimal(total_credits).quantize(Decimal('0.0001'))}",
+                'total_retirado': f"{Decimal(total_debits).quantize(Decimal('0.0001'))}",
                 'ultimos_movimientos': movimientos_serializer.data,
                 'disclaimer': 'Plataforma educativa con moneda virtual. No constituye una casa de apuestas.',
             },

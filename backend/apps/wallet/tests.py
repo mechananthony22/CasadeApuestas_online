@@ -302,8 +302,10 @@ class TestInvarianteSistemaConstante(TestCase):
 # ============================================================
 # Property-Based Testing con Hypothesis
 # ============================================================
+from hypothesis.extra.django import TestCase as HypothesisTestCase
 
-class TestHypothesisInvariantes(TestCase):
+
+class TestHypothesisInvariantes(HypothesisTestCase):
     """
     Tests basados en propiedades usando Hypothesis.
     Genera secuencias aleatorias de transacciones y verifica
@@ -505,7 +507,7 @@ class TestDepositoEndpoint(APITestCase):
             password='Password123!'
         )
         self.client.force_authenticate(user=self.usuario)
-        self.url = reverse('wallet-deposit')
+        self.url = reverse('api-wallet-deposit')
 
     def test_deposito_exitoso_retorna_201(self):
         """Un depósito válido debe retornar HTTP 201."""
@@ -516,7 +518,7 @@ class TestDepositoEndpoint(APITestCase):
     def test_deposito_incrementa_balance(self):
         """Después de un depósito, el balance debe ser igual al monto."""
         self.client.post(self.url, {'amount': '500.0000'}, format='json')
-        respuesta = self.client.get(reverse('wallet-balance'))
+        respuesta = self.client.get(reverse('api-wallet-balance'))
         self.assertEqual(respuesta.data['balance'], '500.0000')
 
     def test_deposito_monto_cero_retorna_400(self):
@@ -546,7 +548,7 @@ class TestRetiroEndpoint(APITestCase):
             password='Password123!'
         )
         self.client.force_authenticate(user=self.usuario)
-        self.url = reverse('wallet-withdraw')
+        self.url = reverse('api-wallet-withdraw')
 
         # Depositar saldo inicial para las pruebas de retiro
         from uuid import uuid4
@@ -581,7 +583,7 @@ class TestRetiroEndpoint(APITestCase):
     def test_retiro_decrementa_balance(self):
         """Después de un retiro, el balance debe disminuir."""
         self.client.post(self.url, {'amount': '100.0000'}, format='json')
-        respuesta = self.client.get(reverse('wallet-balance'))
+        respuesta = self.client.get(reverse('api-wallet-balance'))
         self.assertEqual(respuesta.data['balance'], '900.0000')
 
     def test_retiro_monto_cero_retorna_400(self):
@@ -600,7 +602,7 @@ class TestBalanceEndpoint(APITestCase):
             password='Password123!'
         )
         self.client.force_authenticate(user=self.usuario)
-        self.url = reverse('wallet-balance')
+        self.url = reverse('api-wallet-balance')
 
     def test_balance_retorna_200(self):
         """La consulta de balance debe retornar HTTP 200."""

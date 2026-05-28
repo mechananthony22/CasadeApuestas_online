@@ -4,18 +4,21 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
      x-data="eventList()" x-init="init()">
 
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold">Eventos Deportivos</h1>
-        <div class="flex gap-2">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-white tracking-tight">🏆 Eventos Deportivos</h1>
+            <p class="text-xs text-gray-400 mt-1">Explora partidos en vivo y próximos eventos para apostar de forma educativa</p>
+        </div>
+        <div class="flex gap-2 bg-[#0d0f12] p-1.5 rounded-xl border border-gray-800/40">
             <button @click="filter = 'all'; load()"
-                :class="filter === 'all' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
-                class="px-4 py-2 rounded-lg text-sm font-medium transition">Todos</button>
+                :class="filter === 'all' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">Todos</button>
             <button @click="filter = 'live'; load()"
-                :class="filter === 'live' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
-                class="px-4 py-2 rounded-lg text-sm font-medium transition">En Vivo</button>
+                :class="filter === 'live' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">En Vivo</button>
             <button @click="filter = 'scheduled'; load()"
-                :class="filter === 'scheduled' ? 'bg-accent text-white' : 'bg-card text-gray-300 hover:bg-gray-800'"
-                class="px-4 py-2 rounded-lg text-sm font-medium transition">Próximos</button>
+                :class="filter === 'scheduled' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">Próximos</button>
         </div>
     </div>
 
@@ -90,12 +93,12 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="bg-[#222] px-5 py-3 flex justify-around" x-show="ev.markets && ev.markets.length > 0">
+                                    <div class="bg-[#0d0f12] border-t border-gray-800/40 px-5 py-3.5 flex justify-around items-center gap-4" x-show="ev.markets && ev.markets.length > 0">
                                         <template x-for="mkt in (ev.markets || []).slice(0,1)" :key="mkt.id">
                                             <template x-for="sel in (mkt.selections || []).slice(0,3)" :key="sel.id">
-                                                <div class="text-center">
-                                                    <p class="text-xs text-gray-400" x-text="sel.name"></p>
-                                                    <p class="text-sm font-bold text-win" x-text="sel.odds"></p>
+                                                <div class="flex-1 bg-[#1a1d23] border border-gray-800/60 rounded-lg p-2.5 text-center hover:border-accent/40 transition">
+                                                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider" x-text="sel.name"></p>
+                                                    <p class="text-sm font-extrabold text-win mt-0.5" x-text="sel.odds"></p>
                                                 </div>
                                             </template>
                                         </template>

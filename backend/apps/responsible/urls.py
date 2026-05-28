@@ -5,5 +5,5 @@ from responsible.views import ResponsibleGamingLimitView
 
 urlpatterns = [
     # Gestión de límites de depósito
-    path('responsible/limits/', ResponsibleGamingLimitView.as_view(), name='responsible-limits'),
+    path('responsible/limits/', ResponsibleGamingLimitView.as_view(), name='api-responsible-limits'),
 ]

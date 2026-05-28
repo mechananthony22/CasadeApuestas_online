@@ -70,19 +70,23 @@ class TestValidadorMayoriaDeEdad(TestCase):
 
     def test_persona_de_18_anios_exactos_es_valida(self):
         """Una persona que cumple 18 años hoy debe pasar la validación."""
-        hoy = date.today()
+        from django.utils import timezone
+        hoy = timezone.now().date()
         fecha_18_anios = date(hoy.year - 18, hoy.month, hoy.day)
         self.assertTrue(validar_mayoria_de_edad(fecha_18_anios))
 
     def test_persona_menor_de_edad_no_es_valida(self):
         """Una persona de 17 años debe ser rechazada."""
-        hoy = date.today()
+        from django.utils import timezone
+        hoy = timezone.now().date()
         fecha_17_anios = date(hoy.year - 17, hoy.month, hoy.day)
         self.assertFalse(validar_mayoria_de_edad(fecha_17_anios))
 
     def test_persona_de_30_anios_es_valida(self):
         """Una persona de 30 años debe pasar la validación."""
-        fecha_30_anios = date(date.today().year - 30, 1, 1)
+        from django.utils import timezone
+        hoy = timezone.now().date()
+        fecha_30_anios = date(hoy.year - 30, 1, 1)
         self.assertTrue(validar_mayoria_de_edad(fecha_30_anios))
 
     def test_cumpleanios_maniana_aun_es_menor(self):
@@ -90,9 +94,10 @@ class TestValidadorMayoriaDeEdad(TestCase):
         Si el cumpleaños de los 18 años es mañana, HOY todavía es menor de edad.
         Valida que el cálculo tome en cuenta el día exacto.
         """
-        hoy = date.today()
+        from django.utils import timezone
+        hoy = timezone.now().date()
         maniana = hoy + timedelta(days=1)
-        fecha_casi_18 = date(hoy.year - 18, maniana.month, maniana.day)
+        fecha_casi_18 = date(maniana.year - 18, maniana.month, maniana.day)
         self.assertFalse(validar_mayoria_de_edad(fecha_casi_18))
 
 

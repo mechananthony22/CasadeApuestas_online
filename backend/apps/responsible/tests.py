@@ -60,7 +60,7 @@ class ResponsibleGamingTestCase(APITestCase):
         # Establecer límite diario inicial
         limit_obj = ResponsibleGamingLimit.objects.create(user=self.user, daily_limit=Decimal("500.0000"))
 
-        url = reverse('responsible-limits')
+        url = reverse('api-responsible-limits')
         
         # Reducir el límite a 200.0000
         response = self.client.post(url, {'daily_limit': 200.0}, format='json')
@@ -79,7 +79,7 @@ class ResponsibleGamingTestCase(APITestCase):
         # Establecer límite diario inicial
         limit_obj = ResponsibleGamingLimit.objects.create(user=self.user, daily_limit=Decimal("100.0000"))
 
-        url = reverse('responsible-limits')
+        url = reverse('api-responsible-limits')
 
         # Intentar aumentar el límite a 300.0000
         response = self.client.post(url, {'daily_limit': 300.0}, format='json')
@@ -109,7 +109,7 @@ class ResponsibleGamingTestCase(APITestCase):
         ResponsibleGamingLimit.objects.create(user=self.user, daily_limit=Decimal("100.0000"))
 
         # 1. Realizar una recarga de 80 fichas (exitosa)
-        url_deposit = reverse('wallet-deposit')
+        url_deposit = reverse('api-wallet-deposit')
         response = self.client.post(url_deposit, {'amount': '80.0000', 'description': 'Recarga inicial'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -132,7 +132,7 @@ class ResponsibleGamingTestCase(APITestCase):
         self.assertIn("Autoexcluido", response.data['estado'])
 
         # Verificar que la cuenta está inactiva y no permite depósitos
-        url_deposit = reverse('wallet-deposit')
+        url_deposit = reverse('api-wallet-deposit')
         response = self.client.post(url_deposit, {'amount': '50.0000'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
