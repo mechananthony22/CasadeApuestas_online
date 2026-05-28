@@ -55,6 +55,12 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-dark text-white min-h-screen flex flex-col">
+    {% block navbar %}
+    <!-- 
+      NAVBAR PRINCIPAL (JUANCHO HBET)
+      Este bloque define la barra de navegación principal del sitio.
+      Se puede sobrescribir en plantillas secundarias (por ejemplo, en la vista de login) para ocultar la barra de navegación.
+    -->
     <nav class="bg-card border-b border-accent/30" x-data="{ open: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
@@ -107,6 +113,8 @@
             </div>
         </div>
     </nav>
+    {% endblock %}
+
 
     <main class="flex-grow w-full">
         <!-- 
@@ -141,6 +149,12 @@
         </div>
     </footer>
 
+    {% block bet_slip %}
+    <!-- 
+      BLOQUE DEL CUPÓN DE APUESTAS (BET SLIP)
+      Este bloque define la interfaz del cupón de apuestas flotante y su botón disparador.
+      Se puede sobrescribir con un bloque vacío en páginas donde no debe mostrarse (como el Login).
+    -->
     <!-- CUPÓN DE APUESTAS (BET SLIP) GLOBAL -->
     <div x-data x-show="$store.betSlip.isOpen" 
          class="fixed bottom-0 right-0 sm:right-4 w-full sm:w-80 bg-card border border-accent/40 rounded-t-xl shadow-2xl z-50 flex flex-col"
@@ -224,6 +238,7 @@
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>
         <span class="font-black text-sm" x-text="$store.betSlip.selections.length"></span>
     </button>
+    {% endblock %}
 
     <script>
     const token = () => localStorage.getItem('access_token');

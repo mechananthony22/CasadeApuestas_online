@@ -3,103 +3,539 @@
 
 {% block title %}Registro - JUANCHO HBET{% endblock %}
 
+{% block extra_head %}
+<!-- 
+  ESTILOS PERSONALIZADOS PARA LA VISTA DE REGISTRO (SPLIT LAYOUT)
+  Define un diseño de pantalla dividida idéntico al de login, con acentos y animaciones en tonos verdes.
+-->
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    * {
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* ── FULLSCREEN SPLIT LAYOUT ── */
+    /* Ocupa el 100% de la pantalla sin scroll general, usando scroll interno en el formulario */
+    .register-wrapper {
+        position: fixed;
+        inset: 0;
+        top: 0;
+        display: flex;
+        overflow: hidden;
+    }
+
+    /* ── LEFT PANEL (HERO) ── */
+    .register-left {
+        flex: 1.1;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+
+    .register-left img.hero-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        filter: brightness(0.55) saturate(1.2);
+        transition: transform 8s ease;
+    }
+
+    .register-left:hover img.hero-img {
+        transform: scale(1.04);
+    }
+
+    /* Degradado oscuro inferior en el hero panel */
+    .register-left::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom,
+                rgba(0, 0, 0, 0.05) 0%,
+                rgba(0, 0, 0, 0.15) 40%,
+                rgba(10, 0, 0, 0.75) 80%,
+                rgba(17, 0, 0, 0.92) 100%);
+        pointer-events: none;
+    }
+
+    /* Sombra en el borde derecho del panel izquierdo */
+    .register-left::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 80px;
+        background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.6));
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 3;
+        padding: 2.5rem 3rem;
+    }
+
+    /* Insignia interactiva - Tonos Verdes */
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(22, 163, 74, 0.2);
+        border: 1px solid rgba(22, 163, 74, 0.5);
+        color: #4ade80;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 5px 14px;
+        border-radius: 50px;
+        margin-bottom: 1.25rem;
+        backdrop-filter: blur(8px);
+    }
+
+    .hero-badge .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 8px #22c55e;
+        animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    .hero-title {
+        font-size: clamp(2rem, 3.5vw, 3.2rem);
+        font-weight: 900;
+        line-height: 1.1;
+        color: #fff;
+        letter-spacing: -0.03em;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-title span {
+        background: linear-gradient(135deg, #16a34a 0%, #22c55e 60%, #a3e635 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-subtitle {
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.6);
+        max-width: 380px;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-number {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.03em;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.45);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    .stat-divider {
+        width: 1px;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* ── RIGHT PANEL (FORM) ── */
+    .register-right {
+        width: 540px;
+        min-width: 440px;
+        background: #0d0d0d;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 3rem 3.5rem;
+        position: relative;
+        overflow-y: auto;
+        border-left: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Glow de fondo superior derecho */
+    .register-right::before {
+        content: '';
+        position: absolute;
+        top: -120px;
+        right: -80px;
+        width: 350px;
+        height: 350px;
+        background: radial-gradient(circle, rgba(22, 163, 74, 0.12) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .brand-logo {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .form-heading {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-heading h1 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.03em;
+        margin-bottom: 0.35rem;
+    }
+
+    .form-heading p {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.4);
+        font-weight: 400;
+    }
+
+    /* Campos de entrada */
+    .field-group {
+        margin-bottom: 1rem;
+    }
+
+    .field-label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
+
+    .field-input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1.5px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 11px 14px;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 400;
+        outline: none;
+        transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+        -webkit-appearance: none;
+    }
+
+    .field-input::placeholder {
+        color: rgba(255, 255, 255, 0.2);
+        font-weight: 300;
+    }
+
+    /* Enfoque del input - Acento verde */
+    .field-input:focus {
+        border-color: rgba(22, 163, 74, 0.7);
+        background: rgba(22, 163, 74, 0.04);
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12), inset 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Alerta de error */
+    .error-alert {
+        background: rgba(220, 38, 38, 0.08);
+        border: 1px solid rgba(220, 38, 38, 0.3);
+        border-radius: 10px;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #f87171;
+        font-size: 0.85rem;
+        margin-bottom: 1.2rem;
+    }
+
+    /* Botón de registro */
+    .btn-register {
+        width: 100%;
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 13px;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: all 0.25s;
+        box-shadow: 0 4px 20px rgba(22, 163, 74, 0.3), 0 1px 3px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 0.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-register::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    .btn-register:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 30px rgba(22, 163, 74, 0.45), 0 2px 6px rgba(0, 0, 0, 0.4);
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    }
+
+    .btn-register:active:not(:disabled) {
+        transform: translateY(0px);
+        box-shadow: 0 3px 12px rgba(22, 163, 74, 0.3);
+    }
+
+    .btn-register:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Enlace para volver al login */
+    .login-link {
+        text-align: center;
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.35);
+        margin-top: 1.25rem;
+    }
+
+    .login-link a {
+        color: #16a34a;
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .login-link a:hover {
+        color: #4ade80;
+        text-decoration: underline;
+    }
+
+    /* Legal disclaimer */
+    .legal-disclaimer {
+        margin-top: 1.5rem;
+        padding: 10px 14px;
+        background: rgba(22, 163, 74, 0.06);
+        border: 1px solid rgba(22, 163, 74, 0.15);
+        border-radius: 10px;
+        font-size: 0.72rem;
+        color: rgba(255, 255, 255, 0.3);
+        text-align: center;
+        line-height: 1.5;
+    }
+
+    .legal-disclaimer strong {
+        color: rgba(22, 163, 74, 0.7);
+        font-weight: 600;
+    }
+
+    /* responsive */
+    @media (max-width: 950px) {
+        .register-left {
+            display: none;
+        }
+
+        .register-right {
+            width: 100%;
+            min-width: unset;
+            padding: 2rem 1.75rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .register-right {
+            padding: 1.5rem 1.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
+<!-- Bloque de navegación sobrescrito para ocultar el navbar principal en el registro -->
+{% block navbar %}{% endblock %}
+
+<!-- Bloque de cupón de apuestas sobrescrito para ocultar el cupón en el registro -->
+{% block bet_slip %}{% endblock %}
+
 {% block content %}
-<div class="min-h-[85vh] relative flex items-center justify-center px-4 py-12 overflow-hidden">
-    <!-- Glowing background decorative circles -->
-    <div class="absolute top-1/4 left-1/4 w-80 h-80 bg-accent/15 rounded-full blur-[100px] pointer-events-none animate-pulse" style="animation-duration: 8s;"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#b91c1c]/10 rounded-full blur-[120px] pointer-events-none animate-pulse" style="animation-duration: 12s;"></div>
+<!-- Contenedor principal con diseño dividido (Split Layout) -->
+<div class="register-wrapper" x-data="registerForm()" x-init="init()">
 
-    <!-- Translucent Glassmorphic Card -->
-    <div class="relative z-10 bg-card/60 border border-white/10 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] p-8 w-full max-w-xl backdrop-blur-xl animate-fade-in"
-         x-data="registerForm()"
-         x-init="init()">
+    <!-- ═══════════════ LEFT: HERO PANEL ═══════════════ -->
+    <div class="register-left">
+        <!-- Imagen del hero actualizada con tonos verdes -->
+        <img class="hero-img" src="{% static 'img/login_hero.png' %}?v=green"
+            alt="JUANCHO HBET - Registro de usuarios" onerror="this.style.display='none'">
 
-         <div class="text-center mb-8">
-            <span class="inline-flex items-center justify-center w-12 h-12 bg-accent/10 rounded-2xl border border-accent/30 mb-4 shadow-[0_0_15px_rgba(220,38,38,0.2)]">
-                <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                </svg>
-            </span>
-            <h1 class="text-3xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent tracking-tight">Crear Cuenta</h1>
-            <p class="text-gray-400 mt-2 text-xs font-semibold">Completa tus datos para registrarte en JUANCHO HBET</p>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                Plataforma Educativa · En Vivo
+            </div>
+
+            <h2 class="hero-title">
+                Comienza tu camino<br>
+                <span>sin riesgos reales</span><br>
+                hoy mismo.
+            </h2>
+
+            <p class="hero-subtitle">
+                Únete a la mayor red de simulación deportiva. Crea tu cuenta, recibe tu saldo inicial y compite con otros apostadores de manera 100% segura.
+            </p>
+
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number">14+</span>
+                    <span class="stat-label">Ligas activas</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Virtual &amp; seguro</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number">Ley<br>31557</span>
+                    <span class="stat-label">Cumplimiento</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ RIGHT: FORM PANEL ═══════════════ -->
+    <div class="register-right">
+
+        <!-- Logo Centrado y Agrandado -->
+        <div class="brand-logo">
+            <img src="{% static 'img/Logo.jpeg' %}" alt="JUANCHO HBET Logo" class="h-24 w-auto object-contain rounded-md shadow-md">
         </div>
 
-        <form @submit.prevent="submit" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                <!-- Column 1 -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-gray-300 font-medium mb-1.5 text-sm">Usuario</label>
-                        <input type="text" x-model="form.username" required
-                            class="w-full px-4 py-3 bg-dark/60 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition duration-300"
-                            placeholder="Elige tu usuario">
+        <!-- Encabezado del Formulario -->
+        <div class="form-heading">
+            <h1>Crear Cuenta</h1>
+            <p>Completa tus datos para registrarte en JUANCHO HBET</p>
+        </div>
+
+        <!-- Mensaje de Error -->
+        <template x-if="error">
+            <div class="error-alert" role="alert">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4m0 4h.01" />
+                </svg>
+                <span x-text="error"></span>
+            </div>
+        </template>
+
+        <!-- Formulario de Registro -->
+        <form @submit.prevent="submit" class="space-y-4" novalidate>
+            
+            <!-- Grid de dos columnas para los campos de registro -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                
+                <!-- Columna 1: Datos de usuario -->
+                <div class="space-y-3">
+                    <div class="field-group">
+                        <label class="field-label">Usuario</label>
+                        <input type="text" x-model="form.username" required class="field-input" placeholder="Tu nombre de usuario">
                     </div>
 
-                    <div>
-                        <label class="block text-gray-300 font-medium mb-1.5 text-sm">Email</label>
-                        <input type="email" x-model="form.email" required
-                            class="w-full px-4 py-3 bg-dark/60 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition duration-300"
-                            placeholder="tu@email.com">
+                    <div class="field-group">
+                        <label class="field-label">Email</label>
+                        <input type="email" x-model="form.email" required class="field-input" placeholder="tu@email.com">
                     </div>
 
-                    <div>
-                        <label class="block text-gray-300 font-medium mb-1.5 text-sm">DNI Peruano</label>
-                        <input type="text" x-model="form.dni" required maxlength="8"
-                            class="w-full px-4 py-3 bg-dark/60 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition duration-300"
-                            placeholder="DNI de 8 dígitos">
+                    <div class="field-group">
+                        <label class="field-label">DNI Peruano</label>
+                        <input type="text" x-model="form.dni" required maxlength="8" class="field-input" placeholder="DNI de 8 dígitos">
                     </div>
                 </div>
 
-                <!-- Column 2 -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-gray-300 font-medium mb-1.5 text-sm">Fecha de Nacimiento</label>
-                        <input type="date" x-model="form.birth_date" required
-                            class="w-full px-4 py-3 bg-dark/60 border border-white/10 rounded-xl text-white focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition duration-300 [color-scheme:dark]">
+                <!-- Columna 2: Fecha y Credenciales -->
+                <div class="space-y-3">
+                    <div class="field-group">
+                        <label class="field-label">Fecha de Nacimiento</label>
+                        <input type="date" x-model="form.birth_date" required class="field-input [color-scheme:dark]">
                     </div>
 
-                    <div>
-                        <label class="block text-gray-300 font-medium mb-1.5 text-sm">Contraseña</label>
-                        <input type="password" x-model="form.password" required minlength="8"
-                            class="w-full px-4 py-3 bg-dark/60 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition duration-300"
-                            placeholder="Mínimo 8 caracteres">
+                    <div class="field-group">
+                        <label class="field-label">Contraseña</label>
+                        <input type="password" x-model="form.password" required minlength="8" class="field-input" placeholder="Mínimo 8 caracteres">
                     </div>
 
-                    <div>
-                        <label class="block text-gray-300 font-medium mb-1.5 text-sm">Confirmar Contraseña</label>
-                        <input type="password" x-model="form.confirm_password" required
-                            class="w-full px-4 py-3 bg-dark/60 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition duration-300"
-                            placeholder="Repite tu contraseña">
+                    <div class="field-group">
+                        <label class="field-label">Confirmar Contraseña</label>
+                        <input type="password" x-model="form.confirm_password" required class="field-input" placeholder="Repite tu contraseña">
                     </div>
                 </div>
             </div>
 
-            <template x-if="error">
-                <div class="bg-accent/15 border border-accent/30 text-red-400 px-4 py-3 rounded-xl text-sm backdrop-blur-sm shadow-[0_0_15px_rgba(220,38,38,0.1)]" x-text="error"></div>
-            </template>
-
-            <button type="submit" :disabled="loading"
-                class="w-full bg-accent hover:bg-accent-hover text-white py-3.5 rounded-xl font-bold text-lg hover:shadow-[0_0_20px_rgba(22,163,74,0.3)] disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2">
+            <!-- Botón de Envío -->
+            <button type="submit" class="btn-register" :disabled="loading">
                 <span x-show="!loading">Crear Cuenta</span>
                 <span x-show="loading" class="flex items-center gap-2">
-                    <svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    <svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
                     Registrando...
                 </span>
             </button>
         </form>
 
-        <p class="text-center mt-6 text-sm text-gray-400">
+        <!-- Enlace de navegación para iniciar sesión -->
+        <div class="login-link">
             ¿Ya tienes cuenta?
-            <a href="{% url 'login' %}" class="text-accent hover:text-[#f87171] font-semibold transition hover:underline">Inicia sesión</a>
-        </p>
+            <a href="{% url 'login' %}">Inicia sesión</a>
+        </div>
+
+        <!-- Descargo Legal de Responsabilidad -->
+        <div class="legal-disclaimer">
+            <strong>⚠ Aviso Legal:</strong> Plataforma educativa con moneda virtual.
+            No constituye una casa de apuestas real. Cumple con la <strong>Ley 31557</strong> · Perú.
+        </div>
+
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<!-- 
+  LÓGICA DEL FORMULARIO DE REGISTRO
+  Define el estado de AlpineJS y realiza la llamada POST al endpoint de registro con el token CSRF.
+-->
 <script>
 function getCookie(name) {
     let val = null;

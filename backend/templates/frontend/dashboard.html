@@ -145,6 +145,58 @@ footer p,footer span{color:#6b7280!important}
 </style>
 {% endblock %}
 
+{% block navbar %}
+<nav class="bg-card border-b border-accent/30" x-data="{ open: false }">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-20">
+            <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+                <img src="{% static 'img/logo2.jfif' %}" alt="Logo" class="h-14 w-auto object-contain rounded-md">
+            </a>
+            <div class="hidden sm:flex items-center gap-6 text-lg font-bold">
+                <template x-if="localStorage.getItem('access_token')">
+                    <div class="flex items-center gap-6">
+                        <a href="{% url 'events-list' %}" class="hover:text-accent transition">Eventos</a>
+                        <a href="{% url 'bets-list' %}" class="hover:text-accent transition">Mis Apuestas</a>
+                        <a href="{% url 'wallet-balance' %}" class="hover:text-accent transition">Billetera</a>
+                        <a href="{% url 'responsible-limits' %}" class="hover:text-accent transition">Límites</a>
+                        <span class="text-gray-500">|</span>
+                        <span class="text-gray-300 font-semibold" x-text="'👤 ' + (JSON.parse(localStorage.getItem('user') || '{}').username || '')"></span>
+                        <button @click="localStorage.clear(); window.location.href='/login/'" class="bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl text-base font-bold transition">
+                            Salir
+                        </button>
+                    </div>
+                </template>
+                <template x-if="!localStorage.getItem('access_token')">
+                    <a href="{% url 'login' %}" class="bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl text-base font-bold transition">Ingresar</a>
+                </template>
+            </div>
+            <button @click="open = !open" class="sm:hidden p-2 rounded hover:bg-gray-800">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <div x-show="open" class="sm:hidden border-t border-gray-800">
+        <div class="px-4 py-3 space-y-2" @click="open = false">
+            <template x-if="localStorage.getItem('access_token')">
+                <div>
+                    <a href="{% url 'events-list' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Eventos</a>
+                    <a href="{% url 'bets-list' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Mis Apuestas</a>
+                    <a href="{% url 'wallet-balance' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Billetera</a>
+                    <a href="{% url 'responsible-limits' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Límites</a>
+                </div>
+            </template>
+            <template x-if="!localStorage.getItem('access_token')">
+                <a href="{% url 'login' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Ingresar</a>
+            </template>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block bet_slip %}{% endblock %}
+
 {% block content %}
 <div class="bw-wrap" x-data="dashboard()" x-init="init()">
 
