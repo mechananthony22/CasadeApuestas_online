@@ -273,8 +273,7 @@ import concurrent.futures
 
 class BetPlacementAPITestCase(APITestCase):
     """
-    Pruebas de la API para la colocación de apuestas síncronas, validación de KYC,
-    estrategia de idempotencia y control de re-cotización de cuotas.
+    Pruebas de la API para la colocación de apuestas síncronas, validación de KYC, estrategia de idempotencia y control de re-cotización de cuotas.
     """
     def setUp(self):
         # Crear usuario y perfil KYC verificado
@@ -1224,8 +1223,7 @@ class LiveAndCombinadasTestCase(APITestCase):
 
     def test_celery_task_reactivation(self):
         """
-        Verifica que la ejecución de la tarea de reactivación Celery resume_markets_after_suspension
-        vuelva a habilitar de forma segura los mercados inactivos.
+        Verifica que la ejecución de la tarea de reactivación Celery resume_markets_after_suspension vuelva a habilitar de forma segura los mercados inactivos.
         """
         # Suspender mercados
         self.market1.is_active = False
@@ -1241,8 +1239,7 @@ class LiveAndCombinadasTestCase(APITestCase):
 
 class TheOddsAPITestCase(APITestCase):
     """
-    Suite de pruebas de integración para el nuevo proveedor The Odds API.
-    Valida la sincronización de eventos, hashing determinista de IDs, cuotas y marcadores.
+    Suite de pruebas de integración para el nuevo proveedor The Odds API. Valida la sincronización de eventos, hashing determinista de IDs, cuotas y marcadores.
     """
     def setUp(self):
         from betting.models import League, Team, Event, Market, Selection
@@ -1251,8 +1248,7 @@ class TheOddsAPITestCase(APITestCase):
     @patch('betting.the_odds_api.TheOddsAPIClient.get_fixtures')
     def test_sync_fixtures_the_odds_api(self, mock_get_fixtures):
         """
-        Prueba la sincronización de eventos y cuotas a través de The Odds API
-        empleando el enmascarado determinista de IDs tipo string.
+        Prueba la sincronización de eventos y cuotas a través de The Odds API empleando el enmascarado determinista de IDs tipo string.
         """
         # Configurar mock response de The Odds API
         mock_get_fixtures.return_value = [
@@ -1315,8 +1311,7 @@ class TheOddsAPITestCase(APITestCase):
     @patch('betting.the_odds_api.TheOddsAPIClient.get_live_fixtures')
     def test_sync_live_scores_the_odds_api_goal_suspension(self, mock_get_live_fixtures):
         """
-        Prueba que la sincronización de marcadores en vivo de The Odds API
-        actualice la base de datos y dispare la suspensión de mercados ante un gol.
+        Prueba que la sincronización de marcadores en vivo de The Odds API actualice la base de datos y dispare la suspensión de mercados ante un gol.
         """
         from django.core.cache import cache
         from betting.services import string_to_integer_id
@@ -1373,9 +1368,4 @@ class TheOddsAPITestCase(APITestCase):
             # Los mercados deben haberse suspendido automáticamente por el gol
             market.refresh_from_db()
             self.assertFalse(market.is_active)
-
-
-
-
-
 

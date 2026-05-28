@@ -1,14 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Suite de Pruebas Unitarias y de Integración para la Fase 7: Juego Responsable.
-
-Cubre:
-    1. Límites de Depósito: reducción inmediata, cooldown de 24 horas para aumentos/desactivación.
-    2. Depósitos bloqueados y controlados acumulativamente en DepositoView.
-    3. Autoexclusión temporal y permanente bloqueando depósitos y apuestas de forma segura.
-    4. Restauración dinámica de autoexclusiones temporales expiradas.
-    5. Tarea periódica de Celery para aplicar límites preventivos con cooldown expirado.
-"""
 from decimal import Decimal
 from uuid import uuid4
 from django.contrib.auth.models import User
@@ -23,10 +13,6 @@ from wallet.models import LedgerEntry
 from betting.models import League, Team, Event, Market, Selection
 
 class ResponsibleGamingTestCase(APITestCase):
-    """
-    Suite completa de pruebas para verificar las reglas de negocio de juego responsable.
-    """
-
     def setUp(self):
         # Crear usuario y su perfil KYC verificado
         self.user = User.objects.create_user(username="test_gamer", password="password123")

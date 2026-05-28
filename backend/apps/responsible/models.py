@@ -6,11 +6,6 @@ from django.utils import timezone
 from decimal import Decimal
 
 class ResponsibleGamingLimit(models.Model):
-    """
-    Representa los límites de recargas virtuales configurados por el usuario
-    para fomentar el juego responsable (Reglamento Ley 31557).
-    Soporta cooldowns de 24 horas para incrementos o desactivación.
-    """
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
@@ -91,10 +86,6 @@ class ResponsibleGamingLimit(models.Model):
         return f"Límites de {self.user.username}"
 
     def clean_expired_cooldowns(self):
-        """
-        Aplica de forma transparente cualquier límite pendiente cuyo cooldown de 24h
-        haya expirado en el momento de la llamada.
-        """
         now = timezone.now()
         updated = False
 
@@ -121,10 +112,6 @@ class ResponsibleGamingLimit(models.Model):
 
 
 class AutoExclusion(models.Model):
-    """
-    Representa una autoexclusión temporal o permanente activa para un usuario.
-    Regulado por la Ley 31557 peruana.
-    """
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,

@@ -10,17 +10,6 @@ from betting.the_odds_api import TheOddsAPIClient, OddsCache, string_to_integer_
 logger = logging.getLogger(__name__)
 
 class SyncEngine:
-    """
-    Motor local de sincronización que procesa las respuestas de la API externa
-    y actualiza la base de datos local aplicando el margen del operador.
-
-    USA OddsCache PARA PROTEGER The Odds API:
-    - Las llamadas a la API pasan por la capa de caché Redis
-    - Si la API falla (401, 429), el error se cachea por 5 min para proteger credits
-    - Los datos exitosos se cachean con TTL adecuado (2h fixtures, 30s scores, 10s odds)
-    - Los compañeros de trabajo notarán improvement en velocidad porque los datos
-      frecuentemente vienen del caché Redis en lugar de hacer requests HTTP cada vez.
-    """
     def __init__(self):
         self.client = TheOddsAPIClient()
         # Capa de caché Redis que protege la API de saturación
@@ -48,30 +37,9 @@ class SyncEngine:
             return 'cancelled'
 
     def sync_fixtures(self, league_id, season=2026):
-        """
-        Sincroniza ligas, equipos y partidos programados para una liga específica en BD local.
-        """
         return self._sync_fixtures_the_odds_api(league_id, season)
 
     def _sync_fixtures_the_odds_api(self, league_id, season=2026):
-        """
-        Sincroniza fixtures de una liga específica usando la capa de caché Redis.
-
-        ANTES (llamada directa):
-            fixtures_data = self.client.get_fixtures(league_id, season)
-
-        AHORA (usa caché + manejo de errores):
-            fixtures_data = self.cache.get_fixtures(
-                league_id,
-                api_fetch_fn=lambda: self.client.get_fixtures(league_id, season)
-            )
-
-        BENEFICIOS:
-        - Si la API falló recientemente (401, 429), retorna [] inmediatamente
-          sin hacer request que desperdiciaría credits
-        - Si los datos están en caché ( menos de 2h old), retorna instantáneamente
-        - Si es cache miss, hace el request y guarda en caché
-        """
         def api_fetch_fn():
             return self.client.get_fixtures(league_id, season)
 
@@ -303,24 +271,6 @@ class SyncEngine:
         return self._sync_live_scores_the_odds_api()
 
     def _sync_live_scores_the_odds_api(self):
-        """
-        Sincroniza marcadores en vivo usando la capa de caché Redis.
-
-        ANTES (cada 30s hacía 10+ requests HTTP a la API):
-            live_fixtures = self.client.get_live_fixtures()
-            # Itera sobre todas las deportiva making API call para cada league
-
-        AHORA (usa caché + maneja errores por liga):
-            live_fixtures = self.cache.get_live_scores(
-                api_fetch_fn=lambda: self.client.get_live_fixtures()
-            )
-
-        BENEFICIOS:
-        - Si los scores están en caché (menos de 30s old), retorna instantáneamente
-        - Si la API falló recientemente, retorna [] sin desperdiciar credits
-        - Los datos se guardan en caché por 30s, lo que significa que el task de 30s
-          puede ejecutarse sin hacer request la mayoría de las veces
-        """
         def api_fetch_fn():
             return self.client.get_live_fixtures()
 
@@ -393,10 +343,6 @@ class SyncEngine:
         return synced_count
 
     def suspend_markets_for_event(self, event_obj):
-        """
-        Suspende de forma atómica todos los mercados de un evento deportivo tras un gol u otro
-        evento crítico, transmite el evento WebSocket y programa la reactivación.
-        """
         # 1. Inhabilitar todos los mercados activos
         updated_count = event_obj.markets.filter(is_active=True).update(is_active=False)
         logger.info(f"Mercados suspendidos automáticamente para evento ID {event_obj.id}. Cantidad: {updated_count}")
@@ -427,21 +373,12 @@ class SyncEngine:
         logger.info(f"Programada reactivación automática de mercados para evento ID {event_obj.id} en {cooldown} segundos.")
 
     def sync_odds_for_event(self, event_obj):
-        """
-        Sincroniza mercados y cuotas para un evento deportivo aplicando el margen del operador.
-        
-        Si el evento no tiene mercados aún, genera cuotas mock para que siempre
-        haya algo disponible para apostar (funcionalidad de fallback).
-        """
         if not event_obj.markets.exists():
             margin_multiplier = Decimal('1.0000') - getattr(settings, 'OPERATOR_MARGIN', Decimal('0.05'))
             self.generate_mock_odds(event_obj, margin_multiplier)
         return
 
     def normalize_selection_name(self, market_name, value):
-        """
-        Normaliza los nombres de selecciones de cuotas de la API a formatos consistentes en español.
-        """
         v_lower = str(value).lower()
         if market_name == "1X2":
             if v_lower in ["home", "1"]:
@@ -469,9 +406,6 @@ class SyncEngine:
         return None
 
     def generate_mock_odds(self, event_obj, margin_multiplier):
-        """
-        Genera cuotas ficticias (mock) predeterminadas para desarrollo y testing.
-        """
         logger.info(f"Generando cuotas mock para el evento {event_obj.api_id}")
         
         sport_name = getattr(event_obj.league, 'sport', 'Fútbol')
@@ -544,9 +478,6 @@ class SyncEngine:
                 )
 
     def broadcast_event_update(self, event_obj):
-        """
-        Emite una notificación de actualización del partido al grupo del evento en Channels (Fase 6).
-        """
         try:
             from channels.layers import get_channel_layer
             from asgiref.sync import async_to_sync
@@ -566,9 +497,6 @@ class SyncEngine:
             logger.debug(f"No se pudo transmitir actualización de evento (Channels no inicializado): {e}")
 
     def broadcast_odds_update(self, event_id, selection_obj):
-        """
-        Emite una notificación de re-cotización/cambio de cuota al grupo del evento en Channels (Fase 6).
-        """
         try:
             from channels.layers import get_channel_layer
             from asgiref.sync import async_to_sync

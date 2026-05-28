@@ -238,11 +238,6 @@ class OperatorDashboardTestCase(APITestCase):
         )
         BetSelection.objects.create(bet=b2, selection=self.sel_draw, odds_at_bet=Decimal("3.0000"), status='pending')
 
-        # Total recolectado en este mercado de 1X2 = 100 + 50 = 150
-        # Exposición si gana Local: payout potencial (200) - total recolectado (150) = +50
-        # Exposición si gana Empate: payout potencial (150) - total recolectado (150) = 0
-        # Exposición si gana Visitante: payout potencial (0) - total recolectado (150) = -150 (casa gana 150)
-
         response = self.client.get(self.url_metrics)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -274,8 +269,7 @@ class OperatorDashboardTestCase(APITestCase):
 
     def test_mincetur_report_csv_generation(self):
         """
-        Verifica que el reporte mensual exportable estilo MINCETUR se genere
-        con el formato CSV, encabezados regulatorios y contenido correcto.
+        Verifica que el reporte mensual exportable estilo MINCETUR se genere con el formato CSV, encabezados regulatorios y contenido correcto.
         """
         self.client.force_authenticate(user=self.operator_user)
 

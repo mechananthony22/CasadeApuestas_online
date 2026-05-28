@@ -4,26 +4,7 @@ from django.contrib.auth.models import User
 from django.db.models import Sum
 from decimal import Decimal
 
-
 class LedgerEntry(models.Model):
-    """
-    Registro contable de partida doble para FairBet Lab.
-
-    REGLA DE ORO: NUNCA almacenar el saldo del usuario en una columna.
-    El saldo SIEMPRE se calcula como:
-        balance = SUM(credits) - SUM(debits)
-
-    Cada transacción financiera CREA MÍNIMO 2 entradas balanceadas:
-        - Débito en cuenta A, Crédito en cuenta B
-        - La suma algebraica de todas las entradas de una transacción = 0
-
-    Cuentas contables:
-        - wallet_usuario: Billetera del usuario (saldo disponible)
-        - casa: Caja del operador
-        - apuestas_pendientes: Fondos retenidos por apuestas activas
-        - bonos: Fondos de bonos promocionales
-    """
-
     # Tipo de cuenta contable
     class Account(models.TextChoices):
         WALLET_USUARIO = 'wallet_usuario', 'Billetera del Usuario'
@@ -104,15 +85,6 @@ class LedgerEntry(models.Model):
 
     @classmethod
     def get_user_balance(cls, user) -> Decimal:
-        """
-        Calcula el saldo disponible del usuario en su wallet.
-
-        El saldo se obtiene dinámicamente como:
-            SUM(CREDITs) - SUM(DEBITs)  para account='wallet_usuario'
-
-        Esto garantiza que NUNCA hay un saldo almacenado
-        que pueda desincronizarse.
-        """
         credito = cls.objects.filter(
             user=user,
             account=cls.Account.WALLET_USUARIO,
@@ -129,10 +101,6 @@ class LedgerEntry(models.Model):
 
     @classmethod
     def get_house_balance(cls) -> Decimal:
-        """
-        Calcula el saldo de la cuenta de la casa.
-        Útil para verificar el invariante global del sistema.
-        """
         credito = cls.objects.filter(
             account=cls.Account.CASA,
             direction=cls.Direction.CREDIT
@@ -164,14 +132,6 @@ class LedgerEntry(models.Model):
 
     @classmethod
     def get_system_zero_invariant(cls) -> Decimal:
-        """
-        Verifica el invariante global del sistema:
-        La suma de todas las cuentas (wallet_usuario + casa + apuestas_pendientes + bonos)
-        debe ser SIEMPRE igual a 0.0000.
-
-        Este es el principio fundamental de la partida doble:
-            Total débitos = Total créditos
-        """
         total_debits = cls.objects.filter(
             direction=cls.Direction.DEBIT
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0.0000')
@@ -184,10 +144,6 @@ class LedgerEntry(models.Model):
 
 
 class UserBonus(models.Model):
-    """
-    Representa un bono de bienvenida u otra promoción otorgada a un usuario.
-    Registra el monto del bono, el rollover requerido y el avance acumulado (Ley 31557).
-    """
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,

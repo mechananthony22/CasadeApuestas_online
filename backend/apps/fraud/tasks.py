@@ -14,15 +14,6 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def rescan_fraud_patterns():
-    """
-    Tarea periódica de Celery para escanear retroactivamente patrones de fraude
-    en el historial de movimientos y apuestas. Se ejecuta cada 1 hora.
-
-    Detecta:
-    - Depósitos seguidos de cash-out en menos de 15 min (lavado)
-    - Apuestas idénticas de múltiples usuarios en ventana de 5 min (sindicalización)
-    - IPs compartidas por más de 3 cuentas (multicuenta)
-    """
     logger.info("Iniciando escaneo retroactivo de patrones de fraude...")
     try:
         cutoff = timezone.now() - timedelta(hours=1)

@@ -1,48 +1,89 @@
 {% extends "base.html" %}
 {% block title %}Depositar - FairBet Lab{% endblock %}
 {% block content %}
-<div class="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-8"
-     x-data="deposit()" x-init="init()">
+<div class="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="deposit()" x-init="init()">
 
-    <a href="{% url 'wallet-balance' %}" class="text-gray-400 hover:text-white mb-4 inline-block">&larr; Volver a billetera</a>
+    <a href="{% url 'wallet-balance' %}"
+        class="text-gray-400 hover:text-white mb-4 inline-flex items-center gap-1 transition"><i
+            class="fas fa-arrow-left"></i> Volver a billetera</a>
 
-    <div class="bg-card rounded-xl border border-gray-800 p-8">
-        <h1 class="text-2xl font-bold mb-2">Depositar Fichas</h1>
-        <p class="text-gray-400 text-sm mb-6">Recarga tu saldo con fichas virtuales</p>
+    <div class="bg-card rounded-xl border border-gray-800 p-8 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent/30 via-accent to-accent/30"></div>
 
+        <div class="flex items-center gap-3 mb-2">
+            <div
+                class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold">Depositar Fichas</h1>
+                <p class="text-gray-400 text-sm">Recarga tu saldo con fichas virtuales</p>
+            </div>
+        </div>
+
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 mt-6">Montos rápidos</p>
         <div class="grid grid-cols-3 gap-3 mb-6">
-            <button @click="amount = 10" :class="amount === 10 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'"
-                class="border rounded-xl py-3 text-center font-extrabold hover:border-gray-600 transition">S/ 10</button>
-            <button @click="amount = 25" :class="amount === 25 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'"
-                class="border rounded-xl py-3 text-center font-extrabold hover:border-gray-600 transition">S/ 25</button>
-            <button @click="amount = 50" :class="amount === 50 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'"
-                class="border rounded-xl py-3 text-center font-extrabold hover:border-gray-600 transition">S/ 50</button>
-            <button @click="amount = 100" :class="amount === 100 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'"
-                class="border rounded-xl py-3 text-center font-extrabold hover:border-gray-600 transition">S/ 100</button>
-            <button @click="amount = 200" :class="amount === 200 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'"
-                class="border rounded-xl py-3 text-center font-extrabold hover:border-gray-600 transition">S/ 200</button>
-            <button @click="amount = 500" :class="amount === 500 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'"
-                class="border rounded-xl py-3 text-center font-extrabold hover:border-gray-600 transition">S/ 500</button>
+            <button @click="amount = 10"
+                :class="amount === 10 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'"
+                class="border rounded-xl py-3 text-center font-extrabold hover:border-gray-600 hover:scale-105 active:scale-95 transition cursor-pointer select-none">S/
+                10</button>
+            <button @click="amount = 25"
+                :class="amount === 25 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'"
+                class="border rounded-xl py-3 text-center font-extrabold hover:border-gray-600 hover:scale-105 active:scale-95 transition cursor-pointer select-none">S/
+                25</button>
+            <button @click="amount = 50"
+                :class="amount === 50 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'"
+                class="border rounded-xl py-3 text-center font-extrabold hover:border-gray-600 hover:scale-105 active:scale-95 transition cursor-pointer select-none">S/
+                50</button>
+            <button @click="amount = 100"
+                :class="amount === 100 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'"
+                class="border rounded-xl py-3 text-center font-extrabold hover:border-gray-600 hover:scale-105 active:scale-95 transition cursor-pointer select-none">S/
+                100</button>
+            <button @click="amount = 200"
+                :class="amount === 200 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'"
+                class="border rounded-xl py-3 text-center font-extrabold hover:border-gray-600 hover:scale-105 active:scale-95 transition cursor-pointer select-none">S/
+                200</button>
+            <button @click="amount = 500"
+                :class="amount === 500 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'"
+                class="border rounded-xl py-3 text-center font-extrabold hover:border-gray-600 hover:scale-105 active:scale-95 transition cursor-pointer select-none">S/
+                500</button>
         </div>
 
         <div class="mb-6">
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">O ingresa un monto personalizado</label>
-            <input type="number" x-model="amount" min="1" step="1"
-                class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none font-bold text-lg">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">O ingresa un monto
+                personalizado</label>
+            <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">S/</span>
+                <input type="number" x-model="amount" min="1" step="1"
+                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl pl-10 pr-4 py-3 text-white focus:border-accent outline-none font-bold text-lg transition">
+            </div>
+        </div>
+
+        <div class="bg-accent/5 border border-accent/10 rounded-xl px-4 py-3 mb-6">
+            <p class="text-xs text-gray-400 text-center">Saldo actual: <span class="text-white font-bold">S/ <span
+                        x-text="balance"></span></span></p>
         </div>
 
         <template x-if="error">
-            <div class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mb-4" x-text="error"></div>
+            <div
+                class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mb-4 flex items-center gap-2">
+                <i class="fas fa-exclamation-circle flex-shrink-0"></i> <span x-text="error"></span></div>
         </template>
 
         <template x-if="success">
-            <div class="bg-win/10 border border-win text-win px-4 py-3 rounded-xl text-sm mb-4" x-text="success"></div>
+            <div class="bg-win/10 border border-win text-win px-4 py-3 rounded-xl text-sm mb-4 flex items-center gap-2">
+                <i class="fas fa-check-circle flex-shrink-0"></i> <span x-text="success"></span></div>
         </template>
 
         <button @click="deposit()" :disabled="sending || !amount || amount <= 0"
-            class="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition">
-            <span x-show="!sending">Depositar S/ <span x-text="amount || '0'"></span></span>
-            <span x-show="sending">Procesando...</span>
+            class="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition flex items-center justify-center gap-2">
+            <span x-show="!sending" class="flex items-center gap-2"><i class="fas fa-arrow-right"></i> Depositar S/
+                <span x-text="amount || '0'"></span></span>
+            <span x-show="sending" class="flex items-center gap-2"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"
+                    fill="none">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg> Procesando...</span>
         </button>
     </div>
 </div>
@@ -50,34 +91,42 @@
 
 {% block extra_js %}
 <script>
-function deposit() {
-    return {
-        amount: 10,
-        error: '',
-        success: '',
-        sending: false,
+    function deposit() {
+        return {
+            amount: 10,
+            error: '',
+            success: '',
+            sending: false,
+            balance: '0.00',
 
-        init() {
-            if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
-        },
+            init() {
+                if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
+                this.loadBalance();
+            },
 
-        async deposit() {
-            this.error = '';
-            this.success = '';
-            this.sending = true;
-            const data = await apiFetch('/wallet/deposit/', {
-                method: 'POST',
-                body: JSON.stringify({ amount: parseFloat(this.amount) }),
-            });
-            this.sending = false;
-            if (data._status === 200 || data.mensaje) {
-                this.success = data.mensaje || 'Depósito exitoso';
-                this.amount = 10;
-            } else {
-                this.error = data.error || 'Error al depositar.';
-            }
-        },
-    };
-}
+            async loadBalance() {
+                const data = await apiFetch('/wallet/balance/');
+                if (data._status === 200) this.balance = data.balance || '0.00';
+            },
+
+            async deposit() {
+                this.error = '';
+                this.success = '';
+                this.sending = true;
+                const data = await apiFetch('/wallet/deposit/', {
+                    method: 'POST',
+                    body: JSON.stringify({ amount: parseFloat(this.amount) }),
+                });
+                this.sending = false;
+                if (data._status === 200 || data.mensaje) {
+                    this.success = data.mensaje || 'Depósito exitoso';
+                    this.amount = 10;
+                    this.loadBalance();
+                } else {
+                    this.error = data.error || 'Error al depositar.';
+                }
+            },
+        };
+    }
 </script>
 {% endblock %}

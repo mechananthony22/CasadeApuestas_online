@@ -20,16 +20,6 @@ from wallet.models import LedgerEntry
 
 
 class OperatorDashboardView(APIView):
-    """
-    Vista protegida para que los administradores u operadores visualicen las métricas
-    en vivo de la casa de apuestas deportivas.
-
-    Métricas expuestas:
-        - GGR (Gross Gaming Revenue = stakes - payouts)
-        - Volumen de Apuestas (Totales, Históricas, Pendientes, Últimas 24h)
-        - Usuarios Activos (Últimas 24h, 7 días, 30 días y total registrado)
-        - Exposición Financiera por Evento (Riesgo neta por selección en mercados activos)
-    """
     permission_classes = [IsAdminUser]
 
     def get(self, request, *args, **kwargs):
@@ -166,12 +156,6 @@ class OperatorDashboardView(APIView):
 
 
 class MinceturReportView(APIView):
-    """
-    Vista protegida para exportar el reporte mensual regulatoria estilo MINCETUR
-    en formato CSV (Ley 31557 de Perú).
-
-    Filtra las apuestas liquidadas en el mes y año provistos.
-    """
     permission_classes = [IsAdminUser]
 
     def get(self, request, *args, **kwargs):

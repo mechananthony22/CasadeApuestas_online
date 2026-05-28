@@ -1,13 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Suite de Pruebas Unitarias y de Integración para la Fase 9: Anti-fraude Básico.
-
-Cubre:
-    1. Regla de multicuenta (Misma IP con más de 3 cuentas distintas).
-    2. Regla de velocidad financiera (Recarga seguida de Cash-out en menos de 15 minutos).
-    3. Regla de amaños/sindicalización (Apuestas idénticas de 3 usuarios distintos en menos de 5 minutos).
-    4. Permisos de seguridad y endpoints de auditoría administrativa para resolver alertas.
-"""
 from decimal import Decimal
 from uuid import uuid4
 from django.contrib.auth.models import User
@@ -20,10 +11,6 @@ from betting.models import League, Team, Event, Market, Selection, Bet
 from fraud.models import SuspiciousActivity, UserIpLog
 
 class FraudDetectorTestCase(APITestCase):
-    """
-    Suite de pruebas completa para verificar las heurísticas y el sistema de alertas del motor anti-fraude.
-    """
-
     def setUp(self):
         # Crear usuarios para simular patrones grupales
         self.users = []
@@ -59,8 +46,7 @@ class FraudDetectorTestCase(APITestCase):
 
     def test_rule_1_multiple_accounts_same_ip(self):
         """
-        1. Regla Multicuenta: La dirección IP de origen compartida por más de 3 usuarios
-           distintos durante depósitos debe gatillar SuspiciousActivity.
+        1. Regla Multicuenta: La dirección IP de origen compartida por más de 3 usuarios distintos durante depósitos debe gatillar SuspiciousActivity.
         """
         shared_ip = "192.168.12.12"
         url_deposit = reverse('api-wallet-deposit')
@@ -102,8 +88,7 @@ class FraudDetectorTestCase(APITestCase):
 
     def test_rule_2_deposit_followed_by_immediate_cashout(self):
         """
-        2. Regla de Velocidad Financiera: Recargar saldo y realizar cash-out en menos
-           de 15 minutos debe disparar una alerta de alta severidad.
+        2. Regla de Velocidad Financiera: Recargar saldo y realizar cash-out en menos de 15 minutos debe disparar una alerta de alta severidad.
         """
         u = self.users[0]
         self.client.force_authenticate(user=u)
@@ -141,8 +126,7 @@ class FraudDetectorTestCase(APITestCase):
 
     def test_rule_3_syndicated_identical_betting(self):
         """
-        3. Regla Amaños/Sindicalización: Apuestas idénticas por el mismo monto hechas por
-           3 usuarios diferentes en menos de 5 minutos dispara SuspiciousActivity.
+        3. Regla Amaños/Sindicalización: Apuestas idénticas por el mismo monto hechas por 3 usuarios diferentes en menos de 5 minutos dispara SuspiciousActivity.
         """
         # Cargar saldo inicial a los 3 primeros usuarios
         for i in range(3):
@@ -233,9 +217,7 @@ class FraudDetectorTestCase(APITestCase):
     def test_rule_4_bonus_abuse_hedge_betting(self):
         """
         4. Regla de Abuso de Bono (Apuestas Cruzadas/Hedge Betting):
-           Si un usuario con bono de bienvenida activo coloca apuestas en selecciones
-           mutuamente excluyentes del mismo mercado/evento deportivo para liberar el bono sin riesgo,
-           se debe disparar una alerta anti-fraude.
+           Si un usuario con bono de bienvenida activo coloca apuestas en selecciones  mutuamente excluyentes del mismo mercado/evento deportivo para liberar el bono sin riesgo, se debe disparar una alerta anti-fraude.
         """
         from wallet.models import UserBonus
         u = self.users[0]

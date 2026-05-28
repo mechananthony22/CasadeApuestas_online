@@ -11,15 +11,13 @@ logger = logging.getLogger(__name__)
 
 class FraudDetector:
     """
-    Servicio central de análisis forense y detección de fraude en FairBet Lab.
-    Implementa reglas heurísticas en base a la Ley 31557 peruana.
+    Servicio central de análisis forense y detección de fraude en FairBet Lab. Implementa reglas heurísticas en base a la Ley 31557 peruana.
     """
 
     @classmethod
     def log_and_check_ip(cls, user, ip_address):
         """
-        Regla 1: Registra el uso de IP y audita si la dirección IP actual
-        está siendo utilizada por más de 3 cuentas distintas (multicuenta).
+        Regla 1: Registra el uso de IP y audita si la dirección IP actual está siendo utilizada por más de 3 cuentas distintas (multicuenta).
         """
         if not ip_address:
             return None
@@ -55,8 +53,7 @@ class FraudDetector:
     @classmethod
     def check_deposit_cashout_pattern(cls, user, bet):
         """
-        Regla 2: Detecta si el usuario está realizando un Cash-out inmediato
-        dentro de los 15 minutos posteriores a registrar una recarga de saldo (lavado).
+        Regla 2: Detecta si el usuario está realizando un Cash-out inmediato dentro de los 15 minutos posteriores a registrar una recarga de saldo (lavado).
         """
         cutoff = timezone.now() - timezone.timedelta(minutes=15)
         
@@ -92,9 +89,7 @@ class FraudDetector:
     @classmethod
     def check_syndicated_betting(cls, bet):
         """
-        Regla 3: Detecta patrones de apuestas idénticas en grupo (sindicalización).
-        Si 3 o más usuarios distintos colocan apuestas por el mismo monto y sobre
-        las mismas selecciones en menos de 5 minutos, se levanta una alerta por amaño.
+        Regla 3: Detecta patrones de apuestas idénticas en grupo (sindicalización). Si 3 o más usuarios distintos colocan apuestas por el mismo monto y sobre las mismas selecciones en menos de 5 minutos, se levanta una alerta por amaño.
         """
         cutoff = timezone.now() - timezone.timedelta(minutes=5)
         
@@ -140,9 +135,7 @@ class FraudDetector:
     @classmethod
     def check_bonus_arbitrage(cls, user, bet):
         """
-        Regla 4: Detecta abuso de bonos mediante apuestas cruzadas (hedge betting/arbitraje).
-        Si el usuario tiene un bono de bienvenida activo y realiza apuestas cubriendo
-        resultados mutuamente excluyentes del mismo evento deportivo, se levanta una alerta.
+        Regla 4: Detecta abuso de bonos mediante apuestas cruzadas (hedge betting/arbitraje). Si el usuario tiene un bono de bienvenida activo y realiza apuestas cubriendo resultados mutuamente excluyentes del mismo evento deportivo, se levanta una alerta.
         """
         # 1. Verificar si el usuario tiene un bono activo
         from wallet.models import UserBonus

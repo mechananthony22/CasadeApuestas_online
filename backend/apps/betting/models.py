@@ -30,9 +30,6 @@ class Team(models.Model):
 
 
 class Event(models.Model):
-    """
-    Representa un partido de fútbol (evento deportivo) programado, en vivo o finalizado.
-    """
     STATUS_CHOICES = (
         ('scheduled', 'Programado'),
         ('in_play', 'En Vivo'),
@@ -56,9 +53,6 @@ class Event(models.Model):
 
 
 class Market(models.Model):
-    """
-    Representa un mercado de apuestas asociado a un evento deportivo (ejemplo: 1X2, Over/Under 2.5, BTTS).
-    """
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='markets', help_text="Evento al que pertenece el mercado")
     name = models.CharField(max_length=100, help_text="Nombre del mercado de apuestas (ej. 1X2, Over/Under 2.5, BTTS)")
     is_active = models.BooleanField(default=True, help_text="Indica si el mercado está abierto para recibir apuestas")
@@ -68,9 +62,6 @@ class Market(models.Model):
 
 
 class Selection(models.Model):
-    """
-    Representa una opción o selección dentro de un mercado con su respectiva cuota (odd).
-    """
     market = models.ForeignKey(Market, on_delete=models.CASCADE, related_name='selections', help_text="Mercado al que pertenece la selección")
     name = models.CharField(max_length=100, help_text="Nombre de la opción (ej. Gana Local, Empate, Gana Visitante, Over, Under, Yes, No)")
     odds = models.DecimalField(max_digits=10, decimal_places=4, help_text="Valor decimal de la cuota con el margen de la casa aplicado")
@@ -81,10 +72,6 @@ class Selection(models.Model):
 
 
 class Bet(models.Model):
-    """
-    Representa un boleto o ticket de apuesta colocado por un usuario.
-    Soporta tanto apuestas simples como combinadas (acumuladas).
-    """
     STATUS_CHOICES = (
         ('accepted', 'Aceptada'),
         ('won', 'Ganada'),
@@ -111,13 +98,6 @@ class Bet(models.Model):
         return f"Apuesta #{self.id} - {self.user.username} ({self.get_type_display()}) [{self.get_status_display()}]"
 
     def settle_as_won(self, payout_amount, transaction_id):
-        """
-        Liquida la apuesta en estado GANADA de forma transaccional.
-        REGLA DE PARTIDA DOBLE:
-        - Débito apuestas_pendientes (sale dinero retenido) -> DEBIT, monto=stake
-        - Débito casa (la casa aporta la ganancia neta) -> DEBIT, monto=payout_amount - stake
-        - Crédito wallet_usuario (recibe el retorno) -> CREDIT, monto=payout_amount
-        """
         from wallet.models import LedgerEntry
         from django.utils import timezone
 
@@ -174,12 +154,6 @@ class Bet(models.Model):
             )
 
     def settle_as_lost(self, transaction_id):
-        """
-        Liquida la apuesta en estado PERDIDA de forma transaccional.
-        REGLA DE PARTIDA DOBLE:
-        - Débito apuestas_pendientes (sale dinero retenido) -> DEBIT, monto=stake
-        - Crédito casa (dinero ingresa a la casa) -> CREDIT, monto=stake
-        """
         from wallet.models import LedgerEntry
         from django.utils import timezone
 
@@ -212,13 +186,6 @@ class Bet(models.Model):
         )
 
     def settle_as_cancelled(self, transaction_id):
-        """
-        Liquida la apuesta en estado CANCELADA (Anulada) de forma transaccional.
-        Se reembolsa el stake íntegramente al usuario.
-        REGLA DE PARTIDA DOBLE:
-        - Débito apuestas_pendientes (sale dinero retenido) -> DEBIT, monto=stake
-        - Crédito wallet_usuario (se devuelve al usuario) -> CREDIT, monto=stake
-        """
         from wallet.models import LedgerEntry
         from django.utils import timezone
 
@@ -251,16 +218,6 @@ class Bet(models.Model):
         )
 
     def perform_cash_out(self, cashout_amount, transaction_id):
-        """
-        Ejecuta el cobro anticipado (Cash-out) de forma transaccional.
-        REGLA DE PARTIDA DOBLE:
-        - Débito apuestas_pendientes (monto = stake) -> DEBIT
-        - Crédito wallet_usuario (monto = cashout_amount) -> CREDIT
-        - Si cashout_amount > stake:
-            Débito casa (monto = cashout_amount - stake) -> DEBIT
-        - Si cashout_amount < stake:
-            Crédito casa (monto = stake - cashout_amount) -> CREDIT
-        """
         from wallet.models import LedgerEntry
         from django.utils import timezone
 
@@ -319,10 +276,6 @@ class Bet(models.Model):
 
 
 class BetSelection(models.Model):
-    """
-    Representa la relación intermedia entre un boleto de apuesta y las selecciones individuales
-    incluidas en él, capturando históricamente el valor de la cuota al momento exacto de apostar.
-    """
     STATUS_CHOICES = (
         ('pending', 'Pendiente'),
         ('won', 'Ganada'),

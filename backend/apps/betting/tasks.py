@@ -11,31 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 def _resolve_selection_result(market_name, selection_name, home_score, away_score):
-    """
-    Motor centralizado de resolución de selecciones para todos los tipos de mercado.
-
-    Determina si una selección de apuesta individual ha sido ganadora o perdedora
-    en base al marcador final del evento deportivo y las reglas específicas del mercado.
-
-    Mercados soportados:
-        - 1X2: Victoria local / Empate / Victoria visitante (fútbol clásico).
-        - Over/Under X.X: Parsea dinámicamente la línea del nombre del mercado
-          (ej: "Over/Under 2.5" → línea 2.5, "Over/Under 210.5" → línea 210.5).
-        - BTTS (Both Teams To Score): Ambos equipos anotan (Sí/No).
-        - Ganador (Moneyline): Victoria directa sin posibilidad de empate
-          (baloncesto, fútbol americano, béisbol, etc.).
-        - Handicap Asiático X.X: Aplica la línea de handicap al marcador del equipo local
-          y compara contra el visitante. Versión simplificada con medio gol (sin devolución).
-
-    Args:
-        market_name (str): Nombre del mercado tal como está en la BD (ej: "Over/Under 2.5").
-        selection_name (str): Nombre de la selección apostada (ej: "Local", "Over", "Sí").
-        home_score (int): Goles/puntos del equipo local al finalizar el evento.
-        away_score (int): Goles/puntos del equipo visitante al finalizar el evento.
-
-    Returns:
-        bool: True si la selección es ganadora, False si es perdedora.
-    """
     import re
     from decimal import Decimal
 
@@ -115,10 +90,6 @@ def _resolve_selection_result(market_name, selection_name, home_score, away_scor
 
 @shared_task
 def sync_fixtures():
-    """
-    Tarea periódica de Celery para sincronizar eventos deportivos y ligas futuras.
-    Se ejecuta por defecto cada 2 horas.
-    """
     logger.info("Iniciando sincronización periódica de fixtures deportivos...")
     try:
         engine = SyncEngine()
@@ -141,10 +112,6 @@ def sync_fixtures():
 
 @shared_task
 def sync_live_scores():
-    """
-    Tarea periódica de Celery para sincronizar marcadores de partidos en vivo.
-    Se ejecuta de manera agresiva cada 30 segundos.
-    """
     logger.debug("Iniciando sincronización rápida de marcadores en vivo...")
     try:
         engine = SyncEngine()
@@ -158,10 +125,6 @@ def sync_live_scores():
 
 @shared_task
 def update_odds():
-    """
-    Tarea periódica de Celery para actualizar cuotas y cuotas en vivo.
-    Se ejecuta cada 10 segundos buscando eventos activos/en juego.
-    """
     logger.debug("Iniciando actualización periódica de cuotas...")
     try:
         engine = SyncEngine()
@@ -188,11 +151,6 @@ def update_odds():
 
 @shared_task
 def settle_finished_matches():
-    """
-    Tarea periódica de Celery para liquidar las apuestas cuyos eventos hayan finalizado o hayan sido cancelados.
-    Calcula los resultados de cada selección, actualiza el estado de las apuestas
-    y genera los asientos contables en partida doble.
-    """
     import uuid
     from decimal import Decimal
     from django.db import transaction
@@ -331,10 +289,6 @@ def settle_finished_matches():
 
 @shared_task
 def resume_markets_after_suspension(event_id):
-    """
-    Reanuda la actividad de los mercados de un evento deportivo tras la suspensión automática
-    y transmite la reanudación vía WebSockets a los clientes conectados.
-    """
     from betting.models import Market
     from channels.layers import get_channel_layer
     from asgiref.sync import async_to_sync

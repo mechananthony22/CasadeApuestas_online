@@ -6,10 +6,8 @@ from fraud.models import SuspiciousActivity
 
 class SuspiciousActivitySerializer(serializers.ModelSerializer):
     """
-    Serializador para ver y actualizar alertas de comportamiento sospechoso.
-    El campo status es el único editable por el operador administrativo.
+    Serializador para ver y actualizar alertas de comportamiento sospechoso. El campo status es el único editable por el operador administrativo.
     """
-    
     username = serializers.CharField(source='user.username', read_only=True)
     activity_type_display = serializers.CharField(source='get_activity_type_display', read_only=True)
     severity_display = serializers.CharField(source='get_severity_display', read_only=True)

@@ -5,8 +5,7 @@ from django.contrib.auth.models import User
 
 class UserIpLog(models.Model):
     """
-    Registra el historial de direcciones IP utilizadas por los usuarios
-    durante transacciones clave (depósitos, apuestas) para detectar multicuenta.
+    Registra el historial de direcciones IP utilizadas por los usuarios durante transacciones clave (depósitos, apuestas) para detectar multicuenta.
     """
     user = models.ForeignKey(
         User,
@@ -35,8 +34,7 @@ class UserIpLog(models.Model):
 
 class SuspiciousActivity(models.Model):
     """
-    Consolida las alertas de fraude y comportamiento sospechoso detectadas en tiempo real.
-    Sirve como bitácora para la revisión manual y cumplimiento normativo (Ley 31557).
+    Consolida las alertas de fraude y comportamiento sospechoso detectadas en tiempo real. Sirve como bitácora para la revisión manual y cumplimiento normativo (Ley 31557).
     """
     
     TYPE_MULTIPLE_ACCOUNTS = 'MULTIPLE_ACCOUNTS_SAME_IP'

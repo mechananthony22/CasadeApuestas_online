@@ -2,8 +2,8 @@
 
 **FairBet Lab** es una plataforma web educativa de apuestas deportivas que utiliza **moneda virtual** (fichas virtuales sin valor monetario real) con un fuerte énfasis en la integridad contable, el juego responsable y el cumplimiento normativo según los estándares de la **Ley 31557** de Perú y su reglamento **DS 005-2023-MINCETUR**.
 
-> **[¡IMPORTANTE!] AVISO LEGAL OBLIGATORIO**
-> *Plataforma educativa con moneda virtual. No constituye una casa de apuestas.*
+**[¡IMPORTANTE!] AVISO LEGAL OBLIGATORIO**
+*Plataforma educativa con moneda virtual. No constituye una casa de apuestas.*
 
 ---
 

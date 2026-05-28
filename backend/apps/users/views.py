@@ -1,14 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Vistas (Views) de la API para la Fase 1: Usuarios y KYC.
-
-Implementa los endpoints de registro, verificación de DNI,
-consulta del perfil propio y autoexclusión del usuario.
-
-REGLA DE ARQUITECTURA HÍBRIDA:
-    Todas las operaciones que MODIFICAN datos del usuario van por HTTP (síncrono).
-    Nunca se usa WebSocket para modificar el estado de la cuenta o la billetera.
-"""
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils.decorators import method_decorator
@@ -25,23 +15,6 @@ from .validators import validar_dni_peruano
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RegistroView(APIView):
-    """
-    POST /api/v1/auth/register/
-
-    Endpoint público para el registro de un nuevo usuario en la plataforma.
-    No requiere autenticación previa (permission_classes = [AllowAny]).
-
-    Validaciones automáticas del serializer:
-        - Username y email únicos en el sistema.
-        - DNI peruano válido (Módulo-11) y no duplicado.
-        - Edad mínima de 18 años.
-        - Contraseñas coincidentes.
-
-    Respuestas:
-        201 Created: Usuario creado exitosamente. Devuelve datos del perfil.
-        400 Bad Request: Errores de validación en los datos enviados.
-    """
-
     # Este endpoint es público porque el usuario aún no tiene cuenta
     permission_classes = [AllowAny]
 
@@ -81,23 +54,6 @@ class RegistroView(APIView):
 
 
 class VerificarDniView(APIView):
-    """
-    POST /api/v1/auth/verify-dni/
-
-    Endpoint para verificar manualmente el DNI del usuario autenticado.
-    En una plataforma real, aquí se conectaría con la API de RENIEC.
-    En nuestra implementación educativa, la verificación se hace offline
-    usando el algoritmo de Módulo-11 (ver ADR-0002 para justificación).
-
-    Una vez que el DNI pasa la validación, el estado de la cuenta
-    cambia de 'pending_verification' a 'verified', habilitando las apuestas.
-
-    Respuestas:
-        200 OK: DNI verificado, cuenta activa para apostar.
-        400 Bad Request: El DNI enviado no coincide o no es válido.
-        409 Conflict: La cuenta ya fue verificada previamente.
-    """
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -133,21 +89,6 @@ class VerificarDniView(APIView):
                 {'error': 'El DNI ingresado no coincide con el registrado en tu cuenta.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # TODO: Reactivar validación Módulo-11 cuando se implemente conexión real a RENIEC
-        # # Validar el dígito verificador del DNI usando el algoritmo Módulo-11
-        # try:
-        #     es_valido = validar_dni_peruano(dni_enviado)
-        # except Exception as e:
-        #     return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        #
-        # if not es_valido:
-        #     return Response(
-        #         {'error': 'El DNI no pasa la validación del dígito verificador (Módulo-11).'},
-        #         status=status.HTTP_400_BAD_REQUEST,
-        #     )
-
-        # Cambiar el estado de la cuenta a 'verified' dentro de una transacción
         with transaction.atomic():
             perfil.verification_status = UserProfile.STATUS_VERIFIED
             perfil.save(update_fields=['verification_status', 'updated_at'])
@@ -162,17 +103,6 @@ class VerificarDniView(APIView):
 
 
 class MiPerfilView(APIView):
-    """
-    GET /api/v1/users/me/
-
-    Endpoint privado para que el usuario autenticado consulte su propio perfil.
-    Incluye el estado de verificación, mayoría de edad y si puede apostar.
-
-    Respuestas:
-        200 OK: Datos del perfil del usuario autenticado.
-        404 Not Found: El perfil KYC no existe (estado incompleto del sistema).
-    """
-
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -202,15 +132,6 @@ class MiPerfilView(APIView):
 
 
 class AutoexclusionView(APIView):
-    """
-    POST /api/v1/users/self-exclude/
-
-    Endpoint para que el usuario active su propia autoexclusión de la plataforma.
-    Esta es una medida IRREVERSIBLE durante el período configurado, en cumplimiento
-    con la Ley 31557 Art. 12 (Protección del Jugador).
-
-    Acepta parámetro 'dias' en el body (ej: 7, 30, 90) o null/omisión para permanente.
-    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):

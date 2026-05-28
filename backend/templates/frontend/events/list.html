@@ -5,20 +5,25 @@
      x-data="eventList()" x-init="init()">
 
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-            <h1 class="text-3xl font-black text-white tracking-tight">🏆 Eventos Deportivos</h1>
-            <p class="text-xs text-gray-400 mt-1">Explora partidos en vivo y próximos eventos para apostar de forma educativa</p>
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-black text-white tracking-tight">Eventos Deportivos</h1>
+                <p class="text-xs text-gray-400 mt-1">Explora partidos en vivo y próximos eventos para apostar de forma educativa</p>
+            </div>
         </div>
         <div class="flex gap-2 bg-[#0d0f12] p-1.5 rounded-xl border border-gray-800/40">
             <button @click="filter = 'all'; load()"
                 :class="filter === 'all' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
-                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">Todos</button>
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition inline-flex items-center gap-1.5"><i class="fas fa-list"></i> Todos</button>
             <button @click="filter = 'live'; load()"
                 :class="filter === 'live' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
-                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">En Vivo</button>
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition inline-flex items-center gap-1.5"><i class="fas fa-play-circle"></i> En Vivo</button>
             <button @click="filter = 'scheduled'; load()"
                 :class="filter === 'scheduled' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
-                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">Próximos</button>
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition inline-flex items-center gap-1.5"><i class="fas fa-calendar-alt"></i> Próximos</button>
         </div>
     </div>
 
@@ -27,13 +32,13 @@
         <button @click="selectedSport = 'all'"
             :class="selectedSport === 'all' ? 'bg-accent text-white' : 'bg-card text-gray-400 hover:bg-gray-800 hover:text-white'"
             class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
-            🏆 Todos los Deportes
+            <i class="fas fa-medal"></i> Todos los Deportes
         </button>
         <template x-for="sportName in Object.keys(groupedEvents)" :key="sportName">
             <button @click="selectedSport = sportName"
                 :class="selectedSport === sportName ? 'bg-accent text-white' : 'bg-card text-gray-400 hover:bg-gray-800 hover:text-white'"
                 class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
-                <span x-text="sportName === 'Fútbol' ? '⚽' : sportName === 'Baloncesto' ? '🏀' : sportName === 'Fútbol Americano' ? '🏈' : sportName === 'Béisbol' ? '⚾' : '🏆'"></span>
+                <i :class="'fas ' + sportIcon(sportName)"></i>
                 <span x-text="sportName"></span>
             </button>
         </template>
@@ -48,6 +53,7 @@
 
     <template x-if="!loading && events.length === 0">
         <div class="text-center py-20">
+            <i class="fas fa-calendar-times text-gray-600 text-5xl mb-4"></i>
             <p class="text-gray-500 text-xl">No hay eventos disponibles</p>
         </div>
     </template>
@@ -57,25 +63,32 @@
             <div x-show="selectedSport === 'all' || selectedSport === sport">
                 <!-- Sport Header -->
                 <h2 class="text-xl font-bold text-accent mb-4 border-b border-gray-800 pb-2 flex items-center gap-2">
-                    <span x-text="sport === 'Fútbol' ? '⚽' : sport === 'Baloncesto' ? '🏀' : sport === 'Fútbol Americano' ? '🏈' : sport === 'Béisbol' ? '⚾' : '🏆'"></span>
+                    <i :class="'fas ' + sportIcon(sport)"></i>
                     <span x-text="sport"></span>
                 </h2>
                 
                 <template x-for="(evs, leagueName) in leagues" :key="leagueName">
                     <div class="mb-6 ml-2">
                         <!-- League Header -->
-                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3" x-text="leagueName"></h3>
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5"><i class="fas fa-tag"></i> <span x-text="leagueName"></span></h3>
                         
                         <div class="space-y-3">
                             <template x-for="ev in evs" :key="ev.id">
-                                <a :href="'/events/' + ev.id + '/'" class="block bg-card rounded-xl border border-gray-800 hover:border-accent/50 transition overflow-hidden">
+                                <a :href="'/events/' + ev.id + '/'" class="block bg-card rounded-xl border border-gray-800 hover:border-accent/50 transition overflow-hidden relative">
+                                    <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent/30 via-accent to-accent/30"></div>
                                     <div class="p-5">
                                         <div class="flex items-center justify-between mb-3">
                                             <div class="flex items-center gap-2">
-                                                <span class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded"
-                                                      :class="ev.status === 'live' || ev.status === 'in_play' ? 'bg-green-950 text-green-400' : 'bg-blue-950 text-blue-400'"
-                                                      x-text="ev.status === 'live' || ev.status === 'in_play' ? '🔴 EN VIVO' : '📅 PRÓXIMO'"></span>
-                                                <span class="text-xs text-gray-400 font-medium" x-text="formatDateTime(ev.starts_at)"></span>
+                                                <span :class="ev.status === 'live' || ev.status === 'in_play' ? 'bg-green-950 text-green-400 ring-1 ring-green-500/50 animate-pulse' : 'bg-blue-950 text-blue-400'"
+                                                      class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded inline-flex items-center gap-1">
+                                                    <template x-if="ev.status === 'live' || ev.status === 'in_play'">
+                                                        <span class="inline-flex items-center gap-1"><i class="fas fa-circle text-red-500 text-[8px]"></i> EN VIVO</span>
+                                                    </template>
+                                                    <template x-if="!(ev.status === 'live' || ev.status === 'in_play')">
+                                                        <span class="inline-flex items-center gap-1"><i class="fas fa-calendar-alt"></i> PRÓXIMO</span>
+                                                    </template>
+                                                </span>
+                                                <span class="text-xs text-gray-400 font-medium inline-flex items-center gap-1"><i class="fas fa-clock"></i> <span x-text="formatDateTime(ev.starts_at)"></span></span>
                                             </div>
                                             <span class="text-xs text-gray-500 font-semibold" x-text="ev.league?.country || ''"></span>
                                         </div>
@@ -85,7 +98,7 @@
                                             </div>
                                             <div class="flex items-center gap-4 px-6">
                                                 <span class="text-2xl font-bold text-accent" x-text="ev.home_score ?? ''"></span>
-                                                <span class="text-gray-500 font-bold">VS</span>
+                                                <span class="text-gray-500 font-bold text-sm">VS</span>
                                                 <span class="text-2xl font-bold text-accent" x-text="ev.away_score ?? ''"></span>
                                             </div>
                                             <div class="flex-1 text-center">
@@ -104,8 +117,8 @@
                                                             eventId: ev.id,
                                                             eventName: (ev.home_team?.name + ' vs ' + ev.away_team?.name)
                                                         })"
-                                                        class="flex-1 bg-[#1a1d23] border border-gray-800/60 rounded-lg p-2.5 text-center hover:border-accent hover:bg-accent/10 transition cursor-pointer">
-                                                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider group-hover:text-gray-300" x-text="sel.name"></p>
+                                                        class="flex-1 bg-[#1a1d23] border border-gray-800/60 rounded-lg p-2.5 text-center hover:border-accent hover:bg-accent/10 hover:scale-105 active:scale-95 transition cursor-pointer">
+                                                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider" x-text="sel.name"></p>
                                                     <p class="text-sm font-extrabold text-win mt-0.5" x-text="sel.odds"></p>
                                                 </button>
                                             </template>
@@ -131,6 +144,19 @@ function eventList() {
         selectedSport: 'all',
         loading: true,
         wsConnections: {},
+
+        sportIcon(sport) {
+            const map = {
+                'Fútbol': 'fa-futbol',
+                'Baloncesto': 'fa-basketball-ball',
+                'Béisbol': 'fa-baseball-ball',
+                'Fútbol Americano': 'fa-football-ball',
+                'Hockey': 'fa-hockey-puck',
+                'Tenis': 'fa-table-tennis',
+            };
+            return map[sport] || 'fa-trophy';
+        },
+
         async init() {
             if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
             await this.load();
@@ -154,7 +180,6 @@ function eventList() {
             this.events.forEach(ev => {
                 const ws = connectWebSocket(
                     ev.id,
-                    // onOddsChange
                     (data) => {
                         const selId = data.selection_id;
                         const selName = data.selection_name;
@@ -172,7 +197,6 @@ function eventList() {
                             }
                         }
                     },
-                    // onEventUpdate
                     (data) => {
                         const eventObj = this.events.find(e => e.id === ev.id);
                         if (eventObj) {
@@ -181,14 +205,12 @@ function eventList() {
                             eventObj.status = data.status;
                         }
                     },
-                    // onMarketSuspended
                     (data) => {
                         const eventObj = this.events.find(e => e.id === ev.id);
                         if (eventObj && eventObj.markets) {
                             eventObj.markets.forEach(m => m.is_active = false);
                         }
                     },
-                    // onMarketResumed
                     (data) => {
                         this.load();
                     }

@@ -6,10 +6,6 @@ from django.http import JsonResponse
 
 @csrf_exempt
 def admin_login_api(request):
-    """
-    Endpoint de login para admins del dashboard.
-    No usa DRF para evitar CSRF checking con SessionAuthentication.
-    """
     if request.method != 'POST':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
 

@@ -5,52 +5,79 @@
      x-data="limits()" x-init="init()">
 
     <div class="mb-8">
-        <h1 class="text-3xl font-black text-white tracking-tight">🛡️ Límites de Depósito</h1>
-        <p class="text-xs text-gray-400 mt-1">Configura tus límites de depósito diario, semanal y mensual para promover el juego responsable</p>
+        <div class="flex items-center gap-3 mb-1">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-black text-white tracking-tight">Límites de Depósito</h1>
+                <p class="text-xs text-gray-400">Configura tus límites para promover el juego responsable</p>
+            </div>
+        </div>
     </div>
 
-    <div class="bg-card rounded-xl border border-gray-800 p-8">
-        <div class="space-y-6">
+    <div class="bg-card rounded-xl border border-gray-800 p-8 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500/30 via-amber-500 to-amber-500/30"></div>
+
+        <div class="space-y-5">
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Límite Diario (S/)</label>
-                <input type="number" x-model="limits.daily" min="0" step="10"
-                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none font-bold">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"><i class="fas fa-calendar-day mr-1.5"></i>Límite Diario (S/)</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">S/</span>
+                    <input type="number" x-model="limits.daily" min="0" step="10" placeholder="0"
+                        class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl pl-10 pr-4 py-3 text-white focus:border-amber-500 outline-none font-bold transition">
+                </div>
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Límite Semanal (S/)</label>
-                <input type="number" x-model="limits.weekly" min="0" step="10"
-                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none font-bold">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"><i class="fas fa-calendar-week mr-1.5"></i>Límite Semanal (S/)</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">S/</span>
+                    <input type="number" x-model="limits.weekly" min="0" step="10" placeholder="0"
+                        class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl pl-10 pr-4 py-3 text-white focus:border-amber-500 outline-none font-bold transition">
+                </div>
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Límite Mensual (S/)</label>
-                <input type="number" x-model="limits.monthly" min="0" step="10"
-                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none font-bold">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"><i class="fas fa-calendar-alt mr-1.5"></i>Límite Mensual (S/)</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">S/</span>
+                    <input type="number" x-model="limits.monthly" min="0" step="10" placeholder="0"
+                        class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl pl-10 pr-4 py-3 text-white focus:border-amber-500 outline-none font-bold transition">
+                </div>
             </div>
         </div>
 
         <template x-if="error">
-            <div class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mt-6" x-text="error"></div>
+            <div class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mt-6 flex items-center gap-2"><i class="fas fa-exclamation-circle flex-shrink-0"></i> <span x-text="error"></span></div>
         </template>
 
         <template x-if="success">
-            <div class="bg-win/10 border border-win text-win px-4 py-3 rounded-xl text-sm mt-6" x-text="success"></div>
+            <div class="bg-win/10 border border-win text-win px-4 py-3 rounded-xl text-sm mt-6 flex items-center gap-2"><i class="fas fa-check-circle flex-shrink-0"></i> <span x-text="success"></span></div>
         </template>
 
         <button @click="save()" :disabled="saving"
-            class="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition mt-6">
-            <span x-show="!saving">Guardar Límites</span>
-            <span x-show="saving">Guardando...</span>
+            class="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition mt-6 flex items-center justify-center gap-2">
+            <span x-show="!saving" class="flex items-center gap-2"><i class="fas fa-save"></i> Guardar Límites</span>
+            <span x-show="saving" class="flex items-center gap-2"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Guardando...</span>
         </button>
 
-        <p class="text-xs text-gray-500 mt-4 text-center">
-            Al aumentar tus límites, se aplicará un período de espera de 24 horas (cooldown).
-        </p>
+        <div class="mt-4 bg-amber-500/5 border border-amber-500/10 rounded-xl px-4 py-3 flex items-start gap-2">
+            <i class="fas fa-clock text-amber-400 mt-0.5"></i>
+            <p class="text-xs text-gray-400">Al aumentar tus límites, se aplicará un período de espera de 24 horas (cooldown).</p>
+        </div>
     </div>
 
-    <div class="mt-6 bg-card rounded-xl border border-gray-800 p-6">
-        <h2 class="font-bold mb-2">Autoexclusión</h2>
-        <p class="text-sm text-gray-400 mb-4">Si necesitas un descanso, puedes autoexcluirte temporalmente.</p>
-        <a href="{% url 'responsible-self-exclude' %}" class="text-red-400 hover:text-red-300 underline text-sm">Configurar autoexclusión →</a>
+    <div class="mt-6 bg-card rounded-xl border border-red-800/40 p-6 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500/30 via-red-500 to-red-500/30"></div>
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+                <i class="fas fa-pause-circle"></i>
+            </div>
+            <div>
+                <h2 class="font-bold text-white">Autoexclusión</h2>
+                <p class="text-xs text-gray-400">Si necesitas un descanso, puedes autoexcluirte temporalmente.</p>
+            </div>
+        </div>
+        <a href="{% url 'responsible-self-exclude' %}" class="text-red-400 hover:text-red-300 text-sm inline-flex items-center gap-1 transition">Configurar autoexclusión <i class="fas fa-arrow-right"></i></a>
     </div>
 </div>
 {% endblock %}
@@ -59,7 +86,7 @@
 <script>
 function limits() {
     return {
-        limits: { daily: 0, weekly: 0, monthly: 0 },
+        limits: { daily: '', weekly: '', monthly: '' },
         error: '',
         success: '',
         saving: false,
@@ -68,9 +95,9 @@ function limits() {
             if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
             const data = await apiFetch('/responsible/limits/');
             if (data._status === 200) {
-                this.limits.daily = data.daily_limit || 0;
-                this.limits.weekly = data.weekly_limit || 0;
-                this.limits.monthly = data.monthly_limit || 0;
+                this.limits.daily = data.daily_limit ?? '';
+                this.limits.weekly = data.weekly_limit ?? '';
+                this.limits.monthly = data.monthly_limit ?? '';
             }
         },
 
@@ -79,7 +106,6 @@ function limits() {
             this.success = '';
             this.saving = true;
 
-            // Convertir 0 o vacío a null (sin límite); valores positivos se envían como Decimal
             const parseLimit = (val) => {
                 const num = parseFloat(val);
                 return (isNaN(num) || num <= 0) ? null : num;
@@ -96,11 +122,10 @@ function limits() {
             this.saving = false;
             if (data._status === 200 || data.mensaje) {
                 this.success = data.mensaje || 'Límites guardados';
-                // Actualizar con valores reales del servidor (puede haber cooldown)
                 if (data.limites) {
-                    this.limits.daily = data.limites.daily_limit || 0;
-                    this.limits.weekly = data.limites.weekly_limit || 0;
-                    this.limits.monthly = data.limites.monthly_limit || 0;
+                    this.limits.daily = data.limites.daily_limit ?? '';
+                    this.limits.weekly = data.limites.weekly_limit ?? '';
+                    this.limits.monthly = data.limites.monthly_limit ?? '';
                 }
             } else {
                 this.error = Object.values(data).flat().join(' ') || 'Error al guardar.';

@@ -7,14 +7,6 @@ from .models import LedgerEntry
 
 
 class DepositoSerializer(serializers.Serializer):
-    """
-    Serializer para la recarga simulada de fichas (depósito).
-
-    Recibe el monto a depositar y opcionalmente una descripción.
-    Valida que el monto sea positivo y no exceda los límites
-    configurados en las variables de entorno del sistema.
-    """
-
     amount = serializers.DecimalField(
         max_digits=18,
         decimal_places=4,
@@ -31,14 +23,6 @@ class DepositoSerializer(serializers.Serializer):
 
 
 class RetiroSerializer(serializers.Serializer):
-    """
-    Serializer para el retiro simulado de fichas.
-
-    Recibe el monto a retirar. Valida que sea positivo y
-    que el usuario tenga saldo suficiente (la vista lo verifica
-    con select_for_update dentro de una transacción atómica).
-    """
-
     amount = serializers.DecimalField(
         max_digits=18,
         decimal_places=4,
@@ -55,14 +39,6 @@ class RetiroSerializer(serializers.Serializer):
 
 
 class BalanceSerializer(serializers.Serializer):
-    """
-    Serializer de solo lectura para consultar el saldo del usuario.
-
-    Expone el saldo calculado dinámicamente mediante SUM,
-    el total depositado, el total retirado y el historial
-    de movimientos recientes.
-    """
-
     balance = serializers.DecimalField(
         max_digits=18,
         decimal_places=4,
@@ -92,10 +68,6 @@ class BalanceSerializer(serializers.Serializer):
 
 
 class LedgerEntrySerializer(serializers.ModelSerializer):
-    """
-    Serializer de solo lectura para listar movimientos del libro contable.
-    """
-
     direction_display = serializers.CharField(
         source='get_direction_display',
         read_only=True
@@ -122,12 +94,6 @@ class LedgerEntrySerializer(serializers.ModelSerializer):
 
 
 class TransferenciaSerializer(serializers.Serializer):
-    """
-    Serializer para la transferencia interna de fichas virtuales entre usuarios.
-
-    Valida que el destinatario exista, que no sea el mismo usuario remitente,
-    que ambos usuarios estén verificados y no autoexcluidos, y que el monto sea positivo.
-    """
 
     to_username = serializers.CharField(
         max_length=150,
@@ -158,12 +124,6 @@ class TransferenciaSerializer(serializers.Serializer):
         return username
 
     def validate(self, attrs):
-        """
-        Valida las reglas de negocio para la transferencia interna:
-        1. No transferir dinero a la propia cuenta del usuario.
-        2. El usuario remitente debe estar verificado y no autoexcluido.
-        3. El usuario destinatario debe estar verificado y no autoexcluido.
-        """
         sender = self.context['request'].user
         to_username = attrs['to_username']
 

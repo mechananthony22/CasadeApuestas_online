@@ -12,7 +12,6 @@
     }
 
     /* ── FULLSCREEN SPLIT LAYOUT ── */
-    /* Modificado para que ocupe todo el alto (top: 0) ya que ocultamos el navbar en esta página */
     .login-wrapper {
         position: fixed;
         inset: 0;
@@ -46,7 +45,6 @@
         transform: scale(1.04);
     }
 
-    /* gradient overlay bottom */
     .login-left::after {
         content: '';
         position: absolute;
@@ -59,7 +57,6 @@
         pointer-events: none;
     }
 
-    /* left edge shadow on right side */
     .login-left::before {
         content: '';
         position: absolute;
@@ -129,7 +126,6 @@
         text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
     }
 
-    /* Título destacado - Degradado actualizado a tonos verdes/lima */
     .hero-title span {
         background: linear-gradient(135deg, #16a34a 0%, #22c55e 60%, #a3e635 100%);
         -webkit-background-clip: text;
@@ -190,7 +186,6 @@
         border-left: 1px solid rgba(255, 255, 255, 0.06);
     }
 
-    /* Glow superior derecho - Actualizado a verde */
     .login-right::before {
         content: '';
         position: absolute;
@@ -306,7 +301,6 @@
         font-weight: 300;
     }
 
-    /* Input al hacer foco - Bordes y sombras actualizados a verde */
     .field-input:focus {
         border-color: rgba(22, 163, 74, 0.7);
         background: rgba(22, 163, 74, 0.04);
@@ -336,7 +330,7 @@
         color: rgba(255, 255, 255, 0.6);
     }
 
-    /* error alert (Se mantiene rojo para indicar alerta de error estándar) */
+    /* error alert */
     .error-alert {
         background: rgba(220, 38, 38, 0.08);
         border: 1px solid rgba(220, 38, 38, 0.3);
@@ -350,7 +344,7 @@
         margin-bottom: 1.2rem;
     }
 
-    /* Botón de envío - Actualizado a degradado verde */
+    /* Botón de envío */
     .btn-login {
         width: 100%;
         background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
@@ -423,7 +417,7 @@
         white-space: nowrap;
     }
 
-    /* Enlace de registro - Actualizado a verde */
+    /* Enlace de registro */
     .register-link {
         text-align: center;
         font-size: 0.875rem;
@@ -442,7 +436,7 @@
         text-decoration: underline;
     }
 
-    /* Legal disclaimer - Fondo y texto actualizados a verde */
+    /* Legal disclaimer */
     .legal-disclaimer {
         margin-top: 2rem;
         padding: 12px 16px;
@@ -545,13 +539,10 @@
     <!-- ═══════════════ RIGHT: FORM PANEL ═══════════════ -->
     <div class="login-right">
 
-        <!-- 
-          Logo de la Marca Centrado y Agrandado
-          Modificado para mostrar únicamente el logo de la imagen, agrandado a h-24 y centrado,
-          removiendo los textos de "JUANCHO HBET" y la etiqueta "Educativo".
-        -->
+        <!-- Logo -->
         <div class="brand-logo">
-            <img src="{% static 'img/Logo.jpeg' %}" alt="JUANCHO HBET Logo" class="h-24 w-auto object-contain rounded-md shadow-md">
+            <img src="{% static 'img/Logo.jpeg' %}" alt="JUANCHO HBET Logo"
+                class="h-24 w-auto object-contain rounded-md shadow-md">
         </div>
 
         <!-- Heading -->
@@ -645,7 +636,7 @@
 
         <!-- Divider -->
         <div class="form-divider">
-            <span>¿nuevo en JUANCHO HBET?</span>
+            <span>¿nuevo en JUAMCHO HBET?</span>
         </div>
 
         <!-- Register link -->
@@ -656,7 +647,13 @@
 
         <!-- Legal -->
         <div class="legal-disclaimer">
-            <strong>⚠ Aviso Legal:</strong> Plataforma educativa con moneda virtual.
+            <strong>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-3.5 h-3.5 inline -mt-0.5 me-0.5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                </svg>
+                Aviso Legal:</strong> Plataforma educativa con moneda virtual.
             No constituye una casa de apuestas real. Cumple con <strong>Ley 31557</strong> · Perú.
         </div>
 

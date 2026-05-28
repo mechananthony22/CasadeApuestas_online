@@ -1,80 +1,220 @@
 {% extends "base.html" %}
 {% block title %}Mis Apuestas - FairBet Lab{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-     x-data="betList()" x-init="init()">
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="betList()" x-init="init()">
 
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-            <h1 class="text-3xl font-black text-white tracking-tight">📋 Mis Apuestas</h1>
-            <p class="text-xs text-gray-400 mt-1">Historial de apuestas activas, ganadas y perdidas en tu cuenta educativa</p>
+        <div class="flex items-center gap-3">
+            <div
+                class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-black text-white tracking-tight">Mis Apuestas</h1>
+                <p class="text-xs text-gray-400 mt-1">Historial de apuestas activas, ganadas y perdidas en tu cuenta
+                    educativa</p>
+            </div>
         </div>
         <div class="flex gap-1.5 bg-[#0d0f12] p-1.5 rounded-xl border border-gray-800/40">
             <button @click="filter = 'all'; filterBets()"
                 :class="filter === 'all' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
-                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">Todas</button>
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition inline-flex items-center gap-1"><i
+                    class="fas fa-list"></i> Todas</button>
             <button @click="filter = 'accepted'; filterBets()"
                 :class="filter === 'accepted' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
-                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">Activas</button>
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition inline-flex items-center gap-1"><i
+                    class="fas fa-play-circle"></i> Activas</button>
             <button @click="filter = 'won'; filterBets()"
                 :class="filter === 'won' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
-                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">Ganadas</button>
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition inline-flex items-center gap-1"><i
+                    class="fas fa-trophy"></i> Ganadas</button>
             <button @click="filter = 'lost'; filterBets()"
                 :class="filter === 'lost' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'"
-                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition">Perdidas</button>
+                class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition inline-flex items-center gap-1"><i
+                    class="fas fa-times-circle"></i> Perdidas</button>
         </div>
     </div>
 
     <template x-if="loading">
         <div class="text-center py-20">
             <div class="animate-spin h-10 w-10 border-4 border-accent border-t-transparent rounded-full mx-auto"></div>
+            <p class="text-gray-400 mt-4">Cargando apuestas...</p>
         </div>
     </template>
 
     <template x-if="!loading && filtered.length === 0">
         <div class="text-center py-20">
+            <i class="fas fa-inbox text-gray-600 text-5xl mb-4"></i>
             <p class="text-gray-500 text-xl">No hay apuestas</p>
-            <a href="{% url 'events-list' %}" class="mt-4 inline-block bg-accent text-white px-6 py-3 rounded-xl hover:bg-accent-hover">Ver Eventos</a>
+            <a href="{% url 'events-list' %}"
+                class="mt-4 inline-flex items-center gap-2 bg-accent text-white px-6 py-3 rounded-xl hover:bg-accent-hover transition font-bold"><i
+                    class="fas fa-arrow-right"></i> Ver Eventos</a>
         </div>
     </template>
 
-    <div class="space-y-4" x-show="!loading">
+    <!-- CONTENEDOR DE LA LISTA DE APUESTAS -->
+    <div class="space-y-6" x-show="!loading">
         <template x-for="bet in filtered" :key="bet.id">
-            <div class="bg-card rounded-xl border border-gray-800/80 p-5 hover:border-accent/40 transition">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <p class="text-xs font-bold text-gray-400">Boleto #<span x-text="bet.id"></span></p>
-                        <p class="text-xs text-gray-500 mt-0.5" x-text="formatDateTime(bet.created_at)"></p>
+            <!-- TARJETA PRINCIPAL DEL BOLETO DE APUESTA -->
+            <div
+                class="bg-card rounded-2xl border border-gray-800/80 p-6 hover:border-accent/40 transition-all duration-300 relative overflow-hidden shadow-lg hover:shadow-accent/5">
+                
+                <!-- Línea Superior de Estado -->
+                <div
+                    class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r"
+                    :class="bet.status === 'won' ? 'from-green-500/50 via-win to-green-500/50' : 
+                            bet.status === 'lost' ? 'from-red-500/50 via-red-600 to-red-500/50' : 
+                            bet.status === 'accepted' ? 'from-blue-500/50 via-blue-600 to-blue-500/50' : 
+                            bet.status === 'cashed_out' ? 'from-amber-500/50 via-amber-600 to-amber-500/50' : 
+                            'from-gray-500/50 via-gray-600 to-gray-500/50'">
+                </div>
+                
+                <!-- CABECERA DEL TICKET -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5 pb-4 border-b border-gray-800/40">
+                    <div class="flex items-center gap-3">
+                        <!-- Icono descriptivo del tipo de apuesta -->
+                        <div
+                            class="w-10 h-10 rounded-xl bg-dark border border-gray-800 flex items-center justify-center text-accent">
+                            <i :class="bet.type === 'simple' ? 'fas fa-ticket-alt text-sm' : 'fas fa-layer-group text-sm'"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-black text-white" x-text="bet.type === 'simple' ? 'Apuesta Simple' : 'Apuesta Combinada'"></span>
+                                <span class="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-[#0d0f12] text-gray-400 border border-gray-800/80"
+                                      x-text="bet.selections_detail.length + ' Selecc.'"></span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Boleto #<span class="text-gray-300 font-bold" x-text="bet.id"></span> &bull; 
+                                <span x-text="formatDateTime(bet.created_at)"></span>
+                            </p>
+                        </div>
                     </div>
-                    <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md"
-                          :class="bet.status === 'won' ? 'bg-win/10 text-win border border-win/20' : bet.status === 'lost' ? 'bg-red-950/40 text-red-400 border border-red-900/30' : bet.status === 'accepted' ? 'bg-blue-950/40 text-blue-400 border border-blue-900/30' : 'bg-[#0d0f12] text-gray-400 border border-gray-800'"
-                          x-text="bet.status === 'accepted' ? 'Activa' : bet.status === 'won' ? 'Ganada' : bet.status === 'lost' ? 'Perdida' : bet.status === 'cashed_out' ? 'Cashout' : 'Cancelada'"></span>
+                    
+                    <!-- Badge de Estado del Boleto con colores y bordes semitransparentes -->
+                    <span
+                        class="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-sm border"
+                        :class="bet.status === 'won' ? 'bg-win/10 text-win border-win/20' : 
+                                bet.status === 'lost' ? 'bg-red-950/40 text-red-400 border-red-900/30' : 
+                                bet.status === 'accepted' ? 'bg-blue-950/40 text-blue-400 border-blue-900/30' : 
+                                bet.status === 'cashed_out' ? 'bg-amber-950/40 text-amber-400 border-amber-900/30' : 
+                                'bg-[#0d0f12] text-gray-400 border-gray-800'">
+                        <i x-show="bet.status === 'won'" class="fas fa-check-circle text-xs"></i>
+                        <i x-show="bet.status === 'lost'" class="fas fa-times-circle text-xs"></i>
+                        <i x-show="bet.status === 'accepted'" class="fas fa-hourglass-half text-xs animate-pulse"></i>
+                        <i x-show="bet.status === 'cashed_out'" class="fas fa-hand-holding-usd text-xs"></i>
+                        <i x-show="bet.status === 'cancelled'" class="fas fa-ban text-xs"></i>
+                        <span
+                            x-text="bet.status === 'accepted' ? 'Activa' : 
+                                    bet.status === 'won' ? 'Ganada' : 
+                                    bet.status === 'lost' ? 'Perdida' : 
+                                    bet.status === 'cashed_out' ? 'Cashout' : 'Anulada'"></span>
+                    </span>
                 </div>
 
-                <div class="bg-[#0d0f12] border border-gray-800/40 rounded-lg p-3 mb-3">
-                    <p class="font-bold text-sm text-gray-200" x-text="bet.event_name || 'Evento'"></p>
-                    <p class="text-xs text-gray-500 mt-1">
-                        <span class="font-semibold uppercase" x-text="bet.type === 'simple' ? 'Simple' : 'Combinada'"></span> &bull;
-                        <span class="text-win font-bold" x-text="bet.selection_name || ''"></span>
-                    </p>
+                <!-- DESGLOSE DE PARTIDOS Y SELECCIONES (LEGS DEL TICKET) -->
+                <div class="bg-[#0d0f12]/80 border border-gray-800/40 rounded-xl overflow-hidden mb-5">
+                    <!-- Cabecera de la sección de partidos -->
+                    <div class="px-4 py-2.5 bg-[#0b0c0e] border-b border-gray-800/50 flex justify-between items-center">
+                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Partidos & Pronósticos</span>
+                        <span class="text-xs font-bold text-gray-400">
+                            Cuota Total: <span class="text-win text-sm font-black" x-text="(parseFloat(bet.potential_payout) / parseFloat(bet.stake)).toFixed(2)"></span>
+                        </span>
+                    </div>
+                    
+                    <!-- Listado dinámico de piernas (selections_detail) -->
+                    <div class="divide-y divide-gray-900/60">
+                        <template x-for="sel in bet.selections_detail" :key="sel.id">
+                            <div class="p-4 flex items-start gap-3 transition-colors hover:bg-white/[0.01]">
+                                <!-- Indicador visual de estado de la pierna individual -->
+                                <div class="flex flex-col items-center self-stretch pt-1">
+                                    <div class="w-2.5 h-2.5 rounded-full border-2"
+                                         :class="sel.status === 'won' ? 'bg-win border-win shadow-sm shadow-win/20' :
+                                                 sel.status === 'lost' ? 'bg-red-500 border-red-500' :
+                                                 sel.status === 'void' ? 'bg-amber-500 border-amber-500' :
+                                                 'bg-transparent border-gray-600'">
+                                    </div>
+                                    <div class="w-[2px] flex-grow bg-gray-800/40 my-1 last:hidden"></div>
+                                </div>
+                                
+                                <!-- Información detallada de la selección del partido -->
+                                <div class="flex-grow min-w-0">
+                                    <div class="flex justify-between items-start gap-2">
+                                        <p class="font-bold text-sm text-gray-100 truncate" x-text="sel.event_display"></p>
+                                        <!-- Badge de estado de la pierna -->
+                                        <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md"
+                                              :class="sel.status === 'won' ? 'bg-win/10 text-win' : 
+                                                      sel.status === 'lost' ? 'bg-red-500/10 text-red-400' : 
+                                                      sel.status === 'void' ? 'bg-amber-500/10 text-amber-400' : 
+                                                      'bg-gray-800/40 text-gray-400'"
+                                              x-text="sel.status === 'won' ? 'Acierto' : 
+                                                      sel.status === 'lost' ? 'Fallo' : 
+                                                      sel.status === 'void' ? 'Anulada' : 'Pendiente'"></span>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs text-gray-400">
+                                        <span class="text-accent font-black uppercase text-[10px]" x-text="sel.market_name"></span>
+                                        <span class="text-gray-700">&bull;</span>
+                                        <span>Tu Pronóstico: <span class="text-white font-bold" x-text="sel.selection_name"></span></span>
+                                        <span class="text-gray-700">&bull;</span>
+                                        <span class="text-win font-bold" x-text="'@ ' + parseFloat(sel.odds_at_bet).toFixed(2)"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-sm text-gray-400">Monto: <span class="font-semibold text-white" x-text="'S/ ' + bet.stake"></span></p>
-                        <p class="text-sm text-gray-400">Posible pago: <span class="font-semibold text-win" x-text="'S/ ' + bet.potential_payout"></span></p>
+                <!-- INFORMACIÓN FINANCIERA DEL BOLETO Y ACCIONES -->
+                <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center pt-4 border-t border-gray-800/50 gap-4">
+                    <div class="flex gap-8">
+                        <div class="space-y-0.5">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Monto Apostado</span>
+                            <span class="text-base font-black text-white" x-text="'S/ ' + parseFloat(bet.stake).toFixed(2)"></span>
+                        </div>
+                        <div class="space-y-0.5">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider block"
+                                  x-text="bet.status === 'won' ? 'Premio Ganado' : bet.status === 'cashed_out' ? 'Retiro Anticipado' : 'Ganancia Potencial'"></span>
+                            <span class="text-base font-black" 
+                                  :class="bet.status === 'won' ? 'text-win' : bet.status === 'cashed_out' ? 'text-amber-400' : 'text-accent'"
+                                  x-text="'S/ ' + parseFloat(bet.potential_payout).toFixed(2)"></span>
+                        </div>
                     </div>
-                    <div>
+                    
+                    <!-- Botón de Cashout o Indicador de Retorno Neto -->
+                    <div class="flex items-center">
+                        <!-- Permite realizar Cashout inmediato si la apuesta está activa y califica contablemente -->
                         <template x-if="bet.status === 'accepted' && bet.can_cashout">
-                            <button @click="cashout(bet.id)"
-                                :disabled="cashing === bet.id"
-                                class="bg-win hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50">
-                                <span x-text="cashing === bet.id ? 'Procesando...' : 'Cashout'"></span>
+                            <button @click="cashout(bet.id)" :disabled="cashing === bet.id"
+                                    class="w-full sm:w-auto bg-win hover:bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-black transition disabled:opacity-50 inline-flex items-center justify-center gap-2 shadow-lg shadow-win/15">
+                                <template x-if="cashing !== bet.id">
+                                    <span class="inline-flex items-center gap-1.5"><i class="fas fa-hand-holding-usd text-xs"></i> Retiro Inmediato</span>
+                                </template>
+                                <template x-if="cashing === bet.id">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg> 
+                                        Procesando
+                                    </span>
+                                </template>
                             </button>
                         </template>
-                        <span x-show="bet.status !== 'accepted'" class="text-sm font-bold"
-                              :class="bet.status === 'won' ? 'text-win' : bet.status === 'lost' ? 'text-red-400' : 'text-gray-500'"
-                              x-text="bet.status === 'won' ? '+ S/ ' + bet.potential_payout : bet.status === 'lost' ? '- S/ ' + bet.stake : ''"></span>
+                        
+                        <!-- Si el boleto está cerrado, despliega la ganancia neta o la pérdida de forma clara -->
+                        <span x-show="bet.status !== 'accepted'"
+                              class="text-base font-black inline-flex items-center gap-1.5 ml-auto sm:ml-0"
+                              :class="bet.status === 'won' ? 'text-win' : bet.status === 'lost' ? 'text-red-400' : bet.status === 'cashed_out' ? 'text-amber-400' : 'text-gray-500'">
+                            <i x-show="bet.status === 'won'" class="fas fa-arrow-circle-up text-base"></i>
+                            <i x-show="bet.status === 'lost'" class="fas fa-arrow-circle-down text-base"></i>
+                            <i x-show="bet.status === 'cashed_out'" class="fas fa-arrow-circle-up text-base"></i>
+                            
+                            <!-- Cálculo aritmético dinámico de ganancia neta en base al stake -->
+                            <span
+                                x-text="bet.status === 'lost' ? '- S/ ' + parseFloat(bet.stake).toFixed(2) : 
+                                        (parseFloat(bet.potential_payout) - parseFloat(bet.stake)) >= 0 ? 
+                                        '+ S/ ' + (parseFloat(bet.potential_payout) - parseFloat(bet.stake)).toFixed(2) : 
+                                        '- S/ ' + Math.abs(parseFloat(bet.potential_payout) - parseFloat(bet.stake)).toFixed(2)"></span>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -85,46 +225,46 @@
 
 {% block extra_js %}
 <script>
-function betList() {
-    return {
-        bets: [],
-        filtered: [],
-        filter: 'all',
-        loading: true,
-        cashing: null,
+    function betList() {
+        return {
+            bets: [],
+            filtered: [],
+            filter: 'all',
+            loading: true,
+            cashing: null,
 
-        async init() {
-            if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
-            await this.load();
-        },
-
-        async load() {
-            this.loading = true;
-            const data = await apiFetch('/betting/bets/');
-            this.bets = data.results || data || [];
-            this.filterBets();
-            this.loading = false;
-        },
-
-        filterBets() {
-            if (this.filter === 'all') this.filtered = this.bets;
-            else this.filtered = this.bets.filter(b => b.status === this.filter);
-        },
-
-        async cashout(id) {
-            this.cashing = id;
-            const data = await apiFetch('/betting/bets/' + id + '/cashout/', {
-                method: 'POST',
-                idempotencyKey: generateIdempotencyKey(),
-            });
-            this.cashing = null;
-            if (data._status === 200 || data.status === 'cashed_out') {
+            async init() {
+                if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
                 await this.load();
-            } else {
-                alert(data.error || 'Error al hacer cashout');
-            }
-        },
-    };
-}
+            },
+
+            async load() {
+                this.loading = true;
+                const data = await apiFetch('/betting/bets/');
+                this.bets = data.results || data || [];
+                this.filterBets();
+                this.loading = false;
+            },
+
+            filterBets() {
+                if (this.filter === 'all') this.filtered = this.bets;
+                else this.filtered = this.bets.filter(b => b.status === this.filter);
+            },
+
+            async cashout(id) {
+                this.cashing = id;
+                const data = await apiFetch('/betting/bets/' + id + '/cashout/', {
+                    method: 'POST',
+                    idempotencyKey: generateIdempotencyKey(),
+                });
+                this.cashing = null;
+                if (data._status === 200 || data.status === 'cashed_out') {
+                    await this.load();
+                } else {
+                    alert(data.error || 'Error al hacer cashout');
+                }
+            },
+        };
+    }
 </script>
 {% endblock %}

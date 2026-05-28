@@ -13,15 +13,22 @@
 
     <template x-if="!loading && event">
         <div>
-            <a href="{% url 'events-list' %}" class="text-gray-400 hover:text-white mb-4 inline-block">&larr; Volver a eventos</a>
+            <a href="{% url 'events-list' %}" class="text-gray-400 hover:text-white mb-4 inline-flex items-center gap-1 transition"><i class="fas fa-arrow-left"></i> Volver a eventos</a>
 
-            <div class="bg-card rounded-xl border border-gray-800 p-6 mb-6">
+            <div class="bg-card rounded-xl border border-gray-800 p-6 mb-6 relative overflow-hidden">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent/30 via-accent to-accent/30"></div>
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold uppercase px-3 py-1 rounded-full"
-                          :class="event.status === 'live' || event.status === 'in_play' ? 'bg-green-950 text-green-400 ring-1 ring-green-500/50 animate-pulse' : 'bg-blue-950 text-blue-400'"
-                          x-text="event.status === 'live' || event.status === 'in_play' ? '🔴 EN VIVO' : '📅 PROGRAMADO'"></span>
+                    <span :class="event.status === 'live' || event.status === 'in_play' ? 'bg-green-950 text-green-400 ring-1 ring-green-500/50 animate-pulse' : 'bg-blue-950 text-blue-400'"
+                          class="text-xs font-semibold uppercase px-3 py-1 rounded-full inline-flex items-center gap-1">
+                        <template x-if="event.status === 'live' || event.status === 'in_play'">
+                            <span class="inline-flex items-center gap-1"><i class="fas fa-circle text-red-500 text-[8px]"></i> EN VIVO</span>
+                        </template>
+                        <template x-if="!(event.status === 'live' || event.status === 'in_play')">
+                            <span class="inline-flex items-center gap-1"><i class="fas fa-calendar-alt"></i> PROGRAMADO</span>
+                        </template>
+                    </span>
                     <div class="flex items-center gap-2">
-                        <span class="text-base" x-text="sportEmoji(event.league?.sport)"></span>
+                        <i :class="'fas ' + sportIcon(event.league?.sport)" class="text-sm"></i>
                         <span class="text-xs text-gray-400 font-semibold" x-text="event.league?.name || ''"></span>
                     </div>
                 </div>
@@ -39,25 +46,27 @@
                     </div>
                 </div>
                 <div class="text-center text-xs text-gray-400 mt-2">
+                    <i class="fas fa-clock mr-1"></i>
                     <span>Inicio: </span>
                     <span class="font-semibold text-gray-300" x-text="formatDateTime(event.starts_at)"></span>
                 </div>
             </div>
 
-            <div class="bg-card rounded-xl border border-gray-800 p-6">
-                <h2 class="text-xl font-bold mb-4">Selecciona tu apuesta</h2>
+            <div class="bg-card rounded-xl border border-gray-800 p-6 relative overflow-hidden">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent/30 via-accent to-accent/30"></div>
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-hand-pointer text-accent"></i> Selecciona tu apuesta</h2>
                 <template x-for="mkt in (event.markets || [])" :key="mkt.id">
                     <div class="mb-6">
-                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3" x-text="mkt.name"></h3>
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5"><i class="fas fa-tag"></i> <span x-text="mkt.name"></span></h3>
                         <div :class="(mkt.selections || []).length <= 2 ? 'grid-cols-2' : 'grid-cols-3'" class="grid gap-3">
                             <template x-for="sel in (mkt.selections || [])" :key="sel.id">
                                 <button @click="selectSelection(sel)"
-                                    :class="selected?.id === sel.id ? 'border-accent bg-accent/10 shadow-[0_0_12px_rgba(22,163,74,0.3)]' : 'border-gray-850 hover:border-gray-600 hover:bg-gray-800/20 bg-[#0d0f12]'"
-                                    class="border rounded-xl p-4 text-center transition-all duration-200">
+                                    :class="selected?.id === sel.id ? 'border-accent bg-accent/10 shadow-[0_0_12px_rgba(22,163,74,0.3)] ring-1 ring-accent/50' : 'border-gray-800 hover:border-gray-600 hover:bg-gray-800/20 bg-[#0d0f12]'"
+                                    class="border rounded-xl p-4 text-center transition-all duration-200 cursor-pointer">
                                     <p class="text-xs text-gray-500 font-bold uppercase tracking-wider" x-text="sel.name"></p>
                                     <p class="text-xl font-black text-win mt-1 transition-all duration-300" x-text="parseFloat(liveOdds[sel.id] || sel.odds).toFixed(4)"></p>
                                     <template x-if="liveOdds[sel.id] && liveOdds[sel.id] !== sel.odds">
-                                        <p class="text-xs text-yellow-400 animate-pulse mt-1">⚡ En Vivo</p>
+                                        <p class="text-xs text-yellow-400 animate-pulse mt-1 inline-flex items-center gap-1"><i class="fas fa-bolt"></i> En Vivo</p>
                                     </template>
                                 </button>
                             </template>
@@ -67,34 +76,46 @@
 
                 <template x-if="selected">
                     <div class="mt-6 border-t border-gray-800 pt-6">
-                        <h3 class="text-lg font-bold mb-4">Tu Apuesta</h3>
-                        <div class="bg-[#0d0f12] border border-gray-800/40 rounded-xl p-4 mb-4">
-                            <p class="text-sm"><span class="text-gray-500 font-medium">Selección:</span> <span class="font-bold text-white ml-1" x-text="selected.name"></span></p>
-                            <p class="text-sm mt-1"><span class="text-gray-500 font-medium">Cuota:</span> <span class="font-black text-win ml-1" x-text="currentOdds()"></span></p>
-                            <p class="text-sm mt-1"><span class="text-gray-500 font-medium">Evento:</span> <span class="text-gray-300 ml-1" x-text="event.home_team?.name + ' vs ' + event.away_team?.name"></span></p>
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fas fa-receipt text-accent"></i> Tu Apuesta</h3>
+                        <div class="bg-[#0d0f12] border border-gray-800/40 rounded-xl p-4 mb-4 space-y-2">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-win text-xs"></i>
+                                <p class="text-sm"><span class="text-gray-500 font-medium">Selección:</span> <span class="font-bold text-white ml-1" x-text="selected.name"></span></p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-chart-line text-win text-xs"></i>
+                                <p class="text-sm"><span class="text-gray-500 font-medium">Cuota:</span> <span class="font-black text-win ml-1" x-text="currentOdds()"></span></p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-calendar-alt text-gray-500 text-xs"></i>
+                                <p class="text-sm"><span class="text-gray-500 font-medium">Evento:</span> <span class="text-gray-300 ml-1" x-text="event.home_team?.name + ' vs ' + event.away_team?.name"></span></p>
+                            </div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Monto a apostar (S/)</label>
-                            <input type="number" x-model="stake" min="1" step="0.5"
-                                class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none font-bold text-lg">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"><i class="fas fa-coins mr-1"></i> Monto a apostar (S/)</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">S/</span>
+                                <input type="number" x-model="stake" min="1" step="0.5" placeholder="0"
+                                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl pl-10 pr-4 py-3 text-white focus:border-accent outline-none font-bold text-lg transition">
+                            </div>
                         </div>
 
-                        <div class="bg-[#0d0f12] border border-gray-800/40 rounded-xl p-4 mb-6">
+                        <div class="bg-gradient-to-r from-accent/5 to-transparent border border-accent/10 rounded-xl p-4 mb-6">
                             <div class="flex justify-between items-center">
-                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Posible ganancia:</span>
+                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5"><i class="fas fa-coins"></i> Posible ganancia:</span>
                                 <span class="text-2xl font-black text-win" x-text="'S/ ' + potentialPayout()"></span>
                             </div>
                         </div>
 
                         <template x-if="error">
-                            <div class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mb-4" x-text="error"></div>
+                            <div class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mb-4 flex items-center gap-2"><i class="fas fa-exclamation-circle flex-shrink-0"></i> <span x-text="error"></span></div>
                         </template>
 
                         <button @click="placeBet()" :disabled="sending || !stake || stake <= 0"
-                            class="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition">
-                            <span x-show="!sending">Confirmar Apuesta</span>
-                            <span x-show="sending">Enviando...</span>
+                            class="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition flex items-center justify-center gap-2">
+                            <span x-show="!sending" class="flex items-center gap-2"><i class="fas fa-gavel"></i> Confirmar Apuesta</span>
+                            <span x-show="sending" class="flex items-center gap-2"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Enviando...</span>
                         </button>
                     </div>
                 </template>
@@ -117,16 +138,16 @@ function eventDetail() {
         liveOdds: {},
         ws: null,
 
-        sportEmoji(sport) {
+        sportIcon(sport) {
             const map = {
-                'Fútbol': '⚽',
-                'Baloncesto': '🏀',
-                'Béisbol': '⚾',
-                'Fútbol Americano': '🏈',
-                'Hockey': '🏒',
-                'Tenis': '🎾',
+                'Fútbol': 'fa-futbol',
+                'Baloncesto': 'fa-basketball-ball',
+                'Béisbol': 'fa-baseball-ball',
+                'Fútbol Americano': 'fa-football-ball',
+                'Hockey': 'fa-hockey-puck',
+                'Tenis': 'fa-table-tennis',
             };
-            return map[sport] || '🏆';
+            return map[sport] || 'fa-trophy';
         },
 
         async init() {

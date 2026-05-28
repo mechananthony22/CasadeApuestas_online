@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Configuración del panel de administración de Django para la app de usuarios.
-
-Registra el modelo UserProfile en el admin de Django para que el
-administrador del operador pueda revisar y actualizar estados de KYC
-desde la interfaz web en /admin/.
-"""
 from django.contrib import admin
 from .models import UserProfile
 

@@ -10,8 +10,7 @@ from fraud.serializers import SuspiciousActivitySerializer
 
 class SuspiciousActivityViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ViewSet administrativo para visualizar y gestionar alertas de actividad sospechosa (Fase 9).
-    Solo accesible para operadores del sistema (`IsAdminUser`).
+    ViewSet administrativo para visualizar y gestionar alertas de actividad sospechosa (Fase 9). Solo accesible para operadores del sistema (`IsAdminUser`).
     """
     
     queryset = SuspiciousActivity.objects.all().select_related('user', 'resolved_by').order_by('-created_at')
@@ -20,11 +19,6 @@ class SuspiciousActivityViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='resolve')
     def resolve(self, request, pk=None):
-        """
-        POST /api/v1/fraud/alerts/{id}/resolve/
-        Permite a un administrador auditar y archivar una alerta sospechosa
-        estableciendo el estado final a 'REVIEWED' o 'DISMISSED'.
-        """
         alert = self.get_object()
         
         # Validar el nuevo estado recibido en el body

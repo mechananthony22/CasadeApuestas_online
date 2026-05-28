@@ -1,50 +1,94 @@
 {% extends "base.html" %}
 {% block title %}Transferir Fichas - FairBet Lab{% endblock %}
 {% block content %}
-<div class="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-8"
-     x-data="transfer()" x-init="init()">
+<div class="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="transfer()" x-init="init()">
 
-    <a href="{% url 'wallet-balance' %}" class="text-gray-400 hover:text-white mb-4 inline-block font-medium text-sm transition">&larr; Volver a Billetera</a>
+    <a href="{% url 'wallet-balance' %}"
+        class="text-gray-400 hover:text-white mb-4 inline-flex items-center gap-1 transition"><i
+            class="fas fa-arrow-left"></i> Volver a Billetera</a>
 
-    <div class="bg-card rounded-xl border border-gray-800 p-8 shadow-xl">
-        <h1 class="text-2xl font-black text-white tracking-tight mb-2">⇆ Transferencia Interna</h1>
-        <p class="text-gray-400 text-xs mb-6">Envía fichas virtuales de forma instantánea a otro usuario verificado.</p>
+    <div class="bg-card rounded-xl border border-gray-800 p-8 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500/30 via-blue-500 to-blue-500/30">
+        </div>
+
+        <div class="flex items-center gap-3 mb-6">
+            <div
+                class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                <i class="fas fa-exchange-alt"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-black text-white tracking-tight">Transferencia Interna</h1>
+                <p class="text-gray-400 text-xs">Envía fichas virtuales de forma instantánea a otro usuario verificado
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-blue-500/5 border border-blue-500/10 rounded-xl px-4 py-3 mb-6">
+            <p class="text-xs text-gray-400 text-center">Tu saldo: <span class="text-white font-bold">S/ <span
+                        x-text="balance"></span></span></p>
+        </div>
 
         <!-- Formulario -->
         <div class="space-y-4">
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Usuario Destinatario</label>
-                <input type="text" x-model="to_username" placeholder="Ingrese el username"
-                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none font-bold text-sm transition focus:ring-1 focus:ring-accent">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                    <i class="fas fa-user mr-1"></i> Usuario Destinatario
+                </label>
+                <div class="relative">
+                    <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <input type="text" x-model="to_username" placeholder="Ingrese el username"
+                        class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl pl-10 pr-4 py-3 text-white focus:border-blue-500 outline-none font-bold text-sm transition">
+                </div>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Monto a Transferir (S/.)</label>
-                <input type="number" x-model="amount" min="0.0001" step="0.01" placeholder="0.00"
-                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none font-black text-lg transition focus:ring-1 focus:ring-accent">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                    <i class="fas fa-coins mr-1"></i> Monto a Transferir (S/.)
+                </label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">S/</span>
+                    <input type="number" x-model="amount" min="0.0001" step="0.01" placeholder="0.00"
+                        class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl pl-10 pr-4 py-3 text-white focus:border-blue-500 outline-none font-black text-lg transition">
+                </div>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Descripción / Motivo (Opcional)</label>
-                <input type="text" x-model="description" placeholder="Ej: Pago, regalo, etc."
-                    class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-accent outline-none text-sm transition focus:ring-1 focus:ring-accent">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                    <i class="fas fa-pen mr-1"></i> Descripción / Motivo (Opcional)
+                </label>
+                <div class="relative">
+                    <i class="fas fa-pen absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <input type="text" x-model="description" placeholder="Ej: Pago, regalo, etc."
+                        class="w-full bg-[#0d0f12] border border-gray-800 rounded-xl pl-10 pr-4 py-3 text-white focus:border-blue-500 outline-none text-sm transition">
+                </div>
             </div>
         </div>
 
         <div class="mt-6">
             <template x-if="error">
-                <div class="bg-red-900/40 border border-red-500/80 text-red-200 px-4 py-3 rounded-xl text-sm mb-4" x-text="error"></div>
+                <div
+                    class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mb-4 flex items-center gap-2">
+                    <i class="fas fa-exclamation-circle flex-shrink-0"></i> <span x-text="error"></span>
+                </div>
             </template>
 
             <template x-if="success">
-                <div class="bg-win/10 border border-win text-win px-4 py-3 rounded-xl text-sm mb-4" x-text="success"></div>
+                <div
+                    class="bg-win/10 border border-win text-win px-4 py-3 rounded-xl text-sm mb-4 flex items-center gap-2">
+                    <i class="fas fa-check-circle flex-shrink-0"></i> <span x-text="success"></span>
+                </div>
             </template>
         </div>
 
         <button @click="sendTransfer()" :disabled="sending || !to_username || !amount || amount <= 0"
-            class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-md transition mt-4 shadow-lg hover:shadow-blue-500/10">
-            <span x-show="!sending">Realizar Transferencia</span>
-            <span x-show="sending">Procesando...</span>
+            class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition mt-4 flex items-center justify-center gap-2 shadow-lg hover:shadow-blue-500/20">
+            <span x-show="!sending" class="flex items-center gap-2"><i class="fas fa-paper-plane"></i> Realizar
+                Transferencia</span>
+            <span x-show="sending" class="flex items-center gap-2"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"
+                    fill="none">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg> Procesando...</span>
         </button>
     </div>
 </div>
@@ -52,63 +96,69 @@
 
 {% block extra_js %}
 <script>
-function transfer() {
-    return {
-        to_username: '',
-        amount: '',
-        description: '',
-        error: '',
-        success: '',
-        sending: false,
-        idempotencyKey: '',
+    function transfer() {
+        return {
+            to_username: '',
+            amount: '',
+            description: '',
+            error: '',
+            success: '',
+            sending: false,
+            idempotencyKey: '',
+            balance: '0.00',
 
-        init() {
-            if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
-            this.idempotencyKey = generateIdempotencyKey();
-        },
-
-        async sendTransfer() {
-            this.error = '';
-            this.success = '';
-            this.sending = true;
-
-            const payload = {
-                to_username: this.to_username.trim(),
-                amount: parseFloat(this.amount),
-                description: this.description.trim() || undefined
-            };
-
-            const data = await apiFetch('/wallet/transfer/', {
-                method: 'POST',
-                idempotencyKey: this.idempotencyKey,
-                body: JSON.stringify(payload)
-            });
-
-            this.sending = false;
-
-            if (data._status === 201 || data.mensaje) {
-                this.success = data.mensaje || 'Transferencia realizada con éxito';
-                this.to_username = '';
-                this.amount = '';
-                this.description = '';
-                // Generar nueva clave de idempotencia para la siguiente transacción
+            init() {
+                if (!localStorage.getItem('access_token')) { window.location.href = '/login/'; return; }
                 this.idempotencyKey = generateIdempotencyKey();
-            } else {
-                // Manejar errores estructurados de DRF
-                if (data.non_field_errors) {
-                    this.error = data.non_field_errors[0] || data.non_field_errors;
-                } else if (data.to_username) {
-                    this.error = data.to_username[0] || data.to_username;
-                } else if (data.amount) {
-                    this.error = data.amount[0] || data.amount;
-                } else if (data.error) {
-                    this.error = data.error;
+                this.loadBalance();
+            },
+
+            async loadBalance() {
+                const data = await apiFetch('/wallet/balance/');
+                if (data._status === 200) this.balance = data.balance || '0.00';
+            },
+
+            async sendTransfer() {
+                this.error = '';
+                this.success = '';
+                this.sending = true;
+
+                const payload = {
+                    to_username: this.to_username.trim(),
+                    amount: parseFloat(this.amount),
+                    description: this.description.trim() || undefined
+                };
+
+                const data = await apiFetch('/wallet/transfer/', {
+                    method: 'POST',
+                    idempotencyKey: this.idempotencyKey,
+                    body: JSON.stringify(payload)
+                });
+
+                this.sending = false;
+
+                if (data._status === 201 || data.mensaje) {
+                    this.success = data.mensaje || 'Transferencia realizada con éxito';
+                    this.to_username = '';
+                    this.amount = '';
+                    this.description = '';
+                    this.idempotencyKey = generateIdempotencyKey();
+                    this.loadBalance();
                 } else {
-                    this.error = 'Ocurrió un error al procesar la transferencia.';
+                    if (data.non_field_errors) {
+                        this.error = data.non_field_errors[0] || data.non_field_errors;
+                    } else if (data.to_username) {
+                        this.error = data.to_username[0] || data.to_username;
+                    } else if (data.amount) {
+                        this.error = data.amount[0] || data.amount;
+                    } else if (data.error) {
+                        this.error = data.error;
+                    } else {
+                        this.error = 'Ocurrió un error al procesar la transferencia.';
+                    }
                 }
             }
-        }
-    };
-}
+        };
+    }
 </script>
 {% endblock %}

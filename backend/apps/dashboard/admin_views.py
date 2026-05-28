@@ -20,17 +20,13 @@ import io
 
 
 class AdminUserMixin(UserPassesTestMixin):
-    """
-    Mixin que verifica que el usuario sea staff/admin para acceder a vistas de operador.
-    """
     def test_func(self):
         return self.request.user.is_staff or self.request.user.is_superuser
 
 
 def get_ggr_metrics():
     """
-    Calcula las métricas de GGR (Gross Gaming Revenue) del operador.
-    Considera únicamente apuestas resueltas/liquidadas.
+    Calcula las métricas de GGR (Gross Gaming Revenue) del operador. Considera únicamente apuestas resueltas/liquidadas.
     """
     totals = Bet.objects.filter(
         status__in=['won', 'lost', 'cashed_out', 'cancelled']
@@ -103,8 +99,7 @@ def get_active_users_metrics():
 
 def get_event_exposure_metrics():
     """
-    Calcula la exposición financiera por evento y selección.
-    Muestra cuánto pierde la casa si cada selección gana.
+    Calcula la exposición financiera por evento y selección. Muestra cuánto pierde la casa si cada selección gana.
     """
     event_exposure = []
     active_events = Event.objects.filter(
@@ -175,8 +170,7 @@ def get_event_exposure_metrics():
 
 class AdminDashboardView(LoginRequiredMixin, AdminUserMixin, TemplateView):
     """
-    Vista HTML para el panel del operador/admin.
-    Muestra métricas en vivo: GGR, volumen de apuestas, usuarios activos, exposure.
+    Vista HTML para el panel del operador/admin. Muestra métricas en vivo: GGR, volumen de apuestas, usuarios activos, exposure.
     """
     template_name = 'admin/dashboard.html'
     login_url = '/admin/login/'
@@ -190,8 +184,7 @@ class AdminDashboardView(LoginRequiredMixin, AdminUserMixin, TemplateView):
 
 class AdminMinceturView(LoginRequiredMixin, AdminUserMixin, TemplateView):
     """
-    Vista HTML para la página de reportes MINCETUR.
-    Permite seleccionar año/mes y descargar el CSV.
+    Vista HTML para la página de reportes MINCETUR. Permite seleccionar año/mes y descargar el CSV.
     """
     template_name = 'admin/mincetur.html'
     login_url = '/admin/login/'
@@ -231,8 +224,7 @@ class AdminLoginView(TemplateView):
 
 def get_active_events_for_catalog():
     """
-    Obtiene los eventos activos para el catálogo del admin.
-    Similar a la vista de usuario pero sin necesidad de token JWT.
+    Obtiene los eventos activos para el catálogo del admin. Similar a la vista de usuario pero sin necesidad de token JWT.
     """
     from django.utils import timezone
     from datetime import timedelta
@@ -284,8 +276,7 @@ def get_active_events_for_catalog():
 @method_decorator(csrf_exempt, name='dispatch')
 class AdminMetricsAPIView(APIView):
     """
-    API endpoint JSON para métricas del operador (polling desde el dashboard).
-    Devuelve GGR, volumen, usuarios activos, exposure y catálogo de eventos.
+    API endpoint JSON para métricas del operador (polling desde el dashboard). Devuelve GGR, volumen, usuarios activos, exposure y catálogo de eventos.
     """
     permission_classes = [IsAdminUser]
 
@@ -311,8 +302,7 @@ class AdminMetricsAPIView(APIView):
 
 class AdminMinceturCSVAPIView(APIView):
     """
-    API endpoint para descargar reporte MINCETUR en CSV.
-    Filtra por año/mes y exporta todas las apuestas liquidadas.
+    API endpoint para descargar reporte MINCETUR en CSV. Filtra por año/mes y exporta todas las apuestas liquidadas.
     """
     permission_classes = [IsAdminUser]
 

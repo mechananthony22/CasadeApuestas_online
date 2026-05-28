@@ -1,17 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Vistas de la API para la Fase 2: Wallet + Partida Doble.
-
-REGLA DE ARQUITECTURA HÍBRIDA:
-    Todas las operaciones que modifican el wallet van por HTTP síncrono.
-    NUNCA se usa WebSocket para mover dinero.
-
-REGLAS DE ORO:
-    - NUNCA almacenar saldo en una columna (siempre calcular por SUM).
-    - Cada transacción = mínimo 2 entries balanceadas (suma algebraica = 0).
-    - select_for_update en TODA operación que modifica el wallet.
-    - @transaction.atomic para garantizar atomicidad.
-"""
 from uuid import uuid4
 from decimal import Decimal
 
@@ -35,23 +22,6 @@ from .serializers import (
 
 
 class DepositoView(APIView):
-    """
-    POST /api/v1/wallet/deposit/
-
-    Endpoint para recarga simulada de fichas virtuales.
-
-    Flujo:
-        1. Valida que el monto sea positivo.
-        2. Crea dos entradas en LedgerEntry dentro de una transacción atómica:
-           - CREDIT en wallet_usuario (entra dinero al usuario)
-           - DEBIT en casa (sale dinero de la casa)
-        3. Retorna el nuevo saldo del usuario.
-
-    Respuestas:
-        201 Created: Depósito exitoso, retorna el nuevo saldo.
-        400 Bad Request: Monto inválido o datos incorrectos.
-    """
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -242,25 +212,6 @@ class DepositoView(APIView):
 
 
 class RetiroView(APIView):
-    """
-    POST /api/v1/wallet/withdraw/
-
-    Endpoint para retiro simulado de fichas virtuales.
-
-    Flujo:
-        1. Valida que el monto sea positivo.
-        2. Verifica saldo suficiente (select_for_update).
-        3. Crea dos entradas en LedgerEntry:
-           - DEBIT en wallet_usuario (sale dinero del usuario)
-           - CREDIT en casa (entra dinero a la casa)
-        4. Retorna el nuevo saldo.
-
-    Respuestas:
-        200 OK: Retiro exitoso.
-        400 Bad Request: Monto inválido.
-        409 Conflict: Saldo insuficiente.
-    """
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -343,17 +294,6 @@ class RetiroView(APIView):
 
 
 class BalanceView(APIView):
-    """
-    GET /api/v1/wallet/balance/
-
-    Endpoint para consultar el saldo disponible del usuario autenticado.
-    El saldo SIEMPRE se calcula mediante SUM(credits) - SUM(debits),
-    NUNCA se lee de una columna almacenada.
-
-    Respuestas:
-        200 OK: Datos del balance y movimientos recientes.
-    """
-
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -394,16 +334,6 @@ class BalanceView(APIView):
 
 
 class HistorialView(APIView):
-    """
-    GET /api/v1/wallet/history/
-
-    Endpoint para consultar el historial completo de movimientos
-    del usuario autenticado en el libro contable.
-
-    Respuestas:
-        200 OK: Lista paginada de movimientos.
-    """
-
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -437,13 +367,6 @@ class HistorialView(APIView):
 
 
 class TransferenciaView(APIView):
-    """
-    POST /api/v1/wallet/transfer/
-
-    Endpoint para la transferencia interna de fichas virtuales entre dos usuarios.
-    Mantiene el principio de partida doble y previene duplicaciones con Idempotency-Key.
-    """
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request):

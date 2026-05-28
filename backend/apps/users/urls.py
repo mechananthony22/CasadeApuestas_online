@@ -1,12 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Configuración de rutas URL para la aplicación de usuarios (Fase 1).
-
-Estas URLs mapean los endpoints del plan de desarrollo a sus vistas correspondientes.
-Todas estas rutas son de tipo HTTP síncrono, siguiendo la Regla de Oro del proyecto:
-    - HTTP → operaciones que modifican datos del usuario o la cuenta.
-    - WebSocket → solo actualizaciones de cuotas y marcadores en vivo.
-"""
 from django.urls import path
 from frontend.views import LoginAPIView
 from .views import RegistroView, VerificarDniView, MiPerfilView, AutoexclusionView

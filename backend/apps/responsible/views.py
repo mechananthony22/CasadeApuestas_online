@@ -10,18 +10,9 @@ from responsible.models import ResponsibleGamingLimit
 from responsible.serializers import ResponsibleGamingLimitSerializer
 
 class ResponsibleGamingLimitView(APIView):
-    """
-    APIView para gestionar los límites de depósito de juego responsable.
-    Soporta visualización (GET) y configuración transaccional (POST).
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        """
-        GET /api/v1/responsible/limits/
-        Retorna la configuración actual de límites y cooldowns del usuario autenticado.
-        Aplica dinámicamente cualquier límite pendiente con cooldown ya expirado.
-        """
         limit_obj, _ = ResponsibleGamingLimit.objects.get_or_create(user=request.user)
         
         # Aplicar límites pendientes expirados antes de retornar
@@ -31,12 +22,6 @@ class ResponsibleGamingLimitView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        """
-        POST /api/v1/responsible/limits/
-        Configura nuevos límites de depósito.
-        Reducciones de límites se aplican de manera instantánea.
-        Incrementos o desactivaciones se encolan con un cooldown preventivo de 24 horas.
-        """
         limit_obj, _ = ResponsibleGamingLimit.objects.get_or_create(user=request.user)
         
         # Aplicar límites pendientes expirados primero

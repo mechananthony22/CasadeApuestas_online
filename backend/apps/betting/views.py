@@ -13,19 +13,10 @@ from betting.serializers import EventSerializer, BetSerializer, OddsChangedExcep
 from wallet.models import LedgerEntry
 
 class EventViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Vista de sólo lectura para consultar eventos deportivos, marcadores y mercados/cuotas locales.
-    """
     serializer_class = EventSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """
-        Retorna la lista de partidos ordenados por fecha de inicio.
-        Permite filtrar por estado (ejemplo: ?status=live o ?status=scheduled).
-        Auto-transiciona partidos que ya debieron comenzar a 'in_play' y partidos
-        viejos a 'finished' para mantener el catálogo sincronizado sin Celery Beat en local.
-        """
         from django.utils import timezone
         from datetime import timedelta
 
@@ -63,10 +54,6 @@ class EventViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class BetViewSet(viewsets.ModelViewSet):
-    """
-    Controlador para la gestión de boletos de apuestas (colocación síncrona, listado y detalle).
-    Aplica controles transaccionales ACID, bloqueo pesimista contra doble gasto e idempotencia en Redis.
-    """
     serializer_class = BetSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -82,11 +69,6 @@ class BetViewSet(viewsets.ModelViewSet):
         ).order_by('-created_at')
 
     def create(self, request, *args, **kwargs):
-        """
-        POST /api/v1/bets/
-        Colocación transaccional de un boleto de apuestas (Simple o Combinada).
-        Exige y valida la cabecera 'Idempotency-Key' para prevenir duplicidades.
-        """
         # 1. Obtener y validar cabecera de idempotencia
         idempotency_header = request.headers.get('Idempotency-Key')
         if not idempotency_header:
@@ -265,11 +247,6 @@ class BetViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def cashout(self, request, pk=None):
-        """
-        POST /api/v1/betting/bets/{id}/cashout/
-        Ejecuta el cobro anticipado (Cash-out) para un ticket de apuesta específico.
-        Calcula dinámicamente el valor en base a las cuotas actuales y el factor del operador (0.95).
-        """
         import uuid
         from decimal import Decimal
         from django.db import transaction

@@ -1,13 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Serializadores de DRF para la Fase 1: Usuarios y KYC.
-
-Define la estructura de los datos que se reciben desde el cliente
-(validación de entrada) y los datos que se envían al cliente como respuesta.
-
-Incluye la integración con los validadores de DNI peruano y mayoría de edad
-para que las reglas de negocio se apliquen automáticamente al deserializar datos.
-"""
 from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework import serializers
@@ -19,17 +10,6 @@ from .validators import validar_dni_peruano, validar_mayoria_de_edad
 
 
 class RegistroUsuarioSerializer(serializers.Serializer):
-    """
-    Serializer para el endpoint de registro de un nuevo usuario.
-
-    Recibe: username, email, password, confirm_password, dni y birth_date.
-    Valida en orden:
-        1. Que el email no esté ya registrado.
-        2. Que el DNI tenga el formato correcto y el dígito verificador válido.
-        3. Que el usuario tenga mínimo 18 años.
-        4. Que las contraseñas coincidan.
-    """
-
     # Campos del usuario de Django
     username = serializers.CharField(
         min_length=3,
@@ -72,11 +52,6 @@ class RegistroUsuarioSerializer(serializers.Serializer):
         return valor
 
     def validate_dni(self, valor):
-        """
-        Valida el DNI peruano usando la API de apiperu.dev.
-        SI la API devuelve datos -> asumir que es mayor de edad.
-        SINO -> bloquear registro.
-        """
         # Verificar que el DNI no esté ya registrado en otro perfil
         if UserProfile.objects.filter(dni=valor).exists():
             raise serializers.ValidationError('Este DNI ya está registrado en el sistema.')
@@ -124,12 +99,6 @@ class RegistroUsuarioSerializer(serializers.Serializer):
 
     @transaction.atomic
     def create(self, datos_validados):
-        """
-        Crea el usuario y su perfil KYC dentro de una transacción atómica.
-
-        Usa @transaction.atomic para garantizar que si el perfil falla,
-        el usuario tampoco quede creado (atomicidad total de la operación).
-        """
         # Extraer datos no relacionados al perfil
         datos_validados.pop('confirm_password')
         dni = datos_validados.pop('dni')
@@ -163,11 +132,6 @@ class RegistroUsuarioSerializer(serializers.Serializer):
 
 
 class PerfilUsuarioSerializer(serializers.ModelSerializer):
-    """
-    Serializer de solo lectura para visualizar el perfil completo del usuario autenticado.
-    Expone los datos del perfil KYC y el estado de verificación actual de la cuenta.
-    """
-
     # Datos del usuario de Django anidados en la respuesta
     username = serializers.CharField(source='user.username', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)

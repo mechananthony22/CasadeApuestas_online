@@ -8,10 +8,6 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 def string_to_integer_id(string_id: str) -> int:
-    """
-    Genera un ID entero de 32 bits firmado estable y determinista a partir de una cadena.
-    Asegura compatibilidad con el tipo de campo IntegerField en Django (máx 2147483647).
-    """
     if not string_id:
         return 0
     h = hashlib.sha256(string_id.encode('utf-8')).hexdigest()
@@ -20,21 +16,12 @@ def string_to_integer_id(string_id: str) -> int:
 
 
 class TheOddsAPIClient:
-    """
-    Cliente HTTP para consumir The Odds API V4 (https://the-odds-api.com/).
-    Soporta la sincronización de partidos, cuotas y marcadores en tiempo real.
-    """
     def __init__(self):
         self.api_key = getattr(settings, 'THE_ODDS_API_KEY', '')
         self.api_url = getattr(settings, 'THE_ODDS_API_URL', 'https://api.the-odds-api.com/v4')
         self.sports_mapping = getattr(settings, 'THE_ODDS_API_SPORTS', {})
 
     def get_fixtures(self, league_id, season=2026):
-        """
-        Obtiene los partidos programados y sus cuotas asociadas para una liga específica.
-        Dado que The Odds API retorna eventos y cuotas en la misma consulta, este endpoint
-        cumple un rol híbrido en nuestro motor de sincronización.
-        """
         sport_key = self.sports_mapping.get(league_id)
         if not sport_key:
             logger.warning(f"La liga con ID {league_id} no está mapeada en THE_ODDS_API_SPORTS")
@@ -60,10 +47,6 @@ class TheOddsAPIClient:
             return []
 
     def get_live_fixtures(self):
-        """
-        Obtiene marcadores en tiempo real recorriendo todos los sports configurados.
-        Combina los resultados de cada liga para emular el feed general en vivo.
-        """
         all_live_events = []
         # Recorrer todos los sports que tenemos mapeados
         for league_id, sport_key in self.sports_mapping.items():
@@ -89,58 +72,10 @@ class TheOddsAPIClient:
         return all_live_events
 
     def get_odds(self, fixture_id):
-        """
-        Retorna cuotas bajo demanda para un fixture individual.
-        En The Odds API las cuotas se actualizan de forma masiva por liga en get_fixtures,
-        por lo que este método retorna vacío para evitar peticiones redundantes.
-        """
         return []
 
 
 class OddsCache:
-    """
-    Capa de caché Redis para proteger The Odds API de saturación y desperdicio de credits.
-
-    PROBLEMA QUE RESUELVE:
-    Cada Celery task que consulta The Odds API consume credits del tier gratuito (500/mes).
-    Si una API key está mala (401) o saturada (429), cada retry desperdicia credits.
-    Además, sync_live_scores	itera sobre 10 ligas cada 30 segundos, consumiendo
-    10 credits por ciclo × 120 ciclos/hora = 1,200 credits/hora solo en scores.
-
-    SOLUCIÓN:
-    Esta clase implementa una capa de caché Redis que:
-    1. Guarda los datos de la API en Redis con TTL largo (ej: 2h para fixtures)
-    2. Si la API falla (401, 429, timeout), guarda el error con TTL corto (5 min)
-    3. Cuando SyncEngine necesita datos, primero consulta la caché:
-       - Si hay datos válidos → retorna inmediatamente (0 credits gastados)
-       - Si hay error cacheado → retorna [] sin hacer request (protege credits)
-       - Si no hay nada → hace el request a la API y guarda en caché
-
-    ESTRUCTURA DE CACHÉ EN REDIS:
-        odds:fixtures:{league_id}   → Lista de eventos de una liga (TTL: 2h)
-        odds:live_scores           → Marcadores en vivo de todas las ligas (TTL: 30s)
-        odds:event:{event_id}       → Cuotas de un evento específico (TTL: 10s)
-        odds:error:fixtures:{league_id} → Error 401/429 de fixtures por liga (TTL: 5min)
-        odds:error:live_scores      → Error de scores global (TTL: 5min)
-
-    USO:
-        from betting.the_odds_api import OddsCache
-
-        cache = OddsCache()
-
-        # Para fixtures de una liga
-        def api_call():
-            return client.get_fixtures(league_id)
-
-        data = cache.get_fixtures(league_id, api_call)
-
-        # Para scores en vivo
-        def api_call_scores():
-            return client.get_live_fixtures()
-
-        scores = cache.get_live_scores(api_call_scores)
-    """
-
     @staticmethod
     def _key_fixtures(league_id):
         """Key Redis para fixtures de una liga específica."""
@@ -169,24 +104,6 @@ class OddsCache:
         return f"odds:error:{action}"
 
     def get_fixtures(self, league_id, api_fetch_fn):
-        """
-        Retorna fixtures de una liga desde caché. Si no existen o expiraron, llama a api_fetch_fn.
-
-        FLUJO:
-        1. Check error cacheado (si hay error 401/429 reciente para esta liga → return [])
-        2. Check data cache (si hay datos válidos → return cached_data)
-        3. [CACHE MISS] Llamar api_fetch_fn() que hace el request HTTP real
-        4. Si falla → guardar error en caché por 5 min, return []
-        5. Si success → guardar datos en caché por ODDS_CACHE_TTL_FIXTURES (2h), return datos
-
-        Args:
-            league_id: ID de la liga local (ej: 39 = EPL)
-            api_fetch_fn: Función lambda/sin argumentos que hace el request HTTP real.
-                          Debe retornar [] si falló (para no romper el flujo del caller).
-
-        Returns:
-            list: Datos de fixtures o [] si hay error cacheado o falla.
-        """
         from django.core.cache import cache
         from django.conf import settings
 
@@ -219,16 +136,6 @@ class OddsCache:
             return []
 
     def get_live_scores(self, api_fetch_fn):
-        """
-        Retorna scores en vivo desde caché. Si expiraron, llama a api_fetch_fn.
-
-        FLUJO similar a get_fixtures pero para scores de TODAS las ligas combinados.
-        El error se guarda GLOBAL (no por liga) ya que si la API falla, normalmente
-        falla para todas las ligas juntas.
-
-        Returns:
-            list: Lista de eventos con scores o [] si hay error.
-        """
         from django.core.cache import cache
         from django.conf import settings
 
@@ -257,17 +164,6 @@ class OddsCache:
             return []
 
     def get_odds(self, event_id, league_id, api_fetch_fn):
-        """
-        Retorna cuotas de un evento específico desde caché.
-
-        Args:
-            event_id: ID del evento en la BD local
-            league_id: ID de la liga (para segregar errores por liga)
-            api_fetch_fn: Función lambda sin argumentos que retorna las cuotas.
-
-        Returns:
-            dict: Datos de cuotas del evento o {} si hay error/no hay datos.
-        """
         from django.core.cache import cache
         from django.conf import settings
 
@@ -295,13 +191,6 @@ class OddsCache:
             return {}
 
     def invalidate_fixtures(self, league_id=None):
-        """
-        Limpia el caché de fixtures.
-
-        Args:
-            league_id: Si es None, limpia TODOS los fixtures y errores.
-                       Si se especifica, limpia solo esa liga.
-        """
         from django.core.cache import cache
         from django.conf import settings
 
@@ -325,11 +214,6 @@ class OddsCache:
         logger.info("[CACHE INVALIDATE] live_scores")
 
     def invalidate_all(self):
-        """
-        Limpia TODA la caché de odds (fixtures + scores + errores).
-        Útil cuando se quiere forzar un refresh completo de todos los datos
-        o cuando la API key ha sido renovada.
-        """
         from django.core.cache import cache
         from django.conf import settings
 

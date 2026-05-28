@@ -4,194 +4,806 @@
 
 {% block extra_head %}
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-*{font-family:'Inter',sans-serif;box-sizing:border-box}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-/* RESET page to full dark */
-body{background:#1a1d23!important}
-nav{background:#111317!important;border-bottom:1px solid #2a2d35!important}
-nav a,nav span,nav button,nav div{color:#e5e7eb!important}
-nav button.bg-accent,nav a.bg-accent{background:#16a34a!important;color:#fff!important}
-nav button.bg-accent:hover{background:#15803d!important}
-nav .text-accent{color:#4ade80!important}
-footer{background:#111317!important;border-top:1px solid #2a2d35!important}
-footer p,footer span{color:#6b7280!important}
+  * {
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box
+  }
 
-.bw-wrap{display:flex;min-height:calc(100vh - 64px);background:#1a1d23}
+  /* RESET page to full dark */
+  body {
+    background: #1a1d23 !important
+  }
 
-/* SIDEBAR */
-.bw-sidebar{width:200px;flex-shrink:0;background:#111317;border-right:1px solid #2a2d35;padding:0;overflow-y:auto}
-.bw-sidebar-section{padding:.6rem .75rem .25rem;font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#4ade80;background:#111317;border-bottom:1px solid #1e2128}
-.bw-sidebar-link{display:flex;align-items:center;justify-content:space-between;padding:.55rem 1rem;font-size:.78rem;color:#c9d1d9;text-decoration:none;transition:background .15s,color .15s;border-bottom:1px solid rgba(255,255,255,.03)}
-.bw-sidebar-link:hover{background:#1e2128;color:#fff}
-.bw-sidebar-link .live-badge{font-size:.5rem;font-weight:800;background:#16a34a;color:#fff;padding:2px 5px;border-radius:3px;letter-spacing:.06em}
-.bw-sidebar-link .count-badge{font-size:.6rem;background:#2a2d35;color:#9ca3af;padding:1px 6px;border-radius:10px}
+  nav {
+    background: #111317 !important;
+    border-bottom: 1px solid #2a2d35 !important
+  }
 
-/* MAIN CONTENT */
-.bw-main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+  nav a,
+  nav span,
+  nav button,
+  nav div {
+    color: #e5e7eb !important
+  }
 
-/* SPORT TABS */
-.bw-tabs{background:#111317;border-bottom:2px solid #2a2d35;display:flex;overflow-x:auto;padding:0 1rem;gap:.25rem;scrollbar-width:none}
-.bw-tabs::-webkit-scrollbar{display:none}
-.bw-tab{display:flex;align-items:center;gap:6px;padding:.65rem .9rem;font-size:.75rem;font-weight:600;color:#9ca3af;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;text-decoration:none}
-.bw-tab:hover{color:#e5e7eb}
-.bw-tab.active{color:#4ade80;border-bottom-color:#16a34a}
-.bw-tab .live-dot{width:6px;height:6px;border-radius:50%;background:#ef4444;box-shadow:0 0 6px #ef4444;animation:pd 1.5s ease-in-out infinite}
-@keyframes pd{0%,100%{opacity:1}50%{opacity:.3}}
+  nav button.bg-accent,
+  nav a.bg-accent {
+    background: #16a34a !important;
+    color: #fff !important
+  }
 
-/* CONTENT AREA */
-.bw-content{flex:1;padding:1.25rem;overflow-y:auto}
+  nav button.bg-accent:hover {
+    background: #15803d !important
+  }
 
-/* HERO BANNER */
-.bw-hero{background:linear-gradient(to right, rgba(17,19,23,0.85) 45%, rgba(17,19,23,0.3) 100%), url('/static/img/copavictorisslee_banner.png') center/cover no-repeat;border-radius:16px;padding:4.5rem 3rem;min-height:260px;margin-bottom:1.25rem;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;border:1px solid #3a3f4b}
-.bw-hero-text h2{font-size:1.6rem;font-weight:900;color:#fff;letter-spacing:-.02em;text-shadow:0 2px 4px rgba(0,0,0,0.6)}
-.bw-hero-text h2 span{color:#4ade80}
-.bw-hero-text p{font-size:.8rem;color:rgba(255,255,255,0.8);margin-top:.35rem;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,0.6)}
-.bw-hero-balance{background:rgba(17,19,23,0.85);border:1px solid rgba(74,222,128,.4);border-radius:12px;padding:1rem 1.5rem;text-align:right;flex-shrink:0;backdrop-filter:blur(4px);box-shadow:0 4px 20px rgba(0,0,0,0.4)}
-.bw-hero-balance .lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.6);font-weight:800}
-.bw-hero-balance .amt{font-size:1.75rem;font-weight:900;color:#4ade80;margin-top:.2rem}
+  nav .text-accent {
+    color: #4ade80 !important
+  }
 
-/* STATS ROW */
-.bw-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.25rem}
-.bw-stat{background:#111317;border:1px solid #2a2d35;border-radius:10px;padding:.9rem 1.1rem;display:flex;align-items:center;gap:.75rem;transition:border-color .2s}
-.bw-stat:hover{border-color:#16a34a}
-.bw-stat-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.bw-stat-icon.r{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171}
-.bw-stat-icon.g{background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.2);color:#4ade80}
-.bw-stat-icon.b{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:#60a5fa}
-.bw-stat-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;font-weight:700}
-.bw-stat-num{font-size:1.5rem;font-weight:900;color:#e5e7eb;margin-top:.1rem}
+  footer {
+    background: #111317 !important;
+    border-top: 1px solid #2a2d35 !important
+  }
 
-/* SECTION TITLE */
-.bw-section-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
-.bw-section-hdr h3{font-size:.85rem;font-weight:800;color:#e5e7eb;display:flex;align-items:center;gap:.5rem}
-.bw-section-hdr h3 span{background:#ef4444;color:#fff;font-size:.55rem;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.06em}
-.bw-section-hdr a{font-size:.72rem;color:#4ade80;font-weight:600;text-decoration:none}
-.bw-section-hdr a:hover{color:#86efac}
+  footer p,
+  footer span {
+    color: #6b7280 !important
+  }
 
-/* ODDS TABLE */
-.bw-table{background:#111317;border:1px solid #2a2d35;border-radius:12px;overflow:hidden;margin-bottom:1.25rem}
-.bw-table-head{display:grid;grid-template-columns:1fr 80px 80px 80px 36px;background:#0d0f12;padding:.5rem .9rem;border-bottom:1px solid #2a2d35}
-.bw-table-head span{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;text-align:center}
-.bw-table-head span:first-child{text-align:left}
-.bw-ev{display:grid;grid-template-columns:1fr 80px 80px 80px 36px;align-items:center;padding:.65rem .9rem;border-bottom:1px solid rgba(255,255,255,.03);text-decoration:none;transition:background .15s;cursor:pointer}
-.bw-ev:last-child{border-bottom:none}
-.bw-ev:hover{background:#1e2128}
-.bw-ev-left{}
-.bw-ev-teams{font-size:.8rem;font-weight:600;color:#e5e7eb;transition:color .15s}
-.bw-ev:hover .bw-ev-teams{color:#4ade80}
-.bw-ev-meta{display:flex;align-items:center;gap:.4rem;margin-top:.25rem}
-.bw-ev-league{font-size:.62rem;color:#6b7280}
-.bw-live-tag{font-size:.5rem;font-weight:800;background:#ef4444;color:#fff;padding:1px 5px;border-radius:3px}
-.bw-sched-tag{font-size:.5rem;font-weight:800;background:#1e40af;color:#93c5fd;padding:1px 5px;border-radius:3px}
-.bw-odd-btn{background:#1e2128;border:1px solid #2a2d35;border-radius:6px;padding:.4rem .25rem;text-align:center;transition:all .15s;cursor:pointer}
-.bw-odd-btn:hover{background:#16a34a;border-color:#16a34a}
-.bw-odd-btn .odd-val{font-size:.75rem;font-weight:700;color:#e5e7eb;display:block}
-.bw-odd-btn:hover .odd-val{color:#fff}
-.bw-ev-arrow{display:flex;justify-content:center;color:#374151}
+  .bw-wrap {
+    display: flex;
+    min-height: calc(100vh - 64px);
+    background: #1a1d23
+  }
 
-/* EMPTY */
-.bw-empty{text-align:center;padding:2.5rem;color:#4b5563}
-.bw-empty p{font-size:.8rem;margin-top:.5rem}
+  /* SIDEBAR */
+  .bw-sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    background: #111317;
+    border-right: 1px solid #2a2d35;
+    padding: 0;
+    overflow-y: auto
+  }
 
-/* ACTIONS */
-.bw-actions{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem}
-.bw-action{background:#111317;border:1px solid #2a2d35;border-radius:12px;padding:1.25rem;display:flex;align-items:center;gap:.9rem;text-decoration:none;transition:all .2s}
-.bw-action:hover{background:#1e2128;border-color:#16a34a;transform:translateY(-1px)}
-.bw-action-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.bw-action-icon.g{background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.2);color:#4ade80}
-.bw-action-icon.s{background:rgba(255,255,255,.04);border:1px solid #2a2d35;color:#9ca3af}
-.bw-action-title{font-size:.875rem;font-weight:700;color:#e5e7eb}
-.bw-action-desc{font-size:.7rem;color:#6b7280;margin-top:.15rem}
+  .bw-sidebar-section {
+    padding: .6rem .75rem .25rem;
+    font-size: .6rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #4ade80;
+    background: #111317;
+    border-bottom: 1px solid #1e2128
+  }
 
-/* LEGAL */
-.bw-legal{background:#0d0f12;border:1px solid #2a2d35;border-radius:8px;padding:.6rem 1rem;text-align:center;font-size:.6rem;color:#4b5563}
-.bw-legal strong{color:#16a34a}
+  .bw-sidebar-link {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    color: #c9d1d9;
+    text-decoration: none;
+    transition: background .15s, color .15s;
+    border-bottom: 1px solid rgba(255, 255, 255, .03)
+  }
 
-@media(max-width:768px){.bw-sidebar{display:none}.bw-stats{grid-template-columns:1fr 1fr}.bw-table-head,.bw-ev{grid-template-columns:1fr 60px 60px 60px 28px}}
-@media(max-width:480px){.bw-stats{grid-template-columns:1fr}.bw-actions{grid-template-columns:1fr}}
+  .bw-sidebar-link:hover {
+    background: #1e2128;
+    color: #fff
+  }
 
-/* GRID DE CONTENIDO PRINCIPAL + COLUMNA DERECHA */
-.bw-content-grid{display:grid;grid-template-columns:1fr 300px;gap:1.25rem;align-items:start}
-.bw-right-sidebar{display:flex;flex-direction:column;gap:1.25rem}
+  .bw-sidebar-link .live-badge {
+    font-size: .5rem;
+    font-weight: 800;
+    background: #16a34a;
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 3px;
+    letter-spacing: .06em
+  }
 
-/* TARJETAS DE PROMOCIONES */
-.bw-promo-card{background:#111317;border:1px solid #2a2d35;border-radius:12px;overflow:hidden;position:relative;display:flex;flex-direction:column;text-decoration:none;transition:transform .2s,border-color .2s}
-.bw-promo-card:hover{transform:translateY(-2px);border-color:#16a34a}
-.bw-promo-card.green-theme{background:linear-gradient(135deg,#0a1a0f 0%,#112919 100%);border-color:#14532d}
-.bw-promo-card-body{padding:1.25rem}
-.bw-promo-badge{display:inline-block;font-size:.55rem;font-weight:800;text-transform:uppercase;background:#16a34a;color:#fff;padding:2px 6px;border-radius:3px;margin-bottom:.75rem;letter-spacing:.05em}
-.bw-promo-title{font-size.95rem;font-weight:900;color:#fff;line-height:1.2;margin-bottom:.5rem}
-.bw-promo-title span{color:#4ade80}
-.bw-promo-desc{font-size:.7rem;color:#9ca3af;line-height:1.4;margin-bottom:1rem}
-.bw-promo-btn{display:block;width:100%;background:#16a34a;color:#fff;text-align:center;font-size:.75rem;font-weight:800;padding:.55rem;border-radius:6px;text-transform:uppercase;text-decoration:none;transition:background .15s}
-.bw-promo-btn:hover{background:#15803d}
-.bw-promo-link{display:block;text-align:center;font-size:.65rem;color:#6b7280;margin-top:.6rem;text-decoration:underline}
-.bw-promo-link:hover{color:#9ca3af}
+  .bw-sidebar-link .count-badge {
+    font-size: .6rem;
+    background: #2a2d35;
+    color: #9ca3af;
+    padding: 1px 6px;
+    border-radius: 10px
+  }
 
-/* BANNERS CON IMAGENES */
-.bw-promo-image-wrap{height:150px;position:relative;overflow:hidden}
-.bw-promo-image-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
-.bw-promo-card:hover .bw-promo-image-wrap img{transform:scale(1.05)}
-.bw-promo-overlay-text{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,transparent 100%);padding:.75rem 1rem}
-.bw-promo-overlay-title{font-size:.85rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px}
-.bw-promo-overlay-title span{color:#eab308;font-size:1.1rem;font-weight:900}
-.bw-promo-overlay-title.blue span{color:#3b82f6}
+  /* MAIN CONTENT */
+  .bw-main {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column
+  }
 
-@media(max-width:1024px){
-    .bw-content-grid{grid-template-columns:1fr}
-    .bw-right-sidebar{display:none}
-}
+  /* SPORT TABS */
+  .bw-tabs {
+    background: #111317;
+    border-bottom: 2px solid #2a2d35;
+    display: flex;
+    overflow-x: auto;
+    padding: 0 1rem;
+    gap: .25rem;
+    scrollbar-width: none
+  }
+
+  .bw-tabs::-webkit-scrollbar {
+    display: none
+  }
+
+  .bw-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: .65rem .9rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: #9ca3af;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all .15s;
+    text-decoration: none
+  }
+
+  .bw-tab:hover {
+    color: #e5e7eb
+  }
+
+  .bw-tab.active {
+    color: #4ade80;
+    border-bottom-color: #16a34a
+  }
+
+  .bw-tab .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 6px #ef4444;
+    animation: pd 1.5s ease-in-out infinite
+  }
+
+  @keyframes pd {
+
+    0%,
+    100% {
+      opacity: 1
+    }
+
+    50% {
+      opacity: .3
+    }
+  }
+
+  /* CONTENT AREA */
+  .bw-content {
+    flex: 1;
+    padding: 1.25rem;
+    overflow-y: auto
+  }
+
+  /* HERO BANNER */
+  .bw-hero {
+    background: linear-gradient(to right, rgba(17, 19, 23, 0.85) 45%, rgba(17, 19, 23, 0.3) 100%), url('/static/img/copavictorisslee_banner.png') center/cover no-repeat;
+    border-radius: 16px;
+    padding: 4.5rem 3rem;
+    min-height: 260px;
+    margin-bottom: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #3a3f4b
+  }
+
+  .bw-hero-text h2 {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -.02em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6)
+  }
+
+  .bw-hero-text h2 span {
+    color: #4ade80
+  }
+
+  .bw-hero-text p {
+    font-size: .8rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: .35rem;
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6)
+  }
+
+  .bw-hero-balance {
+    background: rgba(17, 19, 23, 0.85);
+    border: 1px solid rgba(74, 222, 128, .4);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    text-align: right;
+    flex-shrink: 0;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4)
+  }
+
+  .bw-hero-balance .lbl {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: rgba(255, 255, 255, .6);
+    font-weight: 800
+  }
+
+  .bw-hero-balance .amt {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: #4ade80;
+    margin-top: .2rem
+  }
+
+  /* STATS ROW */
+  .bw-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .75rem;
+    margin-bottom: 1.25rem
+  }
+
+  .bw-stat {
+    background: #111317;
+    border: 1px solid #2a2d35;
+    border-radius: 10px;
+    padding: .9rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    transition: border-color .2s
+  }
+
+  .bw-stat:hover {
+    border-color: #16a34a
+  }
+
+  .bw-stat-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0
+  }
+
+  .bw-stat-icon.r {
+    background: rgba(239, 68, 68, .1);
+    border: 1px solid rgba(239, 68, 68, .2);
+    color: #f87171
+  }
+
+  .bw-stat-icon.g {
+    background: rgba(22, 163, 74, .1);
+    border: 1px solid rgba(22, 163, 74, .2);
+    color: #4ade80
+  }
+
+  .bw-stat-icon.b {
+    background: rgba(59, 130, 246, .1);
+    border: 1px solid rgba(59, 130, 246, .2);
+    color: #60a5fa
+  }
+
+  .bw-stat-lbl {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #6b7280;
+    font-weight: 700
+  }
+
+  .bw-stat-num {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #e5e7eb;
+    margin-top: .1rem
+  }
+
+  /* SECTION TITLE */
+  .bw-section-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .75rem
+  }
+
+  .bw-section-hdr h3 {
+    font-size: .85rem;
+    font-weight: 800;
+    color: #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: .5rem
+  }
+
+  .bw-section-hdr h3 span {
+    background: #ef4444;
+    color: #fff;
+    font-size: .55rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: .06em
+  }
+
+  .bw-section-hdr a {
+    font-size: .72rem;
+    color: #4ade80;
+    font-weight: 600;
+    text-decoration: none
+  }
+
+  .bw-section-hdr a:hover {
+    color: #86efac
+  }
+
+  /* ODDS TABLE */
+  .bw-table {
+    background: #111317;
+    border: 1px solid #2a2d35;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1.25rem
+  }
+
+  .bw-table-head {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px 80px 36px;
+    background: #0d0f12;
+    padding: .5rem .9rem;
+    border-bottom: 1px solid #2a2d35
+  }
+
+  .bw-table-head span {
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #6b7280;
+    text-align: center
+  }
+
+  .bw-table-head span:first-child {
+    text-align: left
+  }
+
+  .bw-ev {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px 80px 36px;
+    align-items: center;
+    padding: .65rem .9rem;
+    border-bottom: 1px solid rgba(255, 255, 255, .03);
+    text-decoration: none;
+    transition: background .15s;
+    cursor: pointer
+  }
+
+  .bw-ev:last-child {
+    border-bottom: none
+  }
+
+  .bw-ev:hover {
+    background: #1e2128
+  }
+
+  .bw-ev-teams {
+    font-size: .8rem;
+    font-weight: 600;
+    color: #e5e7eb;
+    transition: color .15s
+  }
+
+  .bw-ev:hover .bw-ev-teams {
+    color: #4ade80
+  }
+
+  .bw-ev-meta {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .25rem
+  }
+
+  .bw-ev-league {
+    font-size: .62rem;
+    color: #6b7280
+  }
+
+  .bw-live-tag {
+    font-size: .5rem;
+    font-weight: 800;
+    background: #ef4444;
+    color: #fff;
+    padding: 1px 5px;
+    border-radius: 3px
+  }
+
+  .bw-sched-tag {
+    font-size: .5rem;
+    font-weight: 800;
+    background: #1e40af;
+    color: #93c5fd;
+    padding: 1px 5px;
+    border-radius: 3px
+  }
+
+  .bw-odd-btn {
+    background: #1e2128;
+    border: 1px solid #2a2d35;
+    border-radius: 6px;
+    padding: .4rem .25rem;
+    text-align: center;
+    transition: all .15s;
+    cursor: pointer
+  }
+
+  .bw-odd-btn:hover {
+    background: #16a34a;
+    border-color: #16a34a
+  }
+
+  .bw-odd-btn .odd-val {
+    font-size: .75rem;
+    font-weight: 700;
+    color: #e5e7eb;
+    display: block
+  }
+
+  .bw-odd-btn:hover .odd-val {
+    color: #fff
+  }
+
+  .bw-ev-arrow {
+    display: flex;
+    justify-content: center;
+    color: #374151
+  }
+
+  /* EMPTY */
+  .bw-empty {
+    text-align: center;
+    padding: 2.5rem;
+    color: #4b5563
+  }
+
+  .bw-empty p {
+    font-size: .8rem;
+    margin-top: .5rem
+  }
+
+  /* ACTIONS */
+  .bw-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .75rem;
+    margin-bottom: 1.25rem
+  }
+
+  .bw-action {
+    background: #111317;
+    border: 1px solid #2a2d35;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    text-decoration: none;
+    transition: all .2s
+  }
+
+  .bw-action:hover {
+    background: #1e2128;
+    border-color: #16a34a;
+    transform: translateY(-1px)
+  }
+
+  .bw-action-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0
+  }
+
+  .bw-action-icon.g {
+    background: rgba(22, 163, 74, .1);
+    border: 1px solid rgba(22, 163, 74, .2);
+    color: #4ade80
+  }
+
+  .bw-action-icon.s {
+    background: rgba(255, 255, 255, .04);
+    border: 1px solid #2a2d35;
+    color: #9ca3af
+  }
+
+  .bw-action-title {
+    font-size: .875rem;
+    font-weight: 700;
+    color: #e5e7eb
+  }
+
+  .bw-action-desc {
+    font-size: .7rem;
+    color: #6b7280;
+    margin-top: .15rem
+  }
+
+  /* LEGAL */
+  .bw-legal {
+    background: #0d0f12;
+    border: 1px solid #2a2d35;
+    border-radius: 8px;
+    padding: .6rem 1rem;
+    text-align: center;
+    font-size: .6rem;
+    color: #4b5563
+  }
+
+  .bw-legal strong {
+    color: #16a34a
+  }
+
+  @media(max-width:768px) {
+    .bw-sidebar {
+      display: none
+    }
+
+    .bw-stats {
+      grid-template-columns: 1fr 1fr
+    }
+
+    .bw-table-head,
+    .bw-ev {
+      grid-template-columns: 1fr 60px 60px 60px 28px
+    }
+  }
+
+  @media(max-width:480px) {
+    .bw-stats {
+      grid-template-columns: 1fr
+    }
+
+    .bw-actions {
+      grid-template-columns: 1fr
+    }
+  }
+
+  /* GRID DE CONTENIDO PRINCIPAL + COLUMNA DERECHA */
+  .bw-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.25rem;
+    align-items: start
+  }
+
+  .bw-right-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem
+  }
+
+  /* TARJETAS DE PROMOCIONES */
+  .bw-promo-card {
+    background: #111317;
+    border: 1px solid #2a2d35;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    transition: transform .2s, border-color .2s
+  }
+
+  .bw-promo-card:hover {
+    transform: translateY(-2px);
+    border-color: #16a34a
+  }
+
+  .bw-promo-card.green-theme {
+    background: linear-gradient(135deg, #0a1a0f 0%, #112919 100%);
+    border-color: #14532d
+  }
+
+  .bw-promo-card-body {
+    padding: 1.25rem
+  }
+
+  .bw-promo-badge {
+    display: inline-block;
+    font-size: .55rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: #16a34a;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-bottom: .75rem;
+    letter-spacing: .05em
+  }
+
+  .bw-promo-title {
+    font-size: .95rem;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: .5rem
+  }
+
+  .bw-promo-title span {
+    color: #4ade80
+  }
+
+  .bw-promo-desc {
+    font-size: .7rem;
+    color: #9ca3af;
+    line-height: 1.4;
+    margin-bottom: 1rem
+  }
+
+  .bw-promo-btn {
+    display: block;
+    width: 100%;
+    background: #16a34a;
+    color: #fff;
+    text-align: center;
+    font-size: .75rem;
+    font-weight: 800;
+    padding: .55rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background .15s
+  }
+
+  .bw-promo-btn:hover {
+    background: #15803d
+  }
+
+  .bw-promo-link {
+    display: block;
+    text-align: center;
+    font-size: .65rem;
+    color: #6b7280;
+    margin-top: .6rem;
+    text-decoration: underline
+  }
+
+  .bw-promo-link:hover {
+    color: #9ca3af
+  }
+
+  /* BANNERS CON IMAGENES */
+  .bw-promo-image-wrap {
+    height: 150px;
+    position: relative;
+    overflow: hidden
+  }
+
+  .bw-promo-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .3s
+  }
+
+  .bw-promo-card:hover .bw-promo-image-wrap img {
+    transform: scale(1.05)
+  }
+
+  .bw-promo-overlay-text {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, transparent 100%);
+    padding: .75rem 1rem
+  }
+
+  .bw-promo-overlay-title {
+    font-size: .85rem;
+    font-weight: 800;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 6px
+  }
+
+  .bw-promo-overlay-title span {
+    color: #eab308;
+    font-size: 1.1rem;
+    font-weight: 900
+  }
+
+  .bw-promo-overlay-title.blue span {
+    color: #3b82f6
+  }
+
+  @media(max-width:1024px) {
+    .bw-content-grid {
+      grid-template-columns: 1fr
+    }
+
+    .bw-right-sidebar {
+      display: none
+    }
+  }
 </style>
 {% endblock %}
 
 {% block navbar %}
 <nav class="bg-card border-b border-accent/30" x-data="{ open: false }">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-20">
-            <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
-                <img src="{% static 'img/logo2.jfif' %}" alt="Logo" class="h-14 w-auto object-contain rounded-md">
-            </a>
-            <div class="hidden sm:flex items-center gap-6 text-lg font-bold">
-                <template x-if="localStorage.getItem('access_token')">
-                    <div class="flex items-center gap-6">
-                        <a href="{% url 'events-list' %}" class="hover:text-accent transition">Eventos</a>
-                        <a href="{% url 'bets-list' %}" class="hover:text-accent transition">Mis Apuestas</a>
-                        <a href="{% url 'wallet-balance' %}" class="hover:text-accent transition">Billetera</a>
-                        <a href="{% url 'responsible-limits' %}" class="hover:text-accent transition">Límites</a>
-                        <span class="text-gray-500">|</span>
-                        <span class="text-gray-300 font-semibold" x-text="'👤 ' + (JSON.parse(localStorage.getItem('user') || '{}').username || '')"></span>
-                        <button @click="localStorage.clear(); window.location.href='/login/'" class="bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl text-base font-bold transition">
-                            Salir
-                        </button>
-                    </div>
-                </template>
-                <template x-if="!localStorage.getItem('access_token')">
-                    <a href="{% url 'login' %}" class="bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl text-base font-bold transition">Ingresar</a>
-                </template>
-            </div>
-            <button @click="open = !open" class="sm:hidden p-2 rounded hover:bg-gray-800">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-20">
+      <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+        <img src="{% static 'img/logo2.jfif' %}" alt="Logo" class="h-14 w-auto object-contain rounded-md">
+      </a>
+      <div class="hidden sm:flex items-center gap-6 text-lg font-bold">
+        <template x-if="localStorage.getItem('access_token')">
+          <div class="flex items-center gap-6">
+            <a href="{% url 'events-list' %}" class="hover:text-accent transition">Eventos</a>
+            <a href="{% url 'bets-list' %}" class="hover:text-accent transition">Mis Apuestas</a>
+            <a href="{% url 'wallet-balance' %}" class="hover:text-accent transition">Billetera</a>
+            <a href="{% url 'responsible-limits' %}" class="hover:text-accent transition">Límites</a>
+            <span class="text-gray-500">|</span>
+            <span class="text-gray-300 font-semibold inline-flex items-center gap-1">
+              <i class="fas fa-user"></i>
+              <span x-text="(JSON.parse(localStorage.getItem('user') || '{}').username || '')"></span>
+            </span>
+            <button @click="localStorage.clear(); window.location.href='/login/'"
+              class="bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl text-base font-bold transition">
+              Salir
             </button>
-        </div>
+          </div>
+        </template>
+        <template x-if="!localStorage.getItem('access_token')">
+          <a href="{% url 'login' %}"
+            class="bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl text-base font-bold transition">Ingresar</a>
+        </template>
+      </div>
+      <button @click="open = !open" class="sm:hidden p-2 rounded hover:bg-gray-800">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
     </div>
-    <div x-show="open" class="sm:hidden border-t border-gray-800">
-        <div class="px-4 py-3 space-y-2" @click="open = false">
-            <template x-if="localStorage.getItem('access_token')">
-                <div>
-                    <a href="{% url 'events-list' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Eventos</a>
-                    <a href="{% url 'bets-list' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Mis Apuestas</a>
-                    <a href="{% url 'wallet-balance' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Billetera</a>
-                    <a href="{% url 'responsible-limits' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Límites</a>
-                </div>
-            </template>
-            <template x-if="!localStorage.getItem('access_token')">
-                <a href="{% url 'login' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Ingresar</a>
-            </template>
+  </div>
+  <div x-show="open" class="sm:hidden border-t border-gray-800">
+    <div class="px-4 py-3 space-y-2" @click="open = false">
+      <template x-if="localStorage.getItem('access_token')">
+        <div>
+          <a href="{% url 'events-list' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Eventos</a>
+          <a href="{% url 'bets-list' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Mis Apuestas</a>
+          <a href="{% url 'wallet-balance' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Billetera</a>
+          <a href="{% url 'responsible-limits' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Límites</a>
         </div>
+      </template>
+      <template x-if="!localStorage.getItem('access_token')">
+        <a href="{% url 'login' %}" class="block px-3 py-2 rounded hover:bg-gray-800">Ingresar</a>
+      </template>
     </div>
+  </div>
 </nav>
 {% endblock %}
 
@@ -209,18 +821,19 @@ footer p,footer span{color:#6b7280!important}
     <a href="#" class="bw-sidebar-link">Béisbol <span class="live-badge">LIVE</span></a>
 
     <div class="bw-sidebar-section">Deportes</div>
-    <a href="{% url 'events-list' %}" class="bw-sidebar-link">⚽ Fútbol <span class="count-badge" x-text="stats.upcoming_events || ''"></span></a>
-    <a href="{% url 'events-list' %}" class="bw-sidebar-link">🎾 Tenis</a>
-    <a href="{% url 'events-list' %}" class="bw-sidebar-link">🏀 Baloncesto</a>
-    <a href="{% url 'events-list' %}" class="bw-sidebar-link">🏈 Fútbol Americano</a>
-    <a href="{% url 'events-list' %}" class="bw-sidebar-link">⚾ Béisbol</a>
-    <a href="{% url 'events-list' %}" class="bw-sidebar-link">🏒 Hockey</a>
-    <a href="{% url 'events-list' %}" class="bw-sidebar-link">🎮 Esports</a>
+    <a href="{% url 'events-list' %}" class="bw-sidebar-link"><i class="fas fa-futbol mr-1"></i> Fútbol <span class="count-badge"
+        x-text="stats.upcoming_events || ''"></span></a>
+    <a href="{% url 'events-list' %}" class="bw-sidebar-link"><i class="fas fa-table-tennis mr-1"></i> Tenis</a>
+    <a href="{% url 'events-list' %}" class="bw-sidebar-link"><i class="fas fa-basketball-ball mr-1"></i> Baloncesto</a>
+    <a href="{% url 'events-list' %}" class="bw-sidebar-link"><i class="fas fa-football-ball mr-1"></i> Fútbol Americano</a>
+    <a href="{% url 'events-list' %}" class="bw-sidebar-link"><i class="fas fa-baseball-ball mr-1"></i> Béisbol</a>
+    <a href="{% url 'events-list' %}" class="bw-sidebar-link"><i class="fas fa-hockey-puck mr-1"></i> Hockey</a>
+    <a href="{% url 'events-list' %}" class="bw-sidebar-link"><i class="fas fa-gamepad mr-1"></i> Esports</a>
 
     <div class="bw-sidebar-section">Mi Cuenta</div>
-    <a href="{% url 'wallet-deposit' %}" class="bw-sidebar-link">💳 Recargar Fichas</a>
-    <a href="{% url 'bets-list' %}" class="bw-sidebar-link">📋 Mis Apuestas</a>
-    <a href="{% url 'responsible-limits' %}" class="bw-sidebar-link">🛡️ Límites</a>
+    <a href="{% url 'wallet-deposit' %}" class="bw-sidebar-link"><i class="fas fa-credit-card mr-1"></i> Recargar Fichas</a>
+    <a href="{% url 'bets-list' %}" class="bw-sidebar-link"><i class="fas fa-clipboard-list mr-1"></i> Mis Apuestas</a>
+    <a href="{% url 'responsible-limits' %}" class="bw-sidebar-link"><i class="fas fa-shield-alt mr-1"></i> Límites</a>
   </aside>
 
   <!-- MAIN -->
@@ -231,13 +844,13 @@ footer p,footer span{color:#6b7280!important}
       <a href="{% url 'events-list' %}" class="bw-tab active">
         <div class="live-dot"></div> En Vivo
       </a>
-      <a href="{% url 'events-list' %}" class="bw-tab">⚽ Fútbol</a>
-      <a href="{% url 'events-list' %}" class="bw-tab">🎾 Tenis</a>
-      <a href="{% url 'events-list' %}" class="bw-tab">🏀 Baloncesto</a>
-      <a href="{% url 'events-list' %}" class="bw-tab">⚾ Béisbol</a>
-      <a href="{% url 'events-list' %}" class="bw-tab">🏒 Hockey</a>
-      <a href="{% url 'events-list' %}" class="bw-tab">🏈 NFL</a>
-      <a href="{% url 'events-list' %}" class="bw-tab">🎮 Esports</a>
+      <a href="{% url 'events-list' %}" class="bw-tab"><i class="fas fa-futbol mr-1"></i> Fútbol</a>
+      <a href="{% url 'events-list' %}" class="bw-tab"><i class="fas fa-table-tennis mr-1"></i> Tenis</a>
+      <a href="{% url 'events-list' %}" class="bw-tab"><i class="fas fa-basketball-ball mr-1"></i> Baloncesto</a>
+      <a href="{% url 'events-list' %}" class="bw-tab"><i class="fas fa-baseball-ball mr-1"></i> Béisbol</a>
+      <a href="{% url 'events-list' %}" class="bw-tab"><i class="fas fa-hockey-puck mr-1"></i> Hockey</a>
+      <a href="{% url 'events-list' %}" class="bw-tab"><i class="fas fa-football-ball mr-1"></i> NFL</a>
+      <a href="{% url 'events-list' %}" class="bw-tab"><i class="fas fa-gamepad mr-1"></i> Esports</a>
     </div>
 
     <!-- CONTENT -->
@@ -245,10 +858,15 @@ footer p,footer span{color:#6b7280!important}
 
       <template x-if="!token">
         <div class="bw-empty">
-          <svg width="40" height="40" fill="none" stroke="#4b5563" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          <svg width="40" height="40" fill="none" stroke="#4b5563" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
           <p style="color:#e5e7eb;font-weight:700;font-size:.9rem">Debes iniciar sesión</p>
           <p>Para ver tu saldo y realizar apuestas educativas.</p>
-          <a href="{% url 'login' %}" style="display:inline-flex;margin-top:1rem;background:#16a34a;color:#fff;padding:.6rem 1.5rem;border-radius:8px;font-weight:700;font-size:.82rem;text-decoration:none">Iniciar Sesión</a>
+          <a href="{% url 'login' %}"
+            style="display:inline-flex;margin-top:1rem;background:#16a34a;color:#fff;padding:.6rem 1.5rem;border-radius:8px;font-weight:700;font-size:.82rem;text-decoration:none">Iniciar
+            Sesión</a>
         </div>
       </template>
 
@@ -258,8 +876,8 @@ footer p,footer span{color:#6b7280!important}
           <!-- HERO -->
           <div class="bw-hero">
             <div class="bw-hero-text">
-              <h2>Bienvenido, <span x-text="user.username"></span> 👋</h2>
-              <p>🏆 CopaVictorissLee &bull; Gran Final: PESCARIOS FC VS MEDICINE &bull; Simulador Educativo</p>
+              <h2>Bienvenido, <span x-text="user.username"></span> <i class="fas fa-hand-wave"></i></h2>
+              <p><i class="fas fa-trophy mr-1"></i> CopaVictorissLee &bull; Gran Final: PESCARIOS FC VS MEDICINE &bull; Simulador Educativo</p>
             </div>
             <div class="bw-hero-balance">
               <p class="lbl">Saldo Virtual</p>
@@ -269,15 +887,18 @@ footer p,footer span{color:#6b7280!important}
 
           <!-- GRID PRINCIPAL + BARRA DE PROMOS -->
           <div class="bw-content-grid">
-            
+
             <!-- COLUMNA IZQUIERDA (CONTENIDO) -->
             <div class="bw-center-col">
-              
+
               <!-- STATS -->
               <div class="bw-stats">
                 <div class="bw-stat">
                   <div class="bw-stat-icon r">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
                   </div>
                   <div>
                     <p class="bw-stat-lbl">Apuestas Activas</p>
@@ -286,7 +907,9 @@ footer p,footer span{color:#6b7280!important}
                 </div>
                 <div class="bw-stat">
                   <div class="bw-stat-icon g" style="align-items:center;justify-content:center">
-                    <div style="width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 10px #ef4444;animation:pd 1.5s ease-in-out infinite"></div>
+                    <div
+                      style="width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 10px #ef4444;animation:pd 1.5s ease-in-out infinite">
+                    </div>
                   </div>
                   <div>
                     <p class="bw-stat-lbl">En Vivo Ahora</p>
@@ -295,7 +918,10 @@ footer p,footer span{color:#6b7280!important}
                 </div>
                 <div class="bw-stat">
                   <div class="bw-stat-icon b">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                   </div>
                   <div>
                     <p class="bw-stat-lbl">Próximos</p>
@@ -310,7 +936,7 @@ footer p,footer span{color:#6b7280!important}
                   Eventos Destacados
                   <span x-show="stats.live_events > 0" x-text="stats.live_events + ' EN VIVO'"></span>
                 </h3>
-                <a href="{% url 'events-list' %}">Ver todos →</a>
+                <a href="{% url 'events-list' %}">Ver todos <i class="fas fa-arrow-right"></i></a>
               </div>
 
               <div class="bw-table">
@@ -324,7 +950,11 @@ footer p,footer span{color:#6b7280!important}
 
                 <template x-if="events.length === 0">
                   <div class="bw-empty">
-                    <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25"/></svg>
+                    <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25" />
+                    </svg>
                     <p>No hay eventos disponibles</p>
                   </div>
                 </template>
@@ -334,8 +964,10 @@ footer p,footer span{color:#6b7280!important}
                     <div class="bw-ev-left">
                       <p class="bw-ev-teams" x-text="ev.name || (ev.home_team?.name + ' vs ' + ev.away_team?.name)"></p>
                       <div class="bw-ev-meta">
-                        <span :class="(ev.status==='in_play'||ev.status==='live') ? 'bw-live-tag' : 'bw-sched-tag'"
-                              x-text="(ev.status==='in_play'||ev.status==='live') ? '● LIVE' : '📅'"></span>
+                        <span :class="(ev.status==='in_play'||ev.status==='live') ? 'bw-live-tag' : 'bw-sched-tag'">
+                            <span x-show="ev.status==='in_play'||ev.status==='live'">● LIVE</span>
+                            <span x-show="!(ev.status==='in_play'||ev.status==='live')"><i class="fas fa-calendar-alt"></i></span>
+                        </span>
                         <span class="bw-ev-league" x-text="ev.league?.name || 'Liga'"></span>
                         <span class="bw-ev-league" x-text="formatDateTime(ev.starts_at)"></span>
                       </div>
@@ -371,7 +1003,10 @@ footer p,footer span{color:#6b7280!important}
                       <span class="odd-val" x-text="ev.markets?.[0]?.selections?.[2]?.odds ?? '—'"></span>
                     </button>
                     <div class="bw-ev-arrow">
-                      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
                     </div>
                   </a>
                 </template>
@@ -381,7 +1016,11 @@ footer p,footer span{color:#6b7280!important}
               <div class="bw-actions">
                 <a href="{% url 'wallet-deposit' %}" class="bw-action">
                   <div class="bw-action-icon g">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
                   <div>
                     <p class="bw-action-title">+ Recargar Fichas</p>
@@ -390,7 +1029,10 @@ footer p,footer span{color:#6b7280!important}
                 </a>
                 <a href="{% url 'bets-list' %}" class="bw-action">
                   <div class="bw-action-icon s">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
                   <div>
                     <p class="bw-action-title">Mis Apuestas</p>
@@ -403,13 +1045,14 @@ footer p,footer span{color:#6b7280!important}
 
             <!-- COLUMNA DERECHA (BARRA DE PROMOS) -->
             <aside class="bw-right-sidebar">
-              
+
               <!-- FREE BET CLUB -->
               <div class="bw-promo-card green-theme">
                 <div class="bw-promo-card-body">
                   <span class="bw-promo-badge">FREE BET CLUB</span>
                   <h4 class="bw-promo-title" style="margin-top:0">10S/ en <span>APUESTAS GRATIS</span></h4>
-                  <p class="bw-promo-desc" style="margin-top:0.25rem">Consigue apuestas virtuales gratuitas cada semana al realizar apuestas múltiples de S/ 25 o más.</p>
+                  <p class="bw-promo-desc" style="margin-top:0.25rem">Consigue apuestas virtuales gratuitas cada semana
+                    al realizar apuestas múltiples de S/ 25 o más.</p>
                   <a href="{% url 'events-list' %}" class="bw-promo-btn">Solicitar</a>
                   <a href="#" class="bw-promo-link">Términos y condiciones</a>
                 </div>
@@ -444,7 +1087,8 @@ footer p,footer span{color:#6b7280!important}
           </div>
 
           <div class="bw-legal" style="margin-top:1.5rem">
-            <strong>⚠ Aviso Legal:</strong> Plataforma educativa con moneda virtual. No constituye una casa de apuestas. Cumple con <strong>Ley 31557</strong> · DS 005-2023-MINCETUR · Perú.
+            <strong><i class="fas fa-exclamation-triangle mr-1"></i> Aviso Legal:</strong> Plataforma educativa con moneda virtual. No constituye una casa de apuestas.
+            Cumple con <strong>Ley 31557</strong> · DS 005-2023-MINCETUR · Perú.
           </div>
 
         </div>
@@ -456,34 +1100,34 @@ footer p,footer span{color:#6b7280!important}
 
 {% block extra_js %}
 <script>
-function dashboard() {
+  function dashboard() {
     return {
-        token: localStorage.getItem('access_token'),
-        user: JSON.parse(localStorage.getItem('user') || '{}'),
-        balance: '0.00',
-        events: [],
-        stats: { active_bets: 0, live_events: 0, upcoming_events: 0 },
-        async init() {
-            if (!this.token) return;
-            await Promise.all([this.loadBalance(), this.loadEvents(), this.loadBets()]);
-        },
-        async loadBalance() {
-            const data = await apiFetch('/wallet/balance/');
-            if (data._status === 200) this.balance = data.balance || '0.00';
-        },
-        async loadEvents() {
-            const data = await apiFetch('/betting/events/');
-            const list = data.results || data || [];
-            this.events = list;
-            this.stats.live_events = list.filter(e => e.status === 'in_play' || e.status === 'live').length;
-            this.stats.upcoming_events = list.filter(e => e.status === 'scheduled').length;
-        },
-        async loadBets() {
-            const data = await apiFetch('/betting/bets/');
-            const list = data.results || data || [];
-            this.stats.active_bets = list.filter(e => e.status === 'accepted').length;
-        },
+      token: localStorage.getItem('access_token'),
+      user: JSON.parse(localStorage.getItem('user') || '{}'),
+      balance: '0.00',
+      events: [],
+      stats: { active_bets: 0, live_events: 0, upcoming_events: 0 },
+      async init() {
+        if (!this.token) return;
+        await Promise.all([this.loadBalance(), this.loadEvents(), this.loadBets()]);
+      },
+      async loadBalance() {
+        const data = await apiFetch('/wallet/balance/');
+        if (data._status === 200) this.balance = data.balance || '0.00';
+      },
+      async loadEvents() {
+        const data = await apiFetch('/betting/events/');
+        const list = data.results || data || [];
+        this.events = list;
+        this.stats.live_events = list.filter(e => e.status === 'in_play' || e.status === 'live').length;
+        this.stats.upcoming_events = list.filter(e => e.status === 'scheduled').length;
+      },
+      async loadBets() {
+        const data = await apiFetch('/betting/bets/');
+        const list = data.results || data || [];
+        this.stats.active_bets = list.filter(e => e.status === 'accepted').length;
+      },
     };
-}
+  }
 </script>
 {% endblock %}

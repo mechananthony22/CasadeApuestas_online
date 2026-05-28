@@ -1,21 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Suite de Tests Unitarios para la Fase 1: Usuarios y KYC.
-
-Cubre los 3 escenarios de tests obligatorios definidos en el plan de desarrollo:
-    1. DNI inválido → debe retornar HTTP 400.
-    2. Menor de edad → debe retornar HTTP 400.
-    3. Autoexclusión → el estado cambia y bloquea las apuestas.
-
-Además incluye tests complementarios para:
-    - Validación del algoritmo de Módulo-11 del DNI peruano.
-    - Registro exitoso de usuario con datos correctos.
-    - Verificación de DNI y cambio de estado.
-
-METODOLOGÍA TDD (Test Driven Development):
-    Estos tests deben ejecutarse ANTES de implementar la lógica de negocio.
-    El commit debe ser: 'test(users): tests de KYC, DNI y mayoría de edad'
-"""
 from datetime import date, timedelta
 
 from django.contrib.auth.models import User
@@ -154,11 +137,6 @@ class TestRegistroEndpoint(APITestCase):
 
 
 class TestAutoexclusionEndpoint(APITestCase):
-    """
-    Tests de integración para el endpoint POST /api/v1/users/self-exclude/.
-    OBLIGATORIO: Verifica que la autoexclusión cambia el estado y bloquea apuestas.
-    """
-
     def setUp(self):
         """Crea un usuario verificado de prueba para los tests."""
         self.usuario = User.objects.create_user(

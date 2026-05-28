@@ -4,19 +4,35 @@
 <div class="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-8"
      x-data="selfExclude()" x-init="init()">
 
-    <a href="{% url 'responsible-limits' %}" class="text-gray-400 hover:text-white mb-4 inline-block">&larr; Volver a límites</a>
+    <a href="{% url 'responsible-limits' %}" class="text-gray-400 hover:text-white mb-4 inline-flex items-center gap-1 transition"><i class="fas fa-arrow-left"></i> Volver a límites</a>
 
-    <div class="bg-card rounded-xl border border-gray-800 p-8">
-        <h1 class="text-2xl font-bold mb-2">Autoexclusión</h1>
-        <p class="text-gray-400 text-sm mb-6">
-            La autoexclusión es una medida IRREVERSIBLE durante el período seleccionado.
-            No podrás acceder a tu cuenta ni realizar apuestas hasta que termine.
-        </p>
+    <div class="bg-card rounded-xl border border-gray-800 p-8 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500/30 via-red-500 to-red-500/30"></div>
 
-        <div class="space-y-4 mb-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+                <i class="fas fa-pause-circle"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-white">Autoexclusión</h1>
+            </div>
+        </div>
+
+        <div class="bg-red-900/30 border border-red-500/30 rounded-xl px-4 py-3 mb-6 flex items-start gap-3">
+            <i class="fas fa-exclamation-triangle text-red-400 mt-0.5"></i>
+            <div>
+                <p class="text-red-300 text-xs font-bold uppercase tracking-wider">Medida Irreversible</p>
+                <p class="text-red-200/70 text-xs mt-1">No podrás acceder a tu cuenta ni realizar apuestas hasta que termine el período seleccionado.</p>
+            </div>
+        </div>
+
+        <div class="space-y-3 mb-6">
             <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
                    :class="duration === 7 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'">
                 <input type="radio" value="7" x-model="duration" class="sr-only">
+                <div class="w-9 h-9 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 flex-shrink-0">
+                    <i class="fas fa-calendar-week"></i>
+                </div>
                 <div>
                     <p class="font-extrabold text-white text-base">7 días</p>
                     <p class="text-xs text-gray-500 mt-0.5">Una semana de descanso temporal</p>
@@ -25,6 +41,9 @@
             <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
                    :class="duration === 30 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'">
                 <input type="radio" value="30" x-model="duration" class="sr-only">
+                <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 flex-shrink-0">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
                 <div>
                     <p class="font-extrabold text-white text-base">30 días</p>
                     <p class="text-xs text-gray-500 mt-0.5">Un mes completo de descanso temporal</p>
@@ -33,6 +52,9 @@
             <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
                    :class="duration === 90 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'">
                 <input type="radio" value="90" x-model="duration" class="sr-only">
+                <div class="w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0">
+                    <i class="fas fa-calendar"></i>
+                </div>
                 <div>
                     <p class="font-extrabold text-white text-base">90 días</p>
                     <p class="text-xs text-gray-500 mt-0.5">Tres meses de descanso temporal</p>
@@ -41,6 +63,9 @@
             <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
                    :class="duration === 0 ? 'border-accent bg-accent/10 shadow-[0_0_10px_rgba(22,163,74,0.2)]' : 'border-gray-800 bg-[#0d0f12]'">
                 <input type="radio" value="0" x-model="duration" class="sr-only">
+                <div class="w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 flex-shrink-0">
+                    <i class="fas fa-infinity"></i>
+                </div>
                 <div>
                     <p class="font-extrabold text-white text-base">Permanente</p>
                     <p class="text-xs text-gray-500 mt-0.5">Indefinido (sin fecha de término programada)</p>
@@ -49,22 +74,23 @@
         </div>
 
         <template x-if="error">
-            <div class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mb-4" x-text="error"></div>
+            <div class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-xl text-sm mb-4 flex items-center gap-2"><i class="fas fa-exclamation-circle flex-shrink-0"></i> <span x-text="error"></span></div>
         </template>
 
         <template x-if="success">
-            <div class="bg-win/10 border border-win text-win px-4 py-3 rounded-xl text-sm mb-4" x-text="success"></div>
+            <div class="bg-win/10 border border-win text-win px-4 py-3 rounded-xl text-sm mb-4 flex items-center gap-2"><i class="fas fa-check-circle flex-shrink-0"></i> <span x-text="success"></span></div>
         </template>
 
         <button @click="exclude()" :disabled="sending"
-            class="w-full bg-red-700 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition">
-            <span x-show="!sending">Confirmar Autoexclusión</span>
-            <span x-show="sending">Procesando...</span>
+            class="w-full bg-red-700 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg transition flex items-center justify-center gap-2">
+            <span x-show="!sending" class="flex items-center gap-2"><i class="fas fa-lock"></i> Confirmar Autoexclusión</span>
+            <span x-show="sending" class="flex items-center gap-2"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Procesando...</span>
         </button>
 
-        <p class="text-xs text-gray-500 mt-4 text-center">
-            Al confirmar, tu cuenta será suspendida inmediatamente por el período seleccionado.
-        </p>
+        <div class="mt-4 bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 flex items-start gap-2">
+            <i class="fas fa-clock text-gray-500 mt-0.5"></i>
+            <p class="text-xs text-gray-500">Al confirmar, tu cuenta será suspendida inmediatamente por el período seleccionado.</p>
+        </div>
     </div>
 </div>
 {% endblock %}

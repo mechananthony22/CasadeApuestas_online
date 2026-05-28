@@ -1,22 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Suite de Tests para la Fase 2: Wallet + Partida Doble.
-
-Cubre los invariantes obligatorios del sistema de partida doble:
-
-INVARIANTES (Property-Based Testing con Hypothesis):
-    1.  SUM(debits) - SUM(credits) = 0 por transacción
-    2.  Ningún usuario tiene saldo negativo
-    3.  Saldo total del sistema (casa + usuarios + apuestas_pendientes) = constante
-
-TESTS DE CONCURRENCIA:
-    - 50 peticiones simultáneas de retiro con saldo justo para 1
-    - Verificar que solo 1 pasa, 49 fallan (select_for_update)
-
-METODOLOGÍA TDD:
-    - Primero se escriben los tests (test:)
-    - Luego se implementa la funcionalidad (feat:)
-"""
 from datetime import date
 from decimal import Decimal
 from uuid import UUID

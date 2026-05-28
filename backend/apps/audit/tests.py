@@ -177,8 +177,6 @@ class AuditImmutableTestCase(APITestCase):
         self.assertGreater(response.data['registros_auditados'], 1)
 
         # 2. Simular un HACK/FRAUDE: alteración de registros directamente en la base de datos.
-        # Como save() bloquea ediciones, realizamos un bypass directo usando QuerySet.update()
-        # que compila directo a SQL sin llamar a save().
         logs_actuales = list(AuditLogEntry.objects.all().order_by('id'))
         target_log = logs_actuales[1] # Elegimos el segundo log
         
