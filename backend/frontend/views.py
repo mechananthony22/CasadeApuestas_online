@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
@@ -73,6 +73,9 @@ class LoginAPIView(APIView):
                 status=400,
             )
 
+        # Establecer cookie de sesión (necesaria para el dashboard admin)
+        login(request, user)
+
         refresh = RefreshToken.for_user(user)
 
         return Response({
@@ -82,5 +85,7 @@ class LoginAPIView(APIView):
                 'id': user.id,
                 'username': user.username,
                 'email': user.email,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
             },
         })

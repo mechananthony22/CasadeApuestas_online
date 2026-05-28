@@ -704,7 +704,11 @@
                         localStorage.setItem('access_token', data.access);
                         localStorage.setItem('refresh_token', data.refresh);
                         localStorage.setItem('user', JSON.stringify(data.user));
-                        window.location.href = '{% url "dashboard" %}';
+                        if (data.user.is_staff || data.user.is_superuser) {
+                            window.location.href = '{% url "admin-dashboard" %}';
+                        } else {
+                            window.location.href = '{% url "dashboard" %}';
+                        }
                     } else {
                         this.error = data.error || data.detail || 'Credenciales incorrectas. Intenta de nuevo.';
                     }

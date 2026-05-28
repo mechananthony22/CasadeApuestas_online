@@ -23,7 +23,7 @@
     </div>
 
     {% comment %} GGR - GRANDE {% endcomment %}
-    <div class="bg-card rounded-xl border border-gray-800 p-6 mb-6">
+    <div class="bg-card rounded-xl border border-[#2a2d35] p-6 mb-6">
         <div class="flex justify-between items-start">
             <div>
                 <h3 class="text-gray-400 text-sm uppercase tracking-wider mb-2">GGR (Gross Gaming Revenue)</h3>
@@ -31,13 +31,13 @@
                 <p class="text-gray-500 text-sm mt-2">Ingresos netos de la casa</p>
             </div>
             <div class="text-right">
-                <div class="bg-[#222] rounded-lg p-3">
+                <div class="bg-[#1a1d23] rounded-lg p-3">
                     <p class="text-xs text-gray-400">Stakes Totales</p>
-                    <p class="text-lg font-bold" x-text="formatNumber(metrics.total_stakes)"></p>
+                    <p class="text-lg font-bold text-white" x-text="formatNumber(metrics.total_stakes)"></p>
                 </div>
-                <div class="bg-[#222] rounded-lg p-3 mt-2">
+                <div class="bg-[#1a1d23] rounded-lg p-3 mt-2">
                     <p class="text-xs text-gray-400">Payouts Totales</p>
-                    <p class="text-lg font-bold" x-text="formatNumber(metrics.total_payouts)"></p>
+                    <p class="text-lg font-bold text-white" x-text="formatNumber(metrics.total_payouts)"></p>
                 </div>
             </div>
         </div>
@@ -76,18 +76,18 @@
     </div>
 
     {% comment %} SECCIÓN EVENTOS - Similar al frontend {% endcomment %}
-    <div class="bg-card rounded-xl border border-gray-800 p-6 mb-6">
+    <div class="bg-card rounded-xl border border-[#2a2d35] p-6 mb-6">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold">⚽ Catálogo de Eventos</h2>
             <div class="flex gap-2">
                 <button @click="eventsFilter = 'all'; updateEventsDisplay()"
-                    :class="eventsFilter === 'all' ? 'bg-accent text-white' : 'bg-[#222] text-gray-300 hover:bg-gray-800'"
+                    :class="eventsFilter === 'all' ? 'bg-accent text-white' : 'bg-[#1a1d23] text-gray-300 hover:bg-[#2a2d35]'"
                     class="px-4 py-2 rounded-lg text-sm font-medium transition">Todos</button>
                 <button @click="eventsFilter = 'live'; updateEventsDisplay()"
-                    :class="eventsFilter === 'live' ? 'bg-accent text-white' : 'bg-[#222] text-gray-300 hover:bg-gray-800'"
+                    :class="eventsFilter === 'live' ? 'bg-accent text-white' : 'bg-[#1a1d23] text-gray-300 hover:bg-[#2a2d35]'"
                     class="px-4 py-2 rounded-lg text-sm font-medium transition">En Vivo</button>
                 <button @click="eventsFilter = 'scheduled'; updateEventsDisplay()"
-                    :class="eventsFilter === 'scheduled' ? 'bg-accent text-white' : 'bg-[#222] text-gray-300 hover:bg-gray-800'"
+                    :class="eventsFilter === 'scheduled' ? 'bg-accent text-white' : 'bg-[#1a1d23] text-gray-300 hover:bg-[#2a2d35]'"
                     class="px-4 py-2 rounded-lg text-sm font-medium transition">Próximos</button>
             </div>
         </div>
@@ -107,7 +107,7 @@
 
         <div class="space-y-3" x-show="!loading && displayEvents.length > 0">
             <template x-for="ev in displayEvents" :key="ev.id">
-                <div class="bg-[#222] rounded-xl border border-gray-800 hover:border-accent/50 transition overflow-hidden">
+                <div class="bg-[#1a1d23] rounded-xl border border-[#2a2d35] hover:border-accent/50 transition overflow-hidden">
                     <div class="p-5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
@@ -132,7 +132,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-[#1a1a1a] px-5 py-3 flex justify-around" x-show="ev.markets && ev.markets.length > 0">
+                    <div class="bg-[#111317] px-5 py-3 flex justify-around" x-show="ev.markets && ev.markets.length > 0">
                         <template x-for="mkt in (ev.markets || []).slice(0,1)" :key="mkt.id">
                             <template x-for="sel in (mkt.selections || []).slice(0,3)" :key="sel.id">
                                 <div class="text-center">
@@ -148,7 +148,7 @@
     </div>
 
     {% comment %} TABLA EXPOSURE {% endcomment %}
-    <div class="bg-card rounded-xl border border-gray-800 p-6 mb-6">
+    <div class="bg-card rounded-xl border border-[#2a2d35] p-6 mb-6">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold">📊 Exposición por Evento</h2>
             <a href="{% url 'admin-mincetur' %}" class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg text-sm font-medium transition">

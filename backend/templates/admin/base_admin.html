@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ page_title|default:'Panel Admin' }}{% endblock %} - FairBet Lab</title>
+    <title>{% block title %}{{ page_title|default:'Panel Admin' }}{% endblock %} - JUANCHO HBET</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {% load static %}
     <script>
     tailwind.config = {
         theme: {
             extend: {
                 colors: {
-                    dark: '#111111',
-                    card: '#1a1a1a',
-                    accent: '#dc2626',
-                    'accent-hover': '#b91c1c',
+                    dark: '#1a1d23',
+                    card: '#111317',
+                    accent: '#16a34a',
+                    'accent-hover': '#15803d',
                     win: '#10b981',
                     orange: '#f97316',
                 }
@@ -23,16 +24,17 @@
     }
     </script>
     <style>
-        body { background-color: #111111; color: white; }
-        .metric-card { background: #1a1a1a; border: 1px solid #374151; }
-        .metric-value { color: #dc2626; font-size: 2.5rem; font-weight: 700; }
+        body { background-color: #1a1d23; color: white; }
+        .metric-card { background: #111317; border: 1px solid #2a2d35; }
+        .metric-value { color: #16a34a; font-size: 2.5rem; font-weight: 700; }
         .positive { color: #10b981; }
         .negative { color: #ef4444; }
         .table-admin { width: 100%; border-collapse: collapse; }
-        .table-admin th { background: #1f2937; padding: 12px; text-align: left; border-bottom: 2px solid #374151; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; }
-        .table-admin td { padding: 12px; border-bottom: 1px solid #374151; }
-        .table-admin tr:hover { background: #1f2937; }
-        .nav-admin { background: #1a1a1a; border-bottom: 2px solid #dc2626; }
+        .table-admin th { background: #0d0f12; padding: 12px; text-align: left; border-bottom: 2px solid #2a2d35; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; }
+        .table-admin td { padding: 12px; border-bottom: 1px solid #2a2d35; }
+        .table-admin tr:hover { background: #1e2128; }
+        .nav-admin { background: #111317; border-bottom: 2px solid #16a34a; }
+        .bg-card { background-color: #111317; }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
@@ -40,26 +42,26 @@
     {% block nav %}
     <nav class="nav-admin">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+            <div class="flex justify-between items-center h-20">
                 <div class="flex items-center gap-4">
                     <a href="{% url 'admin-dashboard' %}" class="flex items-center gap-3">
-                        <span class="text-2xl font-bold text-accent tracking-tight">FairBet Lab</span>
+                        <img src="{% static 'img/logo2.jfif' %}" alt="JUANCHO HBET Logo" class="h-16 w-auto object-contain rounded-md">
                         <span class="bg-accent text-white text-xs font-bold px-2 py-0.5 rounded">ADMIN</span>
                     </a>
                 </div>
 
                 <div class="hidden sm:flex items-center gap-6 text-sm font-medium">
-                    <a href="{% url 'admin-dashboard' %}" class="hover:text-accent transition {% if request.resolver_match.url_name == 'admin-dashboard' %}text-accent{% endif %}">
+                    <a href="{% url 'admin-dashboard' %}" class="hover:text-accent transition {% if request.resolver_match.url_name == 'admin-dashboard' %}text-accent font-bold{% endif %}">
                         📊 Dashboard
                     </a>
-                    <a href="{% url 'admin-mincetur' %}" class="hover:text-accent transition {% if request.resolver_match.url_name == 'admin-mincetur' %}text-accent{% endif %}">
+                    <a href="{% url 'admin-mincetur' %}" class="hover:text-accent transition {% if request.resolver_match.url_name == 'admin-mincetur' %}text-accent font-bold{% endif %}">
                         📄 Reporte MINCETUR
                     </a>
                     <span class="text-gray-400">|</span>
-                    <span class="text-gray-300" x-text="'👤 ' + (user?.username || '{{ user.username }}')"></span>
+                    <span class="text-gray-300 font-bold" x-text="'👤 ' + (user?.username || '{{ user.username }}')"></span>
                     <form method="post" action="{% url 'admin-logout' %}" class="inline">
                         {% csrf_token %}
-                        <button type="submit" class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        <button type="submit" class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg text-sm font-bold transition">
                             Salir
                         </button>
                     </form>
@@ -89,7 +91,7 @@
             </div>
             <p class="text-sm text-gray-400">Cumple con la Ley 31557 de Perú y su reglamento DS 005-2023-MINCETUR.</p>
             <p class="text-sm text-gray-400 mt-1">Prohibido el acceso a menores de 18 años. Juega con responsabilidad.</p>
-            <p class="text-xs mt-4 text-gray-600">&copy; {% now "Y" %} FairBet Lab.</p>
+            <p class="text-xs mt-4 text-gray-600">&copy; {% now "Y" %} JUANCHO HBET.</p>
         </div>
     </footer>
 

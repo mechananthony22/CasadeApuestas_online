@@ -10,12 +10,12 @@
     </div>
 
     {% comment %} FILTROS {% endcomment %}
-    <div class="bg-card rounded-xl border border-gray-800 p-6 mb-6">
+    <div class="bg-card rounded-xl border border-[#2a2d35] p-6 mb-6">
         <h2 class="text-xl font-bold mb-4">Seleccionar Período</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label class="block text-sm text-gray-400 mb-2">Año</label>
-                <select x-model="year" class="w-full bg-[#222] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
+                <select x-model="year" class="w-full bg-[#1a1d23] border border-[#2a2d35] rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
                     {% for y in years %}
                     <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
                     {% endfor %}
@@ -23,7 +23,7 @@
             </div>
             <div>
                 <label class="block text-sm text-gray-400 mb-2">Mes</label>
-                <select x-model="month" class="w-full bg-[#222] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
+                <select x-model="month" class="w-full bg-[#1a1d23] border border-[#2a2d35] rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
                     {% for m in months %}
                     <option value="{{ m.value }}" {% if m.value == current_month %}selected{% endif %}>{{ m.name }}</option>
                     {% endfor %}
@@ -41,22 +41,22 @@
     </div>
 
     {% comment %} INFO DEL REPORTE {% endcomment %}
-    <div class="bg-card rounded-xl border border-gray-800 p-6">
+    <div class="bg-card rounded-xl border border-[#2a2d35] p-6">
         <h2 class="text-xl font-bold mb-4">📋 Información del Reporte</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-[#222] rounded-lg p-4">
+            <div class="bg-[#1a1d23] rounded-lg p-4">
                 <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Contenido</p>
                 <p class="text-white font-semibold">Apuestas liquidadas en el período</p>
             </div>
-            <div class="bg-[#222] rounded-lg p-4">
+            <div class="bg-[#1a1d23] rounded-lg p-4">
                 <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Formato</p>
                 <p class="text-white font-semibold">CSV (UTF-8 con BOM para Excel)</p>
             </div>
-            <div class="bg-[#222] rounded-lg p-4">
+            <div class="bg-[#1a1d23] rounded-lg p-4">
                 <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Normativa</p>
                 <p class="text-white font-semibold">Ley 31557 - DS 005-2023-MINCETUR</p>
             </div>
-            <div class="bg-[#222] rounded-lg p-4">
+            <div class="bg-[#1a1d23] rounded-lg p-4">
                 <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Moneda</p>
                 <p class="text-white font-semibold">Fichas Virtuales (sin valor real)</p>
             </div>
@@ -65,19 +65,19 @@
         <div class="mt-6">
             <h3 class="text-sm text-gray-400 uppercase tracking-wider mb-3">Columnas del CSV:</h3>
             <div class="flex flex-wrap gap-2">
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">ticket_id</span>
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">dni_jugador</span>
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">username</span>
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">fecha_colocacion</span>
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">fecha_liquidacion</span>
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">tipo_apuesta</span>
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">evento_seleccion</span>
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">cuota</span>
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">monto_apostado</span>
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">estado_apuesta</span>
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">monto_pagado</span>
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">ggr</span>
-                <span class="bg-gray-700 px-3 py-1 rounded text-xs">moneda</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">ticket_id</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">dni_jugador</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">username</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">fecha_colocacion</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">fecha_liquidacion</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">tipo_apuesta</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">evento_seleccion</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">cuota</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">monto_apostado</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">estado_apuesta</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">monto_pagado</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">ggr</span>
+                <span class="bg-[#1a1d23] border border-[#2a2d35] px-3 py-1 rounded text-xs">moneda</span>
             </div>
         </div>
     </div>

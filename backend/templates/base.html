@@ -59,10 +59,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
-                    <img src="{% static 'img/Logo.jpeg' %}" alt="JUANCHO HBET Logo"
-                        class="h-14 w-auto object-contain rounded-md">
-                    <span class="text-3xl font-black text-accent tracking-wider uppercase">JUANCHO HBET</span>
-                    <span class="bg-accent text-white text-xs font-bold px-2 py-0.5 rounded">Educativo</span>
+                    <img src="{% static 'img/logo2.jfif' %}" alt="JUANCHO HBET Logo"
+                        class="h-16 w-auto object-contain rounded-md">
                 </a>
 
                 <div class="hidden sm:flex items-center gap-6 text-lg font-bold">
@@ -278,10 +276,21 @@
             }
         }
 
+        function getCookie(name) {
+            let val = null;
+            if (document.cookie) {
+                document.cookie.split('; ').some(c => {
+                    if (c.startsWith(name + '=')) { val = decodeURIComponent(c.substring(name.length + 1)); return true; }
+                });
+            }
+            return val;
+        }
+
         async function apiFetch(endpoint, options = {}) {
             const t = token();
             const headers = {
                 'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
                 ...(t ? { 'Authorization': 'Bearer ' + t } : {}),
                 ...options.headers,
             };
