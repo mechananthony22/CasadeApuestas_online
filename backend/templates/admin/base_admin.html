@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ page_title|default:'Panel Admin' }}{% endblock %} - FairBet Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    dark: '#111111',
+                    card: '#1a1a1a',
+                    accent: '#dc2626',
+                    'accent-hover': '#b91c1c',
+                    win: '#10b981',
+                    orange: '#f97316',
+                }
+            }
+        }
+    }
+    </script>
+    <style>
+        body { background-color: #111111; color: white; }
+        .metric-card { background: #1a1a1a; border: 1px solid #374151; }
+        .metric-value { color: #dc2626; font-size: 2.5rem; font-weight: 700; }
+        .positive { color: #10b981; }
+        .negative { color: #ef4444; }
+        .table-admin { width: 100%; border-collapse: collapse; }
+        .table-admin th { background: #1f2937; padding: 12px; text-align: left; border-bottom: 2px solid #374151; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; }
+        .table-admin td { padding: 12px; border-bottom: 1px solid #374151; }
+        .table-admin tr:hover { background: #1f2937; }
+        .nav-admin { background: #1a1a1a; border-bottom: 2px solid #dc2626; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col">
+    {% block nav %}
+    <nav class="nav-admin">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'admin-dashboard' %}" class="flex items-center gap-3">
+                        <span class="text-2xl font-bold text-accent tracking-tight">FairBet Lab</span>
+                        <span class="bg-accent text-white text-xs font-bold px-2 py-0.5 rounded">ADMIN</span>
+                    </a>
+                </div>
+
+                <div class="hidden sm:flex items-center gap-6 text-sm font-medium">
+                    <a href="{% url 'admin-dashboard' %}" class="hover:text-accent transition {% if request.resolver_match.url_name == 'admin-dashboard' %}text-accent{% endif %}">
+                        📊 Dashboard
+                    </a>
+                    <a href="{% url 'admin-mincetur' %}" class="hover:text-accent transition {% if request.resolver_match.url_name == 'admin-mincetur' %}text-accent{% endif %}">
+                        📄 Reporte MINCETUR
+                    </a>
+                    <span class="text-gray-400">|</span>
+                    <span class="text-gray-300" x-text="'👤 ' + (user?.username || '{{ user.username }}')"></span>
+                    <form method="post" action="{% url 'admin-logout' %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                            Salir
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div x-data="{ open: false }" class="sm:hidden border-t border-gray-800">
+            <div class="px-4 py-3 space-y-2">
+                <a href="{% url 'admin-dashboard' %}" class="block px-3 py-2 rounded hover:bg-gray-800">📊 Dashboard</a>
+                <a href="{% url 'admin-mincetur' %}" class="block px-3 py-2 rounded hover:bg-gray-800">📄 Reporte MINCETUR</a>
+            </div>
+        </div>
+    </nav>
+    {% endblock %}
+
+    <main class="flex-grow w-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-card border-t border-accent/30 py-6 mt-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <div class="bg-accent/10 border border-accent/30 rounded-lg p-4 mb-4">
+                <p class="text-accent font-semibold text-sm">
+                    Plataforma educativa con moneda virtual. No constituye una casa de apuestas.
+                </p>
+            </div>
+            <p class="text-sm text-gray-400">Cumple con la Ley 31557 de Perú y su reglamento DS 005-2023-MINCETUR.</p>
+            <p class="text-sm text-gray-400 mt-1">Prohibido el acceso a menores de 18 años. Juega con responsabilidad.</p>
+            <p class="text-xs mt-4 text-gray-600">&copy; {% now "Y" %} FairBet Lab.</p>
+        </div>
+    </footer>
+
+    <script>
+    function getAdminToken() {
+        return localStorage.getItem('admin_token');
+    }
+
+    async function adminApiFetch(endpoint, options = {}) {
+        const t = getAdminToken();
+        const res = await fetch(endpoint, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(t ? { 'Authorization': 'Bearer ' + t } : {}),
+                ...options.headers,
+            },
+        });
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/admin/login/';
+        }
+        const data = await res.json();
+        data._status = res.status;
+        return data;
+    }
+
+    function formatNumber(num) {
+        if (num === null || num === undefined) return '0.00';
+        const n = parseFloat(num);
+        return isNaN(n) ? '0.00' : n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function formatDateTime(isoString) {
+        if (!isoString) return '-';
+        try {
+            const date = new Date(isoString);
+            return date.toLocaleString('es-PE', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: false
+            });
+        } catch (e) { return isoString; }
+    }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

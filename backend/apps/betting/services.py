@@ -5,7 +5,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.utils import timezone
 from betting.models import League, Team, Event, Market, Selection
-from betting.the_odds_api import TheOddsAPIClient, string_to_integer_id
+from betting.the_odds_api import TheOddsAPIClient, OddsCache, string_to_integer_id
 
 logger = logging.getLogger(__name__)
 
@@ -13,9 +13,18 @@ class SyncEngine:
     """
     Motor local de sincronización que procesa las respuestas de la API externa
     y actualiza la base de datos local aplicando el margen del operador.
+
+    USA OddsCache PARA PROTEGER The Odds API:
+    - Las llamadas a la API pasan por la capa de caché Redis
+    - Si la API falla (401, 429), el error se cachea por 5 min para proteger credits
+    - Los datos exitosos se cachean con TTL adecuado (2h fixtures, 30s scores, 10s odds)
+    - Los compañeros de trabajo notarán improvement en velocidad porque los datos
+      frecuentemente vienen del caché Redis en lugar de hacer requests HTTP cada vez.
     """
     def __init__(self):
         self.client = TheOddsAPIClient()
+        # Capa de caché Redis que protege la API de saturación
+        self.cache = OddsCache()
 
     def map_status(self, api_status_short):
         """
@@ -45,12 +54,34 @@ class SyncEngine:
         return self._sync_fixtures_the_odds_api(league_id, season)
 
     def _sync_fixtures_the_odds_api(self, league_id, season=2026):
-        fixtures_data = self.client.get_fixtures(league_id, season)
+        """
+        Sincroniza fixtures de una liga específica usando la capa de caché Redis.
+
+        ANTES (llamada directa):
+            fixtures_data = self.client.get_fixtures(league_id, season)
+
+        AHORA (usa caché + manejo de errores):
+            fixtures_data = self.cache.get_fixtures(
+                league_id,
+                api_fetch_fn=lambda: self.client.get_fixtures(league_id, season)
+            )
+
+        BENEFICIOS:
+        - Si la API falló recientemente (401, 429), retorna [] inmediatamente
+          sin hacer request que desperdiciaría credits
+        - Si los datos están en caché ( menos de 2h old), retorna instantáneamente
+        - Si es cache miss, hace el request y guarda en caché
+        """
+        def api_fetch_fn():
+            return self.client.get_fixtures(league_id, season)
+
+fixtures_data = self.cache.get_fixtures(league_id, api_fetch_fn)
         if not fixtures_data:
             logger.warning(f"No se obtuvieron fixtures de The Odds API para la liga {league_id}")
             return 0
 
         synced_count = 0
+        processed_events = set()
         for item in fixtures_data:
             try:
                 event_hash = item.get('id')
@@ -91,7 +122,14 @@ class SyncEngine:
                 
                 home_team_id = string_to_integer_id(home_team_name)
                 away_team_id = string_to_integer_id(away_team_name)
-                
+
+                # Deduplicación: evitar procesar el mismo partido varias veces
+                event_key = (home_team_name, away_team_name, str(commence_time) if commence_time else None)
+                if event_key in processed_events:
+                    logger.debug(f"Evento duplicado omitido: {home_team_name} vs {away_team_name} ({commence_time})")
+                    continue
+                processed_events.add(event_key)
+
                 # 2. Crear o actualizar equipos
                 home_team_obj, _ = Team.objects.update_or_create(
                     api_id=home_team_id,
@@ -246,7 +284,28 @@ class SyncEngine:
         return self._sync_live_scores_the_odds_api()
 
     def _sync_live_scores_the_odds_api(self):
-        live_fixtures = self.client.get_live_fixtures()
+        """
+        Sincroniza marcadores en vivo usando la capa de caché Redis.
+
+        ANTES (cada 30s hacía 10+ requests HTTP a la API):
+            live_fixtures = self.client.get_live_fixtures()
+            # Itera sobre todas las deportiva making API call para cada league
+
+        AHORA (usa caché + maneja errores por liga):
+            live_fixtures = self.cache.get_live_scores(
+                api_fetch_fn=lambda: self.client.get_live_fixtures()
+            )
+
+        BENEFICIOS:
+        - Si los scores están en caché (menos de 30s old), retorna instantáneamente
+        - Si la API falló recientemente, retorna [] sin desperdiciar credits
+        - Los datos se guardan en caché por 30s, lo que significa que el task de 30s
+          puede ejecutarse sin hacer request la mayoría de las veces
+        """
+        def api_fetch_fn():
+            return self.client.get_live_fixtures()
+
+        live_fixtures = self.cache.get_live_scores(api_fetch_fn)
         if not live_fixtures:
             logger.info("No hay partidos en vivo reportados por The Odds API")
             return 0
@@ -351,6 +410,9 @@ class SyncEngine:
     def sync_odds_for_event(self, event_obj):
         """
         Sincroniza mercados y cuotas para un evento deportivo aplicando el margen del operador.
+        
+        Si el evento no tiene mercados aún, genera cuotas mock para que siempre
+        haya algo disponible para apostar (funcionalidad de fallback).
         """
         if not event_obj.markets.exists():
             margin_multiplier = Decimal('1.0000') - getattr(settings, 'OPERATOR_MARGIN', Decimal('0.05'))

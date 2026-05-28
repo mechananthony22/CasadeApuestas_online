@@ -115,13 +115,17 @@
 
     async function apiFetch(endpoint, options = {}) {
         const t = token();
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(t ? { 'Authorization': 'Bearer ' + t } : {}),
+            ...options.headers,
+        };
+        if (options.idempotencyKey) {
+            headers['Idempotency-Key'] = options.idempotencyKey;
+        }
         const res = await fetch('/api/v1' + endpoint, {
             ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...(t ? { 'Authorization': 'Bearer ' + t } : {}),
-                ...options.headers,
-            },
+            headers,
         });
         if (res.status === 401) {
             localStorage.clear();

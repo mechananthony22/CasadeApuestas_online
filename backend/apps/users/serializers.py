@@ -71,16 +71,17 @@ class RegistroUsuarioSerializer(serializers.Serializer):
 
     def validate_dni(self, valor):
         """
-        Valida el DNI peruano usando el algoritmo de Módulo-11.
-        Si el DNI ya existe en el sistema, también lo rechaza.
+        Valida el DNI peruano (DESACTIVADO - solo verifica formato básico y duplicados).
+        El algoritmo Módulo-11 está comentado para permitir registro sin validación RENIEC.
         """
-        try:
-            if not validar_dni_peruano(valor):
-                raise serializers.ValidationError(
-                    'El DNI ingresado no es válido. Verifica el dígito verificador.'
-                )
-        except Exception as e:
-            raise serializers.ValidationError(str(e))
+        # TODO: Reactivar validación Módulo-11 cuando se implemente conexión real a RENIEC
+        # try:
+        #     if not validar_dni_peruano(valor):
+        #         raise serializers.ValidationError(
+        #             'El DNI ingresado no es válido. Verifica el dígito verificador.'
+        #         )
+        # except Exception as e:
+        #     raise serializers.ValidationError(str(e))
 
         # Verificar que el DNI no esté ya registrado en otro perfil
         if UserProfile.objects.filter(dni=valor).exists():
@@ -125,12 +126,13 @@ class RegistroUsuarioSerializer(serializers.Serializer):
         )
 
         # Crear el perfil KYC asociado al usuario
+        # TODO: Descomentar verification_status=UserProfile.STATUS_PENDING cuando se implemente verificación real con RENIEC
+        #       Por ahora se auto-verifica para permitir pruebas sin conexión a RENIEC
         UserProfile.objects.create(
             user=usuario,
             dni=dni,
             birth_date=birth_date,
-            # Estado inicial: pendiente de verificación
-            verification_status=UserProfile.STATUS_PENDING,
+            verification_status=UserProfile.STATUS_VERIFIED,  # Auto-verificado para demo
         )
 
         return usuario

@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 # Vistas basadas en Django REST Framework para la verificación de integridad de la cadena de auditoría
+import csv
 import hashlib
+import io
 import json
 import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from audit.models import AuditLogEntry
+from audit.serializers import AuditLogEntrySerializer
 
 logger = logging.getLogger(__name__)
 
@@ -85,5 +88,59 @@ class AuditVerifyView(APIView):
             'status': 'verified',
             'mensaje': 'La cadena de auditoría inmutable es 100% íntegra y segura.',
             'registros_auditados': total_records,
+            'disclaimer': 'Plataforma educativa con moneda virtual. No constituye una casa de apuestas.'
+        }, status=status.HTTP_200_OK)
+
+
+class AuditExportView(APIView):
+    """
+    Endpoint administrativo para exportar la cadena de auditoría
+    en formato JSON o CSV para reguladores (MINCETUR).
+    """
+
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        """
+        GET /api/v1/audit/export/?format=json|csv
+        Exporta todos los registros de auditoría en el formato especificado.
+        """
+        fmt = request.query_params.get('format', 'json').lower()
+        logs = AuditLogEntry.objects.all().order_by('id')
+        total_records = logs.count()
+
+        if total_records == 0:
+            return Response({
+                'status': 'empty',
+                'mensaje': 'No hay registros de auditoría para exportar.',
+                'disclaimer': 'Plataforma educativa con moneda virtual. No constituye una casa de apuestas.'
+            }, status=status.HTTP_200_OK)
+
+        if fmt == 'csv':
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(['id', 'event_type', 'event_type_display', 'payload_json', 'previous_hash', 'current_hash', 'created_at'])
+            for log in logs:
+                writer.writerow([
+                    log.id,
+                    log.event_type,
+                    log.get_event_type_display(),
+                    json.dumps(log.payload, ensure_ascii=False),
+                    log.previous_hash,
+                    log.current_hash,
+                    log.created_at.isoformat() if log.created_at else ''
+                ])
+            output.seek(0)
+            return Response(
+                output.getvalue(),
+                content_type='text/csv; charset=utf-8',
+                status=status.HTTP_200_OK
+            )
+
+        serializer = AuditLogEntrySerializer(logs, many=True)
+        return Response({
+            'status': 'success',
+            'total_records': total_records,
+            'results': serializer.data,
             'disclaimer': 'Plataforma educativa con moneda virtual. No constituye una casa de apuestas.'
         }, status=status.HTTP_200_OK)

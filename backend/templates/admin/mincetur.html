@@ -1,0 +1,142 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Reporte MINCETUR{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+     x-data="minceturReport()">
+
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold">📄 Reporte MINCETUR</h1>
+        <p class="text-gray-400 mt-1">Exporta el reporte mensual de operaciones en formato CSV</p>
+    </div>
+
+    {% comment %} FILTROS {% endcomment %}
+    <div class="bg-card rounded-xl border border-gray-800 p-6 mb-6">
+        <h2 class="text-xl font-bold mb-4">Seleccionar Período</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">Año</label>
+                <select x-model="year" class="w-full bg-[#222] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
+                    {% for y in years %}
+                    <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">Mes</label>
+                <select x-model="month" class="w-full bg-[#222] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-accent outline-none">
+                    {% for m in months %}
+                    <option value="{{ m.value }}" {% if m.value == current_month %}selected{% endif %}>{{ m.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-end gap-4">
+            <button @click="downloadCSV()" :disabled="loading"
+                    class="bg-accent hover:bg-accent-hover disabled:opacity-50 text-white px-6 py-3 rounded-xl font-bold transition flex items-center gap-2">
+                <span x-show="!loading">📥 Descargar CSV</span>
+                <span x-show="loading">⏳ Generando...</span>
+            </button>
+        </div>
+    </div>
+
+    {% comment %} INFO DEL REPORTE {% endcomment %}
+    <div class="bg-card rounded-xl border border-gray-800 p-6">
+        <h2 class="text-xl font-bold mb-4">📋 Información del Reporte</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-[#222] rounded-lg p-4">
+                <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Contenido</p>
+                <p class="text-white font-semibold">Apuestas liquidadas en el período</p>
+            </div>
+            <div class="bg-[#222] rounded-lg p-4">
+                <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Formato</p>
+                <p class="text-white font-semibold">CSV (UTF-8 con BOM para Excel)</p>
+            </div>
+            <div class="bg-[#222] rounded-lg p-4">
+                <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Normativa</p>
+                <p class="text-white font-semibold">Ley 31557 - DS 005-2023-MINCETUR</p>
+            </div>
+            <div class="bg-[#222] rounded-lg p-4">
+                <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Moneda</p>
+                <p class="text-white font-semibold">Fichas Virtuales (sin valor real)</p>
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <h3 class="text-sm text-gray-400 uppercase tracking-wider mb-3">Columnas del CSV:</h3>
+            <div class="flex flex-wrap gap-2">
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">ticket_id</span>
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">dni_jugador</span>
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">username</span>
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">fecha_colocacion</span>
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">fecha_liquidacion</span>
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">tipo_apuesta</span>
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">evento_seleccion</span>
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">cuota</span>
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">monto_apostado</span>
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">estado_apuesta</span>
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">monto_pagado</span>
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">ggr</span>
+                <span class="bg-gray-700 px-3 py-1 rounded text-xs">moneda</span>
+            </div>
+        </div>
+    </div>
+
+    {% comment %} DISCLAIMER {% endcomment %}
+    <div class="mt-6 bg-accent/10 border border-accent/30 rounded-lg p-4 text-center">
+        <p class="text-accent font-semibold text-sm">
+            Plataforma educativa con moneda virtual. No constituye una casa de apuestas.
+        </p>
+        <p class="text-gray-500 text-xs mt-2">Este reporte es para fines educativos y de cumplimiento normativo.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function minceturReport() {
+    return {
+        year: '{{ current_year }}',
+        month: '{{ current_month }}',
+        loading: false,
+
+        async downloadCSV() {
+            this.loading = true;
+            try {
+                const url = `/api/v1/admin/mincetur-csv/?year=${this.year}&month=${this.month}`;
+                const token = localStorage.getItem('admin_token');
+
+                const res = await fetch(url, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                    },
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    window.location.href = '/admin/login/';
+                    return;
+                }
+
+                if (res.status === 200) {
+                    const blob = await res.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = 'reporte_mincetur_{{ current_year }}_{{ current_month }}.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(downloadUrl);
+                    document.body.removeChild(a);
+                } else {
+                    const data = await res.json();
+                    alert('Error: ' + (data.error || 'No se pudo generar el reporte'));
+                }
+            } catch (e) {
+                alert('Error al descargar: ' + e.message);
+            }
+            this.loading = false;
+        }
+    };
+}
+</script>
+{% endblock %}

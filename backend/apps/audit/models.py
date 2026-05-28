@@ -11,15 +11,21 @@ class AuditLogEntry(models.Model):
     Implementa encadenamiento hash SHA-256 (Blockchain básico append-only)
     para impedir de forma absoluta cualquier manipulación o borrado de datos.
     """
-    
+
     EVENT_WALLET_MOVEMENT = 'WALLET_MOVEMENT'
     EVENT_BET_STATUS_CHANGE = 'BET_STATUS_CHANGE'
     EVENT_ODDS_CHANGE = 'ODDS_CHANGE'
-    
+    EVENT_STATUS_CHANGE = 'EVENT_STATUS_CHANGE'
+    MARKET_CREATION = 'MARKET_CREATION'
+    SELECTION_CREATION = 'SELECTION_CREATION'
+
     EVENT_TYPE_CHOICES = [
         (EVENT_WALLET_MOVEMENT, 'Movimiento de Billetera'),
         (EVENT_BET_STATUS_CHANGE, 'Cambio de Estado de Apuesta'),
         (EVENT_ODDS_CHANGE, 'Variación de Cuotas'),
+        (EVENT_STATUS_CHANGE, 'Cambio de Estado de Evento'),
+        (MARKET_CREATION, 'Creación de Mercado'),
+        (SELECTION_CREATION, 'Creación de Selección'),
     ]
     
     event_type = models.CharField(

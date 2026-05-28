@@ -109,7 +109,10 @@ function betList() {
 
         async cashout(id) {
             this.cashing = id;
-            const data = await apiFetch('/betting/bets/' + id + '/cashout/', { method: 'POST' });
+            const data = await apiFetch('/betting/bets/' + id + '/cashout/', {
+                method: 'POST',
+                idempotencyKey: generateIdempotencyKey(),
+            });
             this.cashing = null;
             if (data._status === 200 || data.status === 'cashed_out') {
                 await this.load();

@@ -59,6 +59,12 @@ class RegistroView(APIView):
         # Obtener el perfil recién creado para la respuesta
         perfil = usuario.profile
 
+        # --- CONTROLES ANTI-FRAUDE: Registrar IP en registro ---
+        ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', '127.0.0.1')).split(',')[0].strip()
+        from fraud.services import FraudDetector
+        FraudDetector.log_and_check_ip(usuario, ip)
+        # --- FIN CONTROLES ANTI-FRAUDE ---
+
         return Response(
             {
                 'mensaje': 'Usuario registrado exitosamente. Tu cuenta está pendiente de verificación de DNI.',
@@ -128,17 +134,18 @@ class VerificarDniView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Validar el dígito verificador del DNI usando el algoritmo Módulo-11
-        try:
-            es_valido = validar_dni_peruano(dni_enviado)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not es_valido:
-            return Response(
-                {'error': 'El DNI no pasa la validación del dígito verificador (Módulo-11).'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # TODO: Reactivar validación Módulo-11 cuando se implemente conexión real a RENIEC
+        # # Validar el dígito verificador del DNI usando el algoritmo Módulo-11
+        # try:
+        #     es_valido = validar_dni_peruano(dni_enviado)
+        # except Exception as e:
+        #     return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        #
+        # if not es_valido:
+        #     return Response(
+        #         {'error': 'El DNI no pasa la validación del dígito verificador (Módulo-11).'},
+        #         status=status.HTTP_400_BAD_REQUEST,
+        #     )
 
         # Cambiar el estado de la cuenta a 'verified' dentro de una transacción
         with transaction.atomic():

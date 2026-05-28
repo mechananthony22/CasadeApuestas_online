@@ -140,23 +140,33 @@ OPERATOR_MARGIN = Decimal(os.environ.get('OPERATOR_MARGIN', '0.05'))
 SPORTS_API_PROVIDER = os.environ.get('SPORTS_API_PROVIDER', 'the_odds_api')
 THE_ODDS_API_KEY = os.environ.get('THE_ODDS_API_KEY', '')
 THE_ODDS_API_URL = os.environ.get('THE_ODDS_API_URL', 'https://api.the-odds-api.com/v4')
+
 # Mapeo de IDs de liga locales a sport_key de The Odds API
+# SOLO FÚTBOL: Solo soccer para el tier gratuito (gratis) de The Odds API
 THE_ODDS_API_SPORTS = {
     140: 'soccer_spain_la_liga',       # La Liga
     39: 'soccer_epl',                  # Premier League
-    2: 'soccer_uefa_champs_league',    # Champions League (Corregido: champs en lugar de champions)
+    2: 'soccer_uefa_champs_league',    # Champions League
     13: 'soccer_conmebol_copa_libertadores', # Copa Libertadores
     247: 'soccer_conmebol_copa_sudamericana', # Copa Sudamericana
     135: 'soccer_italy_serie_a',       # Serie A
     78: 'soccer_germany_bundesliga',   # Bundesliga
-    61: 'soccer_france_ligue_one',     # Ligue 1 (Corregido: ligue_one)
-    71: 'soccer_brazil_campeonato',    # Brasileirão Série A (Activo en verano)
+    61: 'soccer_france_ligue_one',     # Ligue 1
+    71: 'soccer_brazil_campeonato',    # Brasileirão Série A
     262: 'soccer_mexico_liga_mx',      # Liga MX
-    301: 'basketball_nba',             # NBA
-    302: 'basketball_euroleague',      # Euroleague
-    401: 'americanfootball_nfl',       # NFL
-    501: 'baseball_mlb',               # MLB
 }
+# Nota: NBA, NFL, MLB, etc. fueron removidos porque el tier gratuito de The Odds API
+# solo cubre soccer. Si necesitas esos deportes, necesitas un plan pagado.
+
+# --- CACHE TTL CONFIGURATION PARA THE ODDS API ---
+# Estos valores controlan cuánto tiempo se mantienen los datos en Redis antes de
+# hacer un nuevo request a la API externa. Esto protege los API credits del desperdicio.
+ODDS_CACHE_TTL_FIXTURES = 7200   # 2 horas - Tiempo entre sincronizaciones de fixtures
+ODDS_CACHE_TTL_LIVE_SCORES = 30  # 30 segundos - Marcadores en vivo
+ODDS_CACHE_TTL_ODDS = 10        # 10 segundos - Cuotas en vivo
+ODDS_CACHE_TTL_API_ERROR = 300  # 5 minutos - Cuando la API falla (401, 429, timeout),
+                                  # guardamos el error por este tiempo para no hacer
+                                  # retries inmediatos que gastarían credits innecesariamente.
 
 # --- PLANIFICACIÓN DE TAREAS PERIÓDICAS (CELERY BEAT) ---
 CELERY_BEAT_SCHEDULE = {
@@ -178,7 +188,11 @@ CELERY_BEAT_SCHEDULE = {
     },
     'liquidar-apuestas-cada-5-minutos': {
         'task': 'betting.tasks.settle_finished_matches',
-        'schedule': 300.0,  # Cada 5 minutos en segundos
+        'schedule': 300.0,  # Cada 5 minutos
+    },
+    'escaneo-retroactivo-antifraude-cada-hora': {
+        'task': 'fraud.tasks.rescan_fraud_patterns',
+        'schedule': 3600.0,  # Cada 1 hora
     },
 }
 

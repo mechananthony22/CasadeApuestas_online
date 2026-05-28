@@ -219,11 +219,13 @@ function eventDetail() {
             const data = await apiFetch('/betting/bets/', {
                 method: 'POST',
                 body: JSON.stringify({
-                    event: this.event.id,
-                    selection: this.selected.id,
                     stake: parseFloat(this.stake),
-                    idempotency_key: generateIdempotencyKey(),
+                    selections: [{
+                        selection_id: this.selected.id,
+                        expected_odds: parseFloat(this.currentOdds()),
+                    }],
                 }),
+                idempotencyKey: generateIdempotencyKey(),
             });
             this.sending = false;
             if (data._status === 201 || data.id) {

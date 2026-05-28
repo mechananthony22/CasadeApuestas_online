@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
-# Rutas de enrutamiento URL para la aplicación dashboard
 from django.urls import path
 from dashboard.views import OperatorDashboardView, MinceturReportView
+from dashboard.admin_views import (
+    AdminMetricsAPIView,
+    AdminMinceturCSVAPIView,
+)
 
 urlpatterns = [
-    # Métricas del Dashboard del Operador en vivo
+    # === OPERATOR DASHBOARD API (IsAdminUser) ===
     path('dashboard/metrics/', OperatorDashboardView.as_view(), name='operator-dashboard-metrics'),
-    
-    # Reporte mensual en cumplimiento reglamentario con MINCETUR (CSV)
     path('dashboard/mincetur-report/', MinceturReportView.as_view(), name='operator-mincetur-report'),
+
+    # === ADMIN API ENDPOINTS (IsAdminUser) ===
+    path('admin/metrics/', AdminMetricsAPIView.as_view(), name='admin-metrics'),
+    path('admin/mincetur-csv/', AdminMinceturCSVAPIView.as_view(), name='admin-mincetur-csv'),
 ]

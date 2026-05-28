@@ -14,6 +14,9 @@ def api_status_view(request):
 
 
 urlpatterns = [
+    # Admin HTML pages (dashboard, MINCETUR reports) - ANTES de admin.site.urls
+    path('admin/', include('dashboard.admin_urls')),
+
     path('admin/', admin.site.urls),
 
     # JWT endpoints
