@@ -1,253 +1,339 @@
 {% extends "admin/base_admin.html" %}
 {% block title %}Dashboard del Operador{% endblock %}
+{% block extra_head %}
+<style>
+    /* Sidebar de deportes */
+    .sport-sidebar { background: #111317; border-right: 1px solid #2a2d35; min-height: calc(100vh - 80px); }
+    .sport-item { cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+    .sport-item:hover { background: #1e2128; border-left-color: #16a34a; }
+    .sport-item.active { background: #16a34a15; border-left-color: #16a34a; color: #16a34a; }
+    .sport-count { background: #1a1d23; border: 1px solid #2a2d35; font-size: 0.65rem; min-width: 20px; text-align: center; }
+    /* Tabs */
+    .tab-btn { border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab-btn.active { border-bottom-color: #16a34a; color: #16a34a; }
+    .tab-btn:hover:not(.active) { color: #9ca3af; }
+    /* Scrollable panel */
+    .events-panel { max-height: calc(100vh - 320px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: #2a2d35 transparent; }
+    .events-panel::-webkit-scrollbar { width: 6px; }
+    .events-panel::-webkit-scrollbar-thumb { background: #2a2d35; border-radius: 3px; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-     x-data="adminDashboard()" x-init="init()">
+<div class="w-full" x-data="adminDashboard()" x-init="init()">
 
-    <div class="flex justify-between items-center mb-8">
-        <div>
-            <h1 class="text-3xl font-bold">Panel del Operador</h1>
-            <p class="text-gray-400 mt-1">Métricas en vivo del sistema</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <span class="text-xs text-gray-500">Última actualización: <span x-text="lastUpdate"></span></span>
-            <span :class="loading ? 'animate-spin' : ''" class="text-2xl">🔄</span>
-        </div>
-    </div>
-
-    {% comment %} ALERTAS {% endcomment %}
-    <div class="mb-6 bg-yellow-900/20 border border-yellow-600/30 rounded-xl p-4">
-        <p class="text-yellow-400 font-semibold text-sm">
-            ⚠️ Las métricas se actualizan automáticamente cada 30 segundos.
-        </p>
-    </div>
-
-    {% comment %} GGR - GRANDE {% endcomment %}
-    <div class="bg-card rounded-xl border border-[#2a2d35] p-6 mb-6">
-        <div class="flex justify-between items-start">
+    {# === MÉTRICAS SUPERIORES (ancho completo) === #}
+    <div class="max-w-full px-4 sm:px-6 lg:px-8 py-6">
+        {# Header #}
+        <div class="flex justify-between items-center mb-6">
             <div>
-                <h3 class="text-gray-400 text-sm uppercase tracking-wider mb-2">GGR (Gross Gaming Revenue)</h3>
-                <p class="text-5xl font-bold" :class="parseFloat(metrics.ggr) >= 0 ? 'positive' : 'negative'" x-text="formatNumber(metrics.ggr)"></p>
-                <p class="text-gray-500 text-sm mt-2">Ingresos netos de la casa</p>
+                <h1 class="text-3xl font-bold">Panel del Operador</h1>
+                <p class="text-gray-400 mt-1">Métricas en vivo del sistema</p>
             </div>
-            <div class="text-right">
-                <div class="bg-[#1a1d23] rounded-lg p-3">
-                    <p class="text-xs text-gray-400">Stakes Totales</p>
-                    <p class="text-lg font-bold text-white" x-text="formatNumber(metrics.total_stakes)"></p>
-                </div>
-                <div class="bg-[#1a1d23] rounded-lg p-3 mt-2">
-                    <p class="text-xs text-gray-400">Payouts Totales</p>
-                    <p class="text-lg font-bold text-white" x-text="formatNumber(metrics.total_payouts)"></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {% comment %} 4 CARDS {% endcomment %}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div class="metric-card rounded-xl p-6">
-            <h3 class="text-gray-400 text-xs uppercase tracking-wider mb-2">Total Apuestas</h3>
-            <p class="text-3xl font-bold text-white" x-text="metrics.bet_volume?.total_bets_count || 0"></p>
-            <p class="text-gray-500 text-xs mt-1">
-                <span x-text="formatNumber(metrics.bet_volume?.total_stakes_amount || 0)"></span> fichas apostadas
-            </p>
-        </div>
-        <div class="metric-card rounded-xl p-6">
-            <h3 class="text-gray-400 text-xs uppercase tracking-wider mb-2">Apuestas Activas</h3>
-            <p class="text-3xl font-bold text-accent" x-text="metrics.bet_volume?.active_bets_count || 0"></p>
-            <p class="text-gray-500 text-xs mt-1">
-                <span x-text="formatNumber(metrics.bet_volume?.active_stakes_amount || 0)"></span> en juego
-            </p>
-        </div>
-        <div class="metric-card rounded-xl p-6">
-            <h3 class="text-gray-400 text-xs uppercase tracking-wider mb-2">Apuestas (24h)</h3>
-            <p class="text-3xl font-bold text-orange-500" x-text="metrics.bet_volume?.today_bets_count || 0"></p>
-            <p class="text-gray-500 text-xs mt-1">
-                <span x-text="formatNumber(metrics.bet_volume?.today_stakes_amount || 0)"></span> hoy
-            </p>
-        </div>
-        <div class="metric-card rounded-xl p-6">
-            <h3 class="text-gray-400 text-xs uppercase tracking-wider mb-2">Usuarios Activos (7d)</h3>
-            <p class="text-3xl font-bold text-win" x-text="metrics.active_users?.active_users_7d || 0"></p>
-            <p class="text-gray-500 text-xs mt-1">
-                Total: <span x-text="metrics.active_users?.total_registered_users || 0"></span> registrados
-            </p>
-        </div>
-    </div>
-
-    {% comment %} SECCIÓN EVENTOS - Similar al frontend {% endcomment %}
-    <div class="bg-card rounded-xl border border-[#2a2d35] p-6 mb-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold">⚽ Catálogo de Eventos</h2>
-            <div class="flex gap-2">
-                <button @click="eventsFilter = 'all'; updateEventsDisplay()"
-                    :class="eventsFilter === 'all' ? 'bg-accent text-white' : 'bg-[#1a1d23] text-gray-300 hover:bg-[#2a2d35]'"
-                    class="px-4 py-2 rounded-lg text-sm font-medium transition">Todos</button>
-                <button @click="eventsFilter = 'live'; updateEventsDisplay()"
-                    :class="eventsFilter === 'live' ? 'bg-accent text-white' : 'bg-[#1a1d23] text-gray-300 hover:bg-[#2a2d35]'"
-                    class="px-4 py-2 rounded-lg text-sm font-medium transition">En Vivo</button>
-                <button @click="eventsFilter = 'scheduled'; updateEventsDisplay()"
-                    :class="eventsFilter === 'scheduled' ? 'bg-accent text-white' : 'bg-[#1a1d23] text-gray-300 hover:bg-[#2a2d35]'"
-                    class="px-4 py-2 rounded-lg text-sm font-medium transition">Próximos</button>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-gray-500">Última actualización: <span x-text="lastUpdate"></span></span>
+                <span :class="loading ? 'animate-spin' : ''" class="text-2xl">🔄</span>
             </div>
         </div>
 
-        <template x-if="loading">
-            <div class="text-center py-8">
-                <span class="animate-spin text-4xl">⏳</span>
-                <p class="text-gray-400 mt-2">Cargando eventos...</p>
-            </div>
-        </template>
-
-        <template x-if="!loading && displayEvents.length === 0">
-            <div class="text-center py-8">
-                <p class="text-gray-500 text-lg">No hay eventos disponibles</p>
-            </div>
-        </template>
-
-        <div class="space-y-3" x-show="!loading && displayEvents.length > 0">
-            <template x-for="ev in displayEvents" :key="ev.id">
-                <div class="bg-[#1a1d23] rounded-xl border border-[#2a2d35] hover:border-accent/50 transition overflow-hidden">
-                    <div class="p-5">
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded"
-                                      :class="ev.status === 'in_play' || ev.status === 'live' ? 'bg-green-950 text-green-400' : 'bg-blue-950 text-blue-400'"
-                                      x-text="ev.status === 'in_play' || ev.status === 'live' ? '🔴 EN VIVO' : '📅 PRÓXIMO'"></span>
-                                <span class="text-xs text-gray-400 font-medium" x-text="formatDateTime(ev.starts_at)"></span>
-                            </div>
-                            <span class="text-xs text-gray-500 font-semibold" x-text="ev.league?.name || ''"></span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1 text-center">
-                                <p class="text-lg font-bold" x-text="ev.home_team?.name || 'Local'"></p>
-                            </div>
-                            <div class="flex items-center gap-4 px-6">
-                                <span class="text-2xl font-bold text-accent" x-text="ev.home_score ?? '-'"></span>
-                                <span class="text-gray-500 font-bold">VS</span>
-                                <span class="text-2xl font-bold text-accent" x-text="ev.away_score ?? '-'"></span>
-                            </div>
-                            <div class="flex-1 text-center">
-                                <p class="text-lg font-bold" x-text="ev.away_team?.name || 'Visitante'"></p>
-                            </div>
-                        </div>
+        {# GGR + 4 Cards en fila #}
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+            {# GGR Grande #}
+            <div class="lg:col-span-2 bg-card rounded-xl border border-[#2a2d35] p-5">
+                <h3 class="text-gray-400 text-xs uppercase tracking-wider mb-1">GGR (Gross Gaming Revenue)</h3>
+                <p class="text-4xl font-bold" :class="parseFloat(metrics.ggr) >= 0 ? 'positive' : 'negative'" x-text="formatNumber(metrics.ggr)"></p>
+                <div class="flex gap-4 mt-3">
+                    <div class="bg-[#1a1d23] rounded-lg px-3 py-2 flex-1">
+                        <p class="text-[10px] text-gray-500">Stakes</p>
+                        <p class="text-sm font-bold text-white" x-text="formatNumber(metrics.total_stakes)"></p>
                     </div>
-                    <div class="bg-[#111317] px-5 py-3 flex justify-around" x-show="ev.markets && ev.markets.length > 0">
-                        <template x-for="mkt in (ev.markets || []).slice(0,1)" :key="mkt.id">
-                            <template x-for="sel in (mkt.selections || []).slice(0,3)" :key="sel.id">
-                                <div class="text-center">
-                                    <p class="text-xs text-gray-400" x-text="sel.name"></p>
-                                    <p class="text-sm font-bold text-win" x-text="sel.odds"></p>
+                    <div class="bg-[#1a1d23] rounded-lg px-3 py-2 flex-1">
+                        <p class="text-[10px] text-gray-500">Payouts</p>
+                        <p class="text-sm font-bold text-white" x-text="formatNumber(metrics.total_payouts)"></p>
+                    </div>
+                </div>
+            </div>
+            {# 3 Cards pequeñas #}
+            <div class="metric-card rounded-xl p-5">
+                <h3 class="text-gray-400 text-[10px] uppercase tracking-wider mb-1">Total Apuestas</h3>
+                <p class="text-2xl font-bold text-white" x-text="metrics.bet_volume?.total_bets_count || 0"></p>
+                <p class="text-gray-500 text-xs mt-1"><span x-text="formatNumber(metrics.bet_volume?.total_stakes_amount || 0)"></span> apostadas</p>
+            </div>
+            <div class="metric-card rounded-xl p-5">
+                <h3 class="text-gray-400 text-[10px] uppercase tracking-wider mb-1">Activas / Hoy</h3>
+                <p class="text-2xl font-bold text-accent" x-text="metrics.bet_volume?.active_bets_count || 0"></p>
+                <p class="text-gray-500 text-xs mt-1"><span class="text-orange-400" x-text="metrics.bet_volume?.today_bets_count || 0"></span> últimas 24h</p>
+            </div>
+            <div class="metric-card rounded-xl p-5">
+                <h3 class="text-gray-400 text-[10px] uppercase tracking-wider mb-1">Usuarios (7d)</h3>
+                <p class="text-2xl font-bold text-win" x-text="metrics.active_users?.active_users_7d || 0"></p>
+                <p class="text-gray-500 text-xs mt-1">Total: <span x-text="metrics.active_users?.total_registered_users || 0"></span></p>
+            </div>
+        </div>
+    </div>
+
+    {# === LAYOUT 2 COLUMNAS: SIDEBAR + CONTENIDO === #}
+    <div class="flex">
+
+        {# --- SIDEBAR IZQUIERDO: Deportes --- #}
+        <aside class="sport-sidebar w-56 flex-shrink-0 hidden lg:block">
+            <div class="px-3 py-4">
+                <h3 class="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-3 px-2">Deportes</h3>
+
+                {# Botón "Todos" #}
+                <div class="sport-item flex items-center justify-between px-3 py-2.5 rounded-lg mb-1"
+                     :class="sportFilter === 'all' ? 'active' : ''"
+                     @click="sportFilter = 'all'; updateEventsDisplay()">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">🏆</span>
+                        <span class="text-sm font-medium">Todos</span>
+                    </div>
+                    <span class="sport-count px-1.5 py-0.5 rounded-full font-bold" x-text="events.length"></span>
+                </div>
+
+                {# Deportes dinámicos #}
+                <template x-for="sp in sportsList" :key="sp.key">
+                    <div class="sport-item flex items-center justify-between px-3 py-2.5 rounded-lg mb-1"
+                         :class="sportFilter === sp.key ? 'active' : ''"
+                         @click="sportFilter = sp.key; updateEventsDisplay()">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg" x-text="sp.icon"></span>
+                            <span class="text-sm font-medium" x-text="sp.name"></span>
+                        </div>
+                        <span class="sport-count px-1.5 py-0.5 rounded-full font-bold" x-text="sp.count"></span>
+                    </div>
+                </template>
+            </div>
+
+            {# Filtro de estado #}
+            <div class="px-3 mt-2 border-t border-[#2a2d35] pt-4">
+                <h3 class="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-3 px-2">Estado</h3>
+                <template x-for="f in [{key:'all',label:'Todos',icon:'📋'},{key:'live',label:'En Vivo',icon:'🔴'},{key:'scheduled',label:'Próximos',icon:'📅'}]" :key="f.key">
+                    <div class="sport-item flex items-center gap-2 px-3 py-2 rounded-lg mb-1 text-sm"
+                         :class="eventsFilter === f.key ? 'active' : ''"
+                         @click="eventsFilter = f.key; updateEventsDisplay()">
+                        <span x-text="f.icon"></span>
+                        <span class="font-medium" x-text="f.label"></span>
+                    </div>
+                </template>
+            </div>
+
+            {# Reporte MINCETUR link #}
+            <div class="px-3 mt-4 border-t border-[#2a2d35] pt-4">
+                <a href="{% url 'admin-mincetur' %}" class="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-accent hover:bg-[#1e2128] transition">
+                    📄 Reporte MINCETUR
+                </a>
+            </div>
+        </aside>
+
+        {# --- CONTENIDO PRINCIPAL DERECHO --- #}
+        <div class="flex-1 px-4 sm:px-6 pb-8">
+
+            {# Tabs: Eventos / Exposición #}
+            <div class="flex items-center gap-6 border-b border-[#2a2d35] mb-4">
+                <button class="tab-btn pb-3 text-sm font-bold uppercase tracking-wider"
+                        :class="activeTab === 'events' ? 'active' : 'text-gray-500'"
+                        @click="activeTab = 'events'">
+                    ⚽ Catálogo de Eventos (<span x-text="displayEvents.length"></span>)
+                </button>
+                <button class="tab-btn pb-3 text-sm font-bold uppercase tracking-wider"
+                        :class="activeTab === 'exposure' ? 'active' : 'text-gray-500'"
+                        @click="activeTab = 'exposure'">
+                    📊 Exposición / Riesgo
+                </button>
+            </div>
+
+            {# Mobile sport filter #}
+            <div class="lg:hidden flex gap-2 mb-4 overflow-x-auto pb-2">
+                <button @click="sportFilter = 'all'; updateEventsDisplay()"
+                        :class="sportFilter === 'all' ? 'bg-accent text-white' : 'bg-[#1a1d23] text-gray-300'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap">🏆 Todos</button>
+                <template x-for="sp in sportsList" :key="sp.key">
+                    <button @click="sportFilter = sp.key; updateEventsDisplay()"
+                            :class="sportFilter === sp.key ? 'bg-accent text-white' : 'bg-[#1a1d23] text-gray-300'"
+                            class="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
+                            x-text="sp.icon + ' ' + sp.name"></button>
+                </template>
+            </div>
+
+            {# === TAB: EVENTOS === #}
+            <div x-show="activeTab === 'events'">
+                <template x-if="loading">
+                    <div class="text-center py-12">
+                        <span class="animate-spin text-4xl">⏳</span>
+                        <p class="text-gray-400 mt-2">Cargando eventos...</p>
+                    </div>
+                </template>
+
+                <template x-if="!loading && displayEvents.length === 0">
+                    <div class="text-center py-12">
+                        <p class="text-gray-500 text-lg">No hay eventos en esta categoría</p>
+                    </div>
+                </template>
+
+                <div class="events-panel space-y-3" x-show="!loading && displayEvents.length > 0">
+                    <template x-for="ev in displayEvents" :key="ev.id">
+                        <div class="bg-card rounded-xl border border-[#2a2d35] hover:border-accent/50 transition overflow-hidden">
+                            <div class="p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded"
+                                              :class="ev.status === 'in_play' || ev.status === 'live' ? 'bg-green-950 text-green-400' : 'bg-blue-950 text-blue-400'"
+                                              x-text="ev.status === 'in_play' || ev.status === 'live' ? '🔴 EN VIVO' : '📅 PRÓXIMO'"></span>
+                                        <span class="text-xs text-gray-400" x-text="formatDateTime(ev.starts_at)"></span>
+                                    </div>
+                                    <span class="text-xs text-gray-500 font-semibold" x-text="ev.league?.name || ''"></span>
                                 </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1 text-center">
+                                        <p class="text-base font-bold" x-text="ev.home_team?.name || 'Local'"></p>
+                                    </div>
+                                    <div class="flex items-center gap-3 px-4">
+                                        <span class="text-xl font-bold text-accent" x-text="ev.home_score ?? '-'"></span>
+                                        <span class="text-gray-600 font-bold text-xs">VS</span>
+                                        <span class="text-xl font-bold text-accent" x-text="ev.away_score ?? '-'"></span>
+                                    </div>
+                                    <div class="flex-1 text-center">
+                                        <p class="text-base font-bold" x-text="ev.away_team?.name || 'Visitante'"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-[#0d0f12] px-4 py-2 flex justify-around" x-show="ev.markets && ev.markets.length > 0">
+                                <template x-for="mkt in (ev.markets || []).slice(0,1)" :key="mkt.id">
+                                    <template x-for="sel in (mkt.selections || []).slice(0,3)" :key="sel.id">
+                                        <div class="text-center">
+                                            <p class="text-[10px] text-gray-500" x-text="sel.name"></p>
+                                            <p class="text-sm font-bold text-win" x-text="sel.odds"></p>
+                                        </div>
+                                    </template>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            {# === TAB: EXPOSICIÓN === #}
+            <div x-show="activeTab === 'exposure'">
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-gray-400 text-sm">Riesgo financiero por selección activa</p>
+                    <a href="{% url 'admin-mincetur' %}" class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        📄 Generar Reporte MINCETUR
+                    </a>
+                </div>
+
+                <template x-if="loading">
+                    <div class="text-center py-12">
+                        <span class="animate-spin text-4xl">⏳</span>
+                        <p class="text-gray-400 mt-2">Cargando métricas...</p>
+                    </div>
+                </template>
+
+                <template x-if="!loading && (!metrics.event_exposure || metrics.event_exposure.length === 0)">
+                    <div class="text-center py-12">
+                        <p class="text-gray-500 text-lg">No hay eventos activos con apuestas</p>
+                    </div>
+                </template>
+
+                <div class="events-panel overflow-x-auto" x-show="!loading && metrics.event_exposure?.length > 0">
+                    <table class="table-admin">
+                        <thead>
+                            <tr>
+                                <th>Evento</th>
+                                <th>Liga</th>
+                                <th>Estado</th>
+                                <th>Mercado</th>
+                                <th>Selección</th>
+                                <th>Cuota</th>
+                                <th class="text-center">Bets</th>
+                                <th class="text-right">Total Stake</th>
+                                <th class="text-right">Gross Exp.</th>
+                                <th class="text-right">Net Exp.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="event in metrics.event_exposure" :key="event.event_id">
+                                <template x-for="market in event.markets" :key="market.market_id">
+                                    <template x-for="sel in market.selections" :key="sel.selection_id">
+                                        <tr>
+                                            <td>
+                                                <p class="font-semibold text-sm" x-text="event.home_team + ' vs ' + event.away_team"></p>
+                                                <p class="text-xs text-gray-500" x-text="formatDateTime(event.starts_at)"></p>
+                                            </td>
+                                            <td><span class="text-xs bg-[#1a1d23] border border-[#2a2d35] px-2 py-1 rounded" x-text="event.league_name"></span></td>
+                                            <td>
+                                                <span class="text-xs px-2 py-1 rounded"
+                                                      :class="event.status === 'in_play' ? 'bg-green-900 text-green-400' : 'bg-blue-900 text-blue-400'"
+                                                      x-text="event.status === 'in_play' ? '🔴 En Vivo' : '📅 Prog.'"></span>
+                                            </td>
+                                            <td class="text-sm" x-text="market.market_name"></td>
+                                            <td class="font-semibold text-sm" x-text="sel.selection_name"></td>
+                                            <td class="text-sm" x-text="parseFloat(sel.odds).toFixed(2)"></td>
+                                            <td class="text-center text-sm" x-text="sel.active_bets_count"></td>
+                                            <td class="text-right text-sm" x-text="formatNumber(sel.total_stake)"></td>
+                                            <td class="text-right text-sm" x-text="formatNumber(sel.gross_exposure)"></td>
+                                            <td class="text-right font-bold text-sm"
+                                                :class="parseFloat(sel.net_exposure) > 0 ? 'negative' : 'positive'"
+                                                x-text="formatNumber(sel.net_exposure)"></td>
+                                        </tr>
+                                    </template>
+                                </template>
                             </template>
-                        </template>
+                        </tbody>
+                    </table>
+                    <div class="mt-3 text-xs text-gray-500">
+                        <p><strong>Net Exposure:</strong> Positivo (rojo) = la casa pierde si esa selección gana. Negativo (verde) = la casa gana.</p>
                     </div>
                 </div>
-            </template>
+            </div>
         </div>
     </div>
 
-    {% comment %} TABLA EXPOSURE {% endcomment %}
-    <div class="bg-card rounded-xl border border-[#2a2d35] p-6 mb-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold">📊 Exposición por Evento</h2>
-            <a href="{% url 'admin-mincetur' %}" class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                📄 Generar Reporte MINCETUR
-            </a>
+    {# Disclaimer #}
+    <div class="px-4 sm:px-6 lg:px-8 pb-6">
+        <div class="bg-accent/10 border border-accent/30 rounded-lg p-4 text-center">
+            <p class="text-accent font-semibold text-sm">⚠️ Juega con responsabilidad. Si tienes problemas con el juego, busca ayuda profesional.</p>
         </div>
-
-        <template x-if="loading">
-            <div class="text-center py-8">
-                <span class="animate-spin text-4xl">⏳</span>
-                <p class="text-gray-400 mt-2">Cargando métricas...</p>
-            </div>
-        </template>
-
-        <template x-if="!loading && (!metrics.event_exposure || metrics.event_exposure.length === 0)">
-            <div class="text-center py-8">
-                <p class="text-gray-500 text-lg">No hay eventos activos con apuestas</p>
-            </div>
-        </template>
-
-        <div class="overflow-x-auto" x-show="!loading && metrics.event_exposure?.length > 0">
-            <table class="table-admin">
-                <thead>
-                    <tr>
-                        <th>Evento</th>
-                        <th>Liga</th>
-                        <th>Estado</th>
-                        <th>Mercado</th>
-                        <th>Selección</th>
-                        <th>Cuota</th>
-                        <th class="text-center">Bets</th>
-                        <th class="text-right">Total Stake</th>
-                        <th class="text-right">Gross Exposure</th>
-                        <th class="text-right">Net Exposure</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <template x-for="event in metrics.event_exposure" :key="event.event_id">
-                        <template x-for="market in event.markets" :key="market.market_id">
-                            <template x-for="sel in market.selections" :key="sel.selection_id">
-                                <tr>
-                                    <td>
-                                        <p class="font-semibold" x-text="event.home_team + ' vs ' + event.away_team"></p>
-                                        <p class="text-xs text-gray-500" x-text="formatDateTime(event.starts_at)"></p>
-                                    </td>
-                                    <td>
-                                        <span class="text-xs bg-gray-700 px-2 py-1 rounded" x-text="event.league_name"></span>
-                                    </td>
-                                    <td>
-                                        <span class="text-xs px-2 py-1 rounded"
-                                              :class="event.status === 'in_play' ? 'bg-green-900 text-green-400' : 'bg-blue-900 text-blue-400'"
-                                              x-text="event.status === 'in_play' ? '🔴 En Vivo' : '📅 Programado'"></span>
-                                    </td>
-                                    <td x-text="market.market_name"></td>
-                                    <td class="font-semibold" x-text="sel.selection_name"></td>
-                                    <td x-text="parseFloat(sel.odds).toFixed(4)"></td>
-                                    <td class="text-center" x-text="sel.active_bets_count"></td>
-                                    <td class="text-right" x-text="formatNumber(sel.total_stake)"></td>
-                                    <td class="text-right" x-text="formatNumber(sel.gross_exposure)"></td>
-                                    <td class="text-right font-bold"
-                                        :class="parseFloat(sel.net_exposure) > 0 ? 'negative' : 'positive'"
-                                        x-text="formatNumber(sel.net_exposure)"></td>
-                                </tr>
-                            </template>
-                        </template>
-                    </template>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="mt-4 text-xs text-gray-500">
-            <p><strong>Net Exposure:</strong> Positive (rojo) = la casa pierde si esa selección gana. Negative (verde) = la casa gana.</p>
-        </div>
-    </div>
-
-    {% comment %} FOOTER DISCLAIMER {% endcomment %}
-    <div class="bg-accent/10 border border-accent/30 rounded-lg p-4 text-center">
-        <p class="text-accent font-semibold text-sm">
-            ⚠️ Juega con responsabilidad. Si tienes problemas con el juego, busca ayuda profesional.
-        </p>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+/**
+ * Mapa de iconos por deporte. Se usa para el sidebar dinámico.
+ */
+const SPORT_ICONS = {
+    'soccer': '⚽', 'football': '⚽', 'fútbol': '⚽',
+    'basketball': '🏀', 'baloncesto': '🏀',
+    'baseball': '⚾', 'béisbol': '⚾',
+    'tennis': '🎾', 'tenis': '🎾',
+    'hockey': '🏒', 'ice_hockey': '🏒',
+    'mma': '🥊', 'boxing': '🥊',
+    'americanfootball': '🏈',
+    'cricket': '🏏',
+    'golf': '⛳',
+    'rugby': '🏉',
+};
+
+function getSportIcon(sportName) {
+    if (!sportName) return '🏅';
+    const key = sportName.toLowerCase().replace(/[^a-záéíóú]/g, '');
+    for (const [k, v] of Object.entries(SPORT_ICONS)) {
+        if (key.includes(k)) return v;
+    }
+    return '🏅';
+}
+
 function adminDashboard() {
     return {
-        metrics: {
-            ggr: '0.00',
-            total_stakes: '0.00',
-            total_payouts: '0.00',
-            bet_volume: {},
-            active_users: {},
-            event_exposure: []
-        },
+        metrics: { ggr:'0.00', total_stakes:'0.00', total_payouts:'0.00', bet_volume:{}, active_users:{}, event_exposure:[] },
         events: [],
         displayEvents: [],
+        sportsList: [],
+        sportFilter: 'all',
         eventsFilter: 'all',
+        activeTab: 'events',
         loading: true,
         lastUpdate: 'Nunca',
         pollInterval: null,
@@ -260,63 +346,58 @@ function adminDashboard() {
         async loadMetrics() {
             this.loading = true;
             try {
-                const res = await fetch('/api/v1/admin/metrics/', {
-                    credentials: 'include'
-                });
-                if (res.status === 401 || res.status === 403) {
-                    window.location.href = '/admin/login/';
-                    return;
-                }
-                if (!res.ok) {
-                    throw new Error('API error: ' + res.status);
-                }
+                const res = await fetch('/api/v1/admin/metrics/', { credentials: 'include' });
+                if (res.status === 401 || res.status === 403) { window.location.href = '/admin/login/'; return; }
+                if (!res.ok) throw new Error('API error: ' + res.status);
                 const data = await res.json();
                 this.metrics = data;
                 this.events = data.events || [];
+                this.buildSportsList();
                 this.updateEventsDisplay();
                 this.lastUpdate = new Date().toLocaleTimeString('es-PE');
-            } catch (e) {
-                console.error('Error loading metrics:', e);
-            }
+            } catch (e) { console.error('Error loading metrics:', e); }
             this.loading = false;
         },
 
+        /** Construye la lista de deportes únicos a partir de los eventos cargados */
+        buildSportsList() {
+            const sportsMap = {};
+            this.events.forEach(ev => {
+                const sport = ev.league?.sport || 'Otro';
+                if (!sportsMap[sport]) {
+                    sportsMap[sport] = { key: sport, name: sport, icon: getSportIcon(sport), count: 0 };
+                }
+                sportsMap[sport].count++;
+            });
+            this.sportsList = Object.values(sportsMap).sort((a, b) => b.count - a.count);
+        },
+
+        /** Filtra los eventos por deporte y estado seleccionados */
         updateEventsDisplay() {
+            let filtered = this.events;
+            if (this.sportFilter !== 'all') {
+                filtered = filtered.filter(e => (e.league?.sport || 'Otro') === this.sportFilter);
+            }
             if (this.eventsFilter === 'live') {
-                this.displayEvents = this.events.filter(e => e.status === 'in_play' || e.status === 'live');
+                filtered = filtered.filter(e => e.status === 'in_play' || e.status === 'live');
             } else if (this.eventsFilter === 'scheduled') {
-                this.displayEvents = this.events.filter(e => e.status === 'scheduled');
-            } else {
-                this.displayEvents = this.events;
+                filtered = filtered.filter(e => e.status === 'scheduled');
             }
+            this.displayEvents = filtered;
         },
 
-        startPolling() {
-            this.pollInterval = setInterval(() => {
-                this.loadMetrics();
-            }, 30000);
-        },
-
-        stopPolling() {
-            if (this.pollInterval) {
-                clearInterval(this.pollInterval);
-            }
-        },
+        startPolling() { this.pollInterval = setInterval(() => { this.loadMetrics(); }, 30000); },
+        stopPolling() { if (this.pollInterval) clearInterval(this.pollInterval); },
 
         formatNumber(num) {
             if (num === null || num === undefined) return '0.00';
             const n = parseFloat(num);
             return isNaN(n) ? '0.00' : n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         },
-
         formatDateTime(isoString) {
             if (!isoString) return '-';
             try {
-                const date = new Date(isoString);
-                return date.toLocaleString('es-PE', {
-                    day: '2-digit', month: '2-digit', year: 'numeric',
-                    hour: '2-digit', minute: '2-digit', hour12: false
-                });
+                return new Date(isoString).toLocaleString('es-PE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:false });
             } catch (e) { return isoString; }
         }
     };

@@ -6,7 +6,7 @@
 
     <div class="mb-8">
         <h1 class="text-3xl font-bold">📄 Reporte MINCETUR</h1>
-        <p class="text-gray-400 mt-1">Exporta el reporte mensual de operaciones en formato CSV</p>
+        <p class="text-gray-400 mt-1">Exporta el reporte mensual de operaciones en formato Excel</p>
     </div>
 
     {% comment %} FILTROS {% endcomment %}
@@ -34,7 +34,7 @@
         <div class="mt-6 flex justify-end gap-4">
             <button @click="downloadCSV()" :disabled="loading"
                     class="bg-accent hover:bg-accent-hover disabled:opacity-50 text-white px-6 py-3 rounded-xl font-bold transition flex items-center gap-2">
-                <span x-show="!loading">📥 Descargar CSV</span>
+                <span x-show="!loading">📥 Descargar Excel</span>
                 <span x-show="loading">⏳ Generando...</span>
             </button>
         </div>
@@ -50,7 +50,7 @@
             </div>
             <div class="bg-[#1a1d23] rounded-lg p-4">
                 <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Formato</p>
-                <p class="text-white font-semibold">CSV (UTF-8 con BOM para Excel)</p>
+                <p class="text-white font-semibold">Excel (.xlsx) con estilos profesionales</p>
             </div>
             <div class="bg-[#1a1d23] rounded-lg p-4">
                 <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Normativa</p>
@@ -122,7 +122,7 @@ function minceturReport() {
                     const downloadUrl = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = downloadUrl;
-                    a.download = 'reporte_mincetur_{{ current_year }}_{{ current_month }}.csv';
+                    a.download = `reporte_mincetur_${this.year}_${String(this.month).padStart(2,'0')}.xlsx`;
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(downloadUrl);

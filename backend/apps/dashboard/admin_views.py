@@ -207,10 +207,19 @@ class AdminMinceturView(LoginRequiredMixin, AdminUserMixin, TemplateView):
 
 
 class AdminLogoutView(TemplateView):
+    """Cierra la sesión del administrador y redirige al login del admin."""
     template_name = 'admin/login.html'
 
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
+        from django.contrib.auth import logout
         from django.shortcuts import redirect
+        logout(request)
+        return redirect('admin-login')
+
+    def get(self, request, *args, **kwargs):
+        from django.contrib.auth import logout
+        from django.shortcuts import redirect
+        logout(request)
         return redirect('admin-login')
 
 
@@ -302,11 +311,16 @@ class AdminMetricsAPIView(APIView):
 
 class AdminMinceturCSVAPIView(APIView):
     """
-    API endpoint para descargar reporte MINCETUR en CSV. Filtra por año/mes y exporta todas las apuestas liquidadas.
+    API endpoint para descargar reporte MINCETUR en Excel (.xlsx).
+    Filtra por año/mes y exporta todas las apuestas liquidadas con formato profesional.
     """
     permission_classes = [IsAdminUser]
 
     def get(self, request):
+        from django.http import HttpResponse
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
         year_param = request.query_params.get('year')
         month_param = request.query_params.get('month')
 
@@ -327,17 +341,44 @@ class AdminMinceturCSVAPIView(APIView):
             'selections__selection__market__event'
         ).order_by('settled_at')
 
-        output = io.StringIO()
-        writer = csv.writer(output)
+        # Crear libro Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f"MINCETUR {year}-{month:02d}"
 
+        # Estilos para encabezados
+        header_font = Font(name='Calibri', bold=True, color='FFFFFF', size=11)
+        header_fill = PatternFill(start_color='16a34a', end_color='16a34a', fill_type='solid')
+        header_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        thin_border = Border(
+            left=Side(style='thin', color='CCCCCC'),
+            right=Side(style='thin', color='CCCCCC'),
+            top=Side(style='thin', color='CCCCCC'),
+            bottom=Side(style='thin', color='CCCCCC'),
+        )
+
+        # Encabezados de columnas
         headers = [
-            'ticket_id', 'dni_jugador', 'username', 'fecha_colocacion',
-            'fecha_liquidacion', 'tipo_apuesta', 'evento_seleccion',
-            'cuota', 'monto_apostado', 'estado_apuesta', 'monto_pagado',
-            'ggr', 'moneda'
+            'Ticket ID', 'DNI Jugador', 'Username', 'Fecha Colocación',
+            'Fecha Liquidación', 'Tipo Apuesta', 'Evento / Selección',
+            'Cuota', 'Monto Apostado', 'Estado', 'Monto Pagado',
+            'GGR', 'Moneda'
         ]
-        writer.writerow(headers)
 
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_idx, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = thin_border
+
+        # Estilos para datos
+        data_font = Font(name='Calibri', size=10)
+        data_alignment = Alignment(vertical='center')
+        number_format_4d = '#,##0.0000'
+
+        # Llenar filas
+        row_idx = 2
         for bet in bets:
             dni = bet.user.profile.dni if hasattr(bet.user, 'profile') else 'N/A'
 
@@ -367,22 +408,53 @@ class AdminMinceturCSVAPIView(APIView):
 
             ggr_ticket = bet.stake - payout
 
-            row = [
-                bet.id, dni, bet.user.username,
-                bet.created_at.isoformat(),
-                bet.settled_at.isoformat() if bet.settled_at else '',
+            row_data = [
+                bet.id,
+                dni,
+                bet.user.username,
+                bet.created_at.strftime('%d/%m/%Y %H:%M'),
+                bet.settled_at.strftime('%d/%m/%Y %H:%M') if bet.settled_at else '',
                 bet.get_type_display(),
                 evento_seleccion,
-                f"{cuota:.4f}",
-                f"{bet.stake:.4f}",
+                float(cuota),
+                float(bet.stake),
                 bet.get_status_display(),
-                f"{payout:.4f}",
-                f"{ggr_ticket:.4f}",
+                float(payout),
+                float(ggr_ticket),
                 'Fichas Virtuales'
             ]
-            writer.writerow(row)
 
+            for col_idx, value in enumerate(row_data, 1):
+                cell = ws.cell(row=row_idx, column=col_idx, value=value)
+                cell.font = data_font
+                cell.alignment = data_alignment
+                cell.border = thin_border
+                # Formato numérico para columnas de dinero
+                if col_idx in (8, 9, 11, 12):
+                    cell.number_format = number_format_4d
+
+            row_idx += 1
+
+        # Auto-ajustar ancho de columnas
+        for col_idx, header in enumerate(headers, 1):
+            max_length = len(header) + 4
+            for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=col_idx, max_col=col_idx):
+                for cell in row:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)) + 2)
+            ws.column_dimensions[ws.cell(row=1, column=col_idx).column_letter].width = min(max_length, 40)
+
+        # Congelar encabezado
+        ws.freeze_panes = 'A2'
+
+        # Generar respuesta HTTP con archivo Excel
+        output = io.BytesIO()
+        wb.save(output)
         output.seek(0)
-        response = Response(output.getvalue(), content_type='text/csv; charset=utf-8')
-        response['Content-Disposition'] = f'attachment; filename="reporte_mincetur_{year}_{month:02d}.csv"'
+
+        response = HttpResponse(
+            output.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="reporte_mincetur_{year}_{month:02d}.xlsx"'
         return response
