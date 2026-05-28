@@ -2,8 +2,7 @@
 
 Este documento presenta la guía detallada de integración de la API externa **API-Football V3** con el backend de **FairBet Lab** (desarrollado en Django), y diseña el esquema de base de datos relacional (PostgreSQL) para cumplir con todos los requerimientos técnicos y normativos del reto (incluyendo partida doble, juego responsable y auditoría inmutable).
 
----
-
+--
 ## 1. ¿Cómo se relaciona el Backend con una API Externa?
 
 Una API externa como **API-Football** no tiene "tablas" que puedas clonar directamente en tu base de datos mediante SQL o migraciones. En su lugar, expone **Endpoints de tipo REST (JSON)** a través del protocolo HTTP.

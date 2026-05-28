@@ -288,15 +288,36 @@ footer p,footer span{color:#6b7280!important}
                         <span class="bw-ev-league" x-text="formatDateTime(ev.starts_at)"></span>
                       </div>
                     </div>
-                    <div class="bw-odd-btn">
+                    <button @click.prevent.stop="if(ev.markets?.[0]?.selections?.[0]) $store.betSlip.addSelection({
+                                id: ev.markets[0].selections[0].id,
+                                name: ev.markets[0].selections[0].name,
+                                odds: ev.markets[0].selections[0].odds,
+                                marketName: ev.markets[0].name,
+                                eventId: ev.id,
+                                eventName: ev.name || (ev.home_team?.name + ' vs ' + ev.away_team?.name)
+                            })" class="bw-odd-btn">
                       <span class="odd-val" x-text="ev.markets?.[0]?.selections?.[0]?.odds ?? '—'"></span>
-                    </div>
-                    <div class="bw-odd-btn">
+                    </button>
+                    <button @click.prevent.stop="if(ev.markets?.[0]?.selections?.[1]) $store.betSlip.addSelection({
+                                id: ev.markets[0].selections[1].id,
+                                name: ev.markets[0].selections[1].name,
+                                odds: ev.markets[0].selections[1].odds,
+                                marketName: ev.markets[0].name,
+                                eventId: ev.id,
+                                eventName: ev.name || (ev.home_team?.name + ' vs ' + ev.away_team?.name)
+                            })" class="bw-odd-btn">
                       <span class="odd-val" x-text="ev.markets?.[0]?.selections?.[1]?.odds ?? '—'"></span>
-                    </div>
-                    <div class="bw-odd-btn">
+                    </button>
+                    <button @click.prevent.stop="if(ev.markets?.[0]?.selections?.[2]) $store.betSlip.addSelection({
+                                id: ev.markets[0].selections[2].id,
+                                name: ev.markets[0].selections[2].name,
+                                odds: ev.markets[0].selections[2].odds,
+                                marketName: ev.markets[0].name,
+                                eventId: ev.id,
+                                eventName: ev.name || (ev.home_team?.name + ' vs ' + ev.away_team?.name)
+                            })" class="bw-odd-btn">
                       <span class="odd-val" x-text="ev.markets?.[0]?.selections?.[2]?.odds ?? '—'"></span>
-                    </div>
+                    </button>
                     <div class="bw-ev-arrow">
                       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                     </div>

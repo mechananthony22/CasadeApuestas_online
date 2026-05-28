@@ -141,6 +141,90 @@
         </div>
     </footer>
 
+    <!-- CUPÓN DE APUESTAS (BET SLIP) GLOBAL -->
+    <div x-data x-show="$store.betSlip.isOpen" 
+         class="fixed bottom-0 right-0 sm:right-4 w-full sm:w-80 bg-card border border-accent/40 rounded-t-xl shadow-2xl z-50 flex flex-col"
+         style="max-height: 85vh; display: none;"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="transform translate-y-full"
+         x-transition:enter-end="transform translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="transform translate-y-0"
+         x-transition:leave-end="transform translate-y-full">
+        
+        <!-- Header -->
+        <div class="bg-accent text-white px-4 py-3 rounded-t-xl flex justify-between items-center cursor-pointer" @click="$store.betSlip.toggle()">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-sm tracking-wide">CUPÓN DE APUESTAS</span>
+                <span class="bg-white text-accent text-xs font-black px-1.5 py-0.5 rounded" x-text="$store.betSlip.selections.length"></span>
+            </div>
+            <button class="hover:bg-accent-hover p-1 rounded transition">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto bg-dark p-3 space-y-3">
+            <template x-if="$store.betSlip.selections.length === 0">
+                <div class="text-center py-6 text-gray-400">
+                    <p class="text-sm">Tu cupón está vacío.</p>
+                    <p class="text-xs mt-1">Haz clic en una cuota para agregarla.</p>
+                </div>
+            </template>
+
+            <!-- Selecciones -->
+            <template x-for="sel in $store.betSlip.selections" :key="sel.id">
+                <div class="bg-card border border-gray-800 rounded-lg p-3 relative group">
+                    <button @click="$store.betSlip.removeSelection(sel.id)" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 transition">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    <p class="text-xs font-bold text-gray-300 pr-6" x-text="sel.eventName"></p>
+                    <p class="text-[10px] text-gray-500 uppercase mt-0.5" x-text="sel.marketName"></p>
+                    <div class="flex justify-between items-center mt-2">
+                        <p class="text-sm font-black text-white" x-text="sel.name"></p>
+                        <p class="text-sm font-bold text-accent" x-text="sel.odds"></p>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Footer / Checkout -->
+        <div class="bg-card border-t border-gray-800 p-4" x-show="$store.betSlip.selections.length > 0">
+            <div class="flex justify-between items-center mb-3 text-xs text-gray-400 font-bold uppercase">
+                <span x-text="$store.betSlip.selections.length > 1 ? 'Combinada' : 'Simple'"></span>
+                <span>Cuota Total: <span class="text-white text-base" x-text="$store.betSlip.totalOdds"></span></span>
+            </div>
+            
+            <div class="relative mb-3">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">S/</span>
+                <input type="number" x-model="$store.betSlip.stake" min="1" step="1"
+                       class="w-full bg-dark border border-gray-700 rounded-lg py-2.5 pl-8 pr-3 text-white font-bold focus:outline-none focus:border-accent transition"
+                       placeholder="Monto a apostar">
+            </div>
+
+            <div class="flex justify-between items-center mb-4 text-sm font-bold">
+                <span class="text-gray-300">Ganancia Potencial:</span>
+                <span class="text-win text-lg">S/ <span x-text="$store.betSlip.potentialPayout"></span></span>
+            </div>
+
+            <button @click="$store.betSlip.placeBet()" 
+                    class="w-full bg-accent hover:bg-accent-hover text-white font-black py-3 rounded-xl transition flex justify-center items-center gap-2 disabled:opacity-50"
+                    :disabled="$store.betSlip.isPlacing">
+                <span x-show="!$store.betSlip.isPlacing">APOSTAR AHORA</span>
+                <span x-show="$store.betSlip.isPlacing" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+            </button>
+            <p x-show="$store.betSlip.error" class="text-red-400 text-xs text-center mt-2 font-semibold" x-text="$store.betSlip.error"></p>
+            <p x-show="$store.betSlip.success" class="text-win text-xs text-center mt-2 font-semibold">¡Apuesta colocada con éxito!</p>
+        </div>
+    </div>
+    
+    <!-- Botón Flotante para abrir cupón cuando está cerrado -->
+    <button x-data x-show="!$store.betSlip.isOpen && $store.betSlip.selections.length > 0" 
+            @click="$store.betSlip.toggle()"
+            class="fixed bottom-6 right-6 bg-accent hover:bg-accent-hover text-white p-4 rounded-full shadow-lg shadow-accent/20 z-40 transition flex items-center justify-center gap-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>
+        <span class="font-black text-sm" x-text="$store.betSlip.selections.length"></span>
+    </button>
+
     <script>
     const token = () => localStorage.getItem('access_token');
 
@@ -207,6 +291,117 @@
         };
         return ws;
     }
+
+    // --- TIENDA ALPINE.JS PARA EL CUPÓN DE APUESTAS ---
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('betSlip', {
+            isOpen: true,
+            selections: JSON.parse(localStorage.getItem('betSlip_selections') || '[]'),
+            stake: 10,
+            isPlacing: false,
+            error: null,
+            success: false,
+
+            init() {
+                // Actualizar localStorage cada vez que cambien las selecciones
+                Alpine.effect(() => {
+                    localStorage.setItem('betSlip_selections', JSON.stringify(this.selections));
+                });
+            },
+            toggle() {
+                this.isOpen = !this.isOpen;
+            },
+            addSelection(sel) {
+                // Verificar si ya existe
+                const exists = this.selections.find(s => s.id === sel.id);
+                if (exists) return;
+                
+                // Solo una selección por evento (para evitar apostar al Local y Visitante en el mismo ticket)
+                this.selections = this.selections.filter(s => s.eventId !== sel.eventId);
+                
+                this.selections.push({
+                    id: sel.id,
+                    name: sel.name,
+                    odds: sel.odds,
+                    marketName: sel.marketName,
+                    eventId: sel.eventId,
+                    eventName: sel.eventName
+                });
+                this.isOpen = true;
+                this.error = null;
+                this.success = false;
+            },
+            removeSelection(id) {
+                this.selections = this.selections.filter(s => s.id !== id);
+                this.error = null;
+                this.success = false;
+            },
+            get totalOdds() {
+                if (this.selections.length === 0) return '0.00';
+                let total = 1.0;
+                this.selections.forEach(s => {
+                    total *= parseFloat(s.odds);
+                });
+                return total.toFixed(2);
+            },
+            get potentialPayout() {
+                if (!this.stake || this.selections.length === 0) return '0.00';
+                return (parseFloat(this.stake) * parseFloat(this.totalOdds)).toFixed(2);
+            },
+            async placeBet() {
+                if (this.selections.length === 0) return;
+                if (!token()) {
+                    window.location.href = '/login/';
+                    return;
+                }
+                
+                this.isPlacing = true;
+                this.error = null;
+                this.success = false;
+                
+                const payload = {
+                    stake: parseFloat(this.stake),
+                    selections: this.selections.map(s => ({
+                        selection_id: s.id,
+                        expected_odds: parseFloat(s.odds)
+                    }))
+                };
+                
+                try {
+                    const res = await apiFetch('/betting/bets/', {
+                        method: 'POST',
+                        body: JSON.stringify(payload),
+                        idempotencyKey: generateIdempotencyKey()
+                    });
+                    
+                    if (res._status === 201) {
+                        this.success = true;
+                        setTimeout(() => {
+                            this.selections = [];
+                            this.isOpen = false;
+                            this.success = false;
+                            this.error = null;
+                        }, 2000);
+                    } else {
+                        // Extraer mensaje de error
+                        if (res.detail) {
+                            this.error = res.detail;
+                        } else if (res.error) {
+                            this.error = res.error;
+                        } else if (typeof res === 'object') {
+                            this.error = Object.values(res).flat().join(' | ');
+                        } else {
+                            this.error = 'Error al colocar la apuesta. Revisa tu saldo o las cuotas.';
+                        }
+                    }
+                } catch (e) {
+                    this.error = "Error de red al intentar apostar.";
+                } finally {
+                    this.isPlacing = false;
+                }
+            }
+        });
+    });
     </script>
 
     {% block extra_js %}{% endblock %}
