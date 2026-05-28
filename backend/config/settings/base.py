@@ -141,6 +141,9 @@ SPORTS_API_PROVIDER = os.environ.get('SPORTS_API_PROVIDER', 'the_odds_api')
 THE_ODDS_API_KEY = os.environ.get('THE_ODDS_API_KEY', '')
 THE_ODDS_API_URL = os.environ.get('THE_ODDS_API_URL', 'https://api.the-odds-api.com/v4')
 
+# --- CONFIGURACIÓN API PERU DEV ---
+APIPERU_DEV_TOKEN = os.environ.get('APIPERU_DEV_TOKEN', '')
+
 # Mapeo de IDs de liga locales a sport_key de The Odds API
 THE_ODDS_API_SPORTS = {
     140: 'soccer_spain_la_liga',       # La Liga
