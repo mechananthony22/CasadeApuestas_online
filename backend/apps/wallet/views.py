@@ -299,20 +299,66 @@ class BalanceView(APIView):
     def get(self, request):
         user = request.user
 
+        from django.db.models import Q, Sum
+        from betting.models import Bet
+
+        # 1. Calcular balance contable real
         balance = LedgerEntry.get_user_balance(user)
 
-        total_credits = LedgerEntry.objects.filter(
+        # 2. Calcular depósitos reales (solo recargas contables)
+        total_depositado = LedgerEntry.objects.filter(
             user=user,
             account=LedgerEntry.Account.WALLET_USUARIO,
-            direction=LedgerEntry.Direction.CREDIT,
+            direction=LedgerEntry.Direction.CREDIT
+        ).filter(
+            Q(description__icontains='recarga') |
+            Q(description__icontains='carga') |
+            Q(description__icontains='fianza') |
+            Q(description__icontains='financiamiento') |
+            Q(description__icontains='fichas iniciales')
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0.0000')
 
-        total_debits = LedgerEntry.objects.filter(
+        # 3. Calcular retiros reales
+        total_retirado = LedgerEntry.objects.filter(
             user=user,
             account=LedgerEntry.Account.WALLET_USUARIO,
             direction=LedgerEntry.Direction.DEBIT,
+            description__icontains='retiro'
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0.0000')
 
+        # 4. Calcular estadísticas del flujo de apuestas usando el modelo Bet
+        total_apostado = Bet.objects.filter(user=user).exclude(status='cancelled').aggregate(total=Sum('stake'))['total'] or Decimal('0.0000')
+        total_ganado = Bet.objects.filter(user=user, status__in=['won', 'cashed_out']).aggregate(total=Sum('potential_payout'))['total'] or Decimal('0.0000')
+        total_perdido = Bet.objects.filter(user=user, status='lost').aggregate(total=Sum('stake'))['total'] or Decimal('0.0000')
+
+        stakes_resueltas = Bet.objects.filter(user=user, status__in=['won', 'lost', 'cashed_out']).aggregate(total=Sum('stake'))['total'] or Decimal('0.0000')
+        ganancia_neta_apuestas = total_ganado - stakes_resueltas
+
+        total_pendiente = Bet.objects.filter(user=user, status='accepted').aggregate(total=Sum('stake'))['total'] or Decimal('0.0000')
+
+        # 5. Calcular flujos adicionales (transferencias y bonos)
+        transferencias_enviadas = LedgerEntry.objects.filter(
+            user=user,
+            account=LedgerEntry.Account.WALLET_USUARIO,
+            direction=LedgerEntry.Direction.DEBIT,
+            description__icontains='Envío'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.0000')
+
+        transferencias_recibidas = LedgerEntry.objects.filter(
+            user=user,
+            account=LedgerEntry.Account.WALLET_USUARIO,
+            direction=LedgerEntry.Direction.CREDIT,
+            description__icontains='Recepción'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.0000')
+
+        bonos_recibidos = LedgerEntry.objects.filter(
+            user=user,
+            account=LedgerEntry.Account.WALLET_USUARIO,
+            direction=LedgerEntry.Direction.CREDIT,
+            description__icontains='Bono'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.0000')
+
+        # 6. Obtener últimos movimientos de la billetera
         movimientos = LedgerEntry.objects.filter(
             user=user,
             account=LedgerEntry.Account.WALLET_USUARIO,
@@ -324,8 +370,21 @@ class BalanceView(APIView):
             {
                 'username': user.username,
                 'balance': f"{Decimal(balance).quantize(Decimal('0.0001'))}",
-                'total_depositado': f"{Decimal(total_credits).quantize(Decimal('0.0001'))}",
-                'total_retirado': f"{Decimal(total_debits).quantize(Decimal('0.0001'))}",
+                'total_depositado': f"{Decimal(total_depositado).quantize(Decimal('0.0001'))}",
+                'total_retirado': f"{Decimal(total_retirado).quantize(Decimal('0.0001'))}",
+                
+                # Nuevas estadísticas de apuestas
+                'total_apostado': f"{Decimal(total_apostado).quantize(Decimal('0.0001'))}",
+                'total_ganado': f"{Decimal(total_ganado).quantize(Decimal('0.0001'))}",
+                'total_perdido': f"{Decimal(total_perdido).quantize(Decimal('0.0001'))}",
+                'ganancia_neta_apuestas': f"{Decimal(ganancia_neta_apuestas).quantize(Decimal('0.0001'))}",
+                'total_pendiente': f"{Decimal(total_pendiente).quantize(Decimal('0.0001'))}",
+                
+                # Nuevas estadísticas de transferencias y bonos
+                'transferencias_enviadas': f"{Decimal(transferencias_enviadas).quantize(Decimal('0.0001'))}",
+                'transferencias_recibidas': f"{Decimal(transferencias_recibidas).quantize(Decimal('0.0001'))}",
+                'bonos_recibidos': f"{Decimal(bonos_recibidos).quantize(Decimal('0.0001'))}",
+                
                 'ultimos_movimientos': movimientos_serializer.data,
                 'disclaimer': 'Plataforma educativa con moneda virtual. No constituye una casa de apuestas.',
             },

@@ -60,6 +60,62 @@ class BalanceSerializer(serializers.Serializer):
         help_text='Total histórico retirado'
     )
 
+    total_apostado = serializers.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        read_only=True,
+        help_text='Total apostado'
+    )
+
+    total_ganado = serializers.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        read_only=True,
+        help_text='Total ganado'
+    )
+
+    total_perdido = serializers.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        read_only=True,
+        help_text='Total perdido'
+    )
+
+    ganancia_neta_apuestas = serializers.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        read_only=True,
+        help_text='Ganancia neta en apuestas'
+    )
+
+    total_pendiente = serializers.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        read_only=True,
+        help_text='Total retenido en apuestas pendientes'
+    )
+
+    transferencias_enviadas = serializers.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        read_only=True,
+        help_text='Total enviado en transferencias'
+    )
+
+    transferencias_recibidas = serializers.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        read_only=True,
+        help_text='Total recibido en transferencias'
+    )
+
+    bonos_recibidos = serializers.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        read_only=True,
+        help_text='Total de bonos recibidos'
+    )
+
     username = serializers.CharField(
         source='user.username',
         read_only=True,
