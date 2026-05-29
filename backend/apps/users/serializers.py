@@ -22,18 +22,33 @@ class RegistroUsuarioSerializer(serializers.Serializer):
     password = serializers.CharField(
         write_only=True,  # No se devuelve en la respuesta por seguridad
         min_length=8,
-        help_text='Contraseña de mínimo 8 caracteres'
+        help_text='Contraseña de mínimo 8 caracteres',
+        error_messages={
+            'min_length': 'La contraseña debe tener mínimo 8 caracteres.',
+            'blank': 'La contraseña es obligatoria.',
+            'required': 'La contraseña es obligatoria.',
+        }
     )
     confirm_password = serializers.CharField(
         write_only=True,
-        help_text='Repetición de contraseña para confirmar'
+        help_text='Repetición de contraseña para confirmar',
+        error_messages={
+            'blank': 'Debes confirmar tu contraseña.',
+            'required': 'Debes confirmar tu contraseña.',
+        }
     )
 
     # Campos del perfil KYC
     dni = serializers.CharField(
         min_length=8,
         max_length=8,
-        help_text='DNI peruano de 8 dígitos'
+        help_text='DNI peruano de 8 dígitos',
+        error_messages={
+            'min_length': 'El DNI peruano debe tener exactamente 8 dígitos.',
+            'max_length': 'El DNI peruano debe tener exactamente 8 dígitos.',
+            'blank': 'El DNI es obligatorio.',
+            'required': 'El DNI es obligatorio.',
+        }
     )
     birth_date = serializers.DateField(
         help_text='Fecha de nacimiento en formato YYYY-MM-DD'

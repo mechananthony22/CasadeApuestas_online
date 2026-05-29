@@ -200,7 +200,7 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-# --- CONFIGURACIÓN JWT (djangorestframework-simplejwt) ---
+# --- CONFIGURACIÓN JWT (djangorestframework) ---
 from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
